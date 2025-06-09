@@ -1,0 +1,2 @@
+# Evita che i file in tests/ vengano mergiati in main
+src/application/** merge=ours
