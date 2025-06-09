@@ -165,3 +165,7 @@ cython_debug/
 
 # Flet
 storage/
+
+# framework
+src/application/*
+!src/application/**/*.md
