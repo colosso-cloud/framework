@@ -180,10 +180,15 @@ class adapter(presentation.port):
 
     async def attribute_class(self, widget, pr, value): widget.class_name = value  # "class" is reserved
 
-    async def set_attribute(self, widget, pr, value): 
-        widget.class_name = value  # "class" is reserved
+    async def set_attribute(self, widget, attributes, field, value): 
+        name = field.lower()
+        method_name = f"attribute_{name}"
+        method = getattr(self, method_name, None)
 
-    async def get_attribute(self, widget, field, value=None):
+        if method:
+            await method(widget, attributes, value)
+
+    async def get_attribute(self, widget, field):
         match field:
             case 'elements':
                 a = getattr(widget,'controls',None)
@@ -214,14 +219,17 @@ class adapter(presentation.port):
             #page.window_title_bar_hidden = True
             #page.window_title_bar_buttons_hidden = True
             #page.title = self.config['title']
-            aaa = await self.host({'url':self.config.get('view')})
+            #aaa = await self.host({'url':self.config.get('view')})
             
-            page.vertical_alignment = ft.MainAxisAlignment.CENTER
+            #page.vertical_alignment = ft.MainAxisAlignment.CENTER
+            file = await self.host({'url':'application/policy/presentation/'+self.config.get('route','')})
+            self.mount_route(file)
             page.spacing = 0
             page.margin=0
             page.padding=0
             #print(self.builder)
-            view = await self.builder(text=aaa)
+            #view = await self.builder(text=aaa)
+            view = await self.apply_view('/')
             #print('VIEW',view)
             #await page.add_async(view,)
             page.add(view)
@@ -259,28 +267,38 @@ class adapter(presentation.port):
     @staticmethod
     def widget_column(tag, inner, props):
         print(inner)
-        widget = ft.Column(controls=inner)
+        widget = ft.Column(controls=inner,spacing=0,alignment=ft.MainAxisAlignment.START)
         widget.tag = tag
         return widget
     
     @staticmethod
     def widget_row(tag, inner, props):
         print('Row',inner)
-        widget = ft.Row(controls=inner)
+        widget = ft.Row(controls=inner,spacing=0,alignment=ft.MainAxisAlignment.START)
         widget.tag = tag
         return widget
     
     @staticmethod
     def widget_container(tag, inner, props):
         print('Container',inner,props)
-        widget = ft.Container(content=ft.ResponsiveRow(expand=True,controls=inner))
+        widget = ft.Container(
+            content=ft.ResponsiveRow(expand=True,controls=inner,alignment=ft.MainAxisAlignment.START),
+            border_radius=0
+            #alignment=ft.MainAxisAlignment.START
+        )
         widget.tag = tag
         return widget
     
     
     def widget_button(self, tag, inner, props):
         print('Button',inner)
-        widget = ft.FilledButton(content=ft.ResponsiveRow(expand=True,controls=inner))
+        widget = ft.FilledButton(
+            content=ft.ResponsiveRow(expand=True,controls=inner),
+            style=ft.ButtonStyle(
+                padding=0,
+                shape=ft.RoundedRectangleBorder(radius=0),
+            ),
+        )
         widget.tag = tag
         return widget
     
@@ -311,14 +329,28 @@ class adapter(presentation.port):
         
         widget.tag = tag
         return widget
-    
-    
-    async def mount_route(self, *services, **constants):
-        pass
 
-    
-    async def render_view(self, *services, **constants):
-        pass
+    async def apply_route(self, *services, **constants):
+        currentElement = event.target
+        attributeValue = None
+
+        while not attributeValue: 
+            attributeValue = currentElement.getAttribute('route')
+            currentElement = currentElement.parentElement
+
+            # Parsing dell'URL
+            parsed = urllib.parse.urlparse(attributeValue)
+            path = parsed.path
+            query = urllib.parse.parse_qs(parsed.query)
+            fragment = urllib.parse.parse_qs(parsed.fragment)
+            print('BOOM',path,query,fragment)
+            code = await self.builder(url=attributeValue,path=path,query=query,fragment=fragment)
+            js.document.getElementById('main').innerHTML = ''
+            js.document.getElementById('main').prepend(code)
+
+    async def apply_view(self,url):
+        view = await self.builder(url=self.routes.get(url,{}).get('view'))
+        return view
 
     async def apply_style(self ,widget, styles=None):
         if styles is None:
@@ -348,7 +380,7 @@ class adapter(presentation.port):
         for attr, val in applied.items():
             setattr(widget, attr, val)
 
-    async def mount_css(self, *services, **constants):
+    async def apply_css(self, *services, **constants):
         ttt = """
 .primary {
   background-color: #ff0000;

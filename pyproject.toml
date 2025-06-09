@@ -103,9 +103,9 @@ requires-python = ">=3.9"                # Versione minima di Python richiesta
 # ssl_certfile = "cert.pem"               # (opzionale)
 
 
-# [presentation.native]
-# adapter = "flutter"
-# view = "application/view/page/auth/login.xml"
+[presentation.native]
+adapter = "flutter"
+route = "route.xml"
 
 
 # [authentication.supabase]

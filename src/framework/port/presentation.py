@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from jinja2 import Environment, select_autoescape,FileSystemLoader,BaseLoader,ChoiceLoader,Template,DebugUndefined
 from html import escape
 import uuid
+import untangle
 
 modules = {'flow': 'framework.service.flow'}
 
@@ -90,9 +91,11 @@ class port(ABC):
     def initialize(self):
         self.components = {}
         self.data = {}
+        self.routes = {}
         # DOM
         self.document = {}
         fs_loader = FileSystemLoader("src/application/view/layout/")
+
         #http_loader = MyLoader()
         #choice_loader = ChoiceLoader([fs_loader, http_loader])
         
@@ -102,7 +105,11 @@ class port(ABC):
         self.env = Environment(loader=fs_loader,autoescape=select_autoescape(["html", "xml"]),undefined=DebugUndefined)
 
     @abstractmethod
-    async def get_attribute(self, widget, field, value=None):
+    async def get_attribute(self, widget, field):
+        pass
+
+    @abstractmethod
+    async def set_attribute(self, widget, attributes, field, value):
         pass
 
     @abstractmethod
@@ -110,26 +117,18 @@ class port(ABC):
         pass
 
     @abstractmethod
-    async def mount_property(self, *services, **constants):
+    async def apply_view(self, *services, **constants):
         pass
 
     @abstractmethod
-    async def mount_route(self, *services, **constants):
+    async def apply_route(self, *services, **constants):
         pass
 
     @abstractmethod
-    async def mount_view(self, *services, **constants):
+    async def apply_css(self, *services, **constants):
         pass
 
-    @abstractmethod
-    async def render_view(self, *services, **constants):
-        pass
-
-    @abstractmethod
-    async def mount_css(self, *services, **constants):
-        pass
-
-    async def host(self,constants):
+    async def host(self,constants={},**c):
         #import os
         #print(os.getcwd())
         with open('src/'+constants['url'], 'r', encoding='utf-8') as file:
@@ -138,15 +137,13 @@ class port(ABC):
     
     #@flow.asynchronous()
     async def builder(self,**constants):
-        if 'application/view/component/.xml' == constants.get('url'):
-            print('KANBOOOM!',constants)
-        #print('BUILD41',constants)
-        #try:
         if 'text' in constants:
             text = constants['text']
         else:
+            print(constants)
             text = await self.host(constants)
 
+        print(text)
         template = self.env.from_string(text)
         if 'data' not in constants:
             constants['data'] = {}
@@ -164,17 +161,36 @@ class port(ABC):
         await self.mount_css(view)
         return view
     
-    async def rebuild(self, *services, **constants):
-        pass
+    async def rebuild(self, id, tag, **data):
+          try:
+              #url = f"application/view/component/{tag}.xml"
+              url = tag
+              #new_component = await self.builder(url=url, **{'component':self.components.get(id,{})}|data)
+              print('BOOM',self.components.get(id,{}))
+              new_component = await self.builder(url=url, component=self.components.get(id,{}) , **data)
+              old_component = self.document.getElementById(id)
+              #old_component.innerHTML = new_component.innerHTML
 
+              if old_component is None:
+                  raise ValueError(f"Elemento con id '{id}' non trovato nel documento.")
+
+              parent = old_component.parentNode
+              if parent is None:
+                  raise ValueError(f"L'elemento con id '{id}' non ha un nodo genitore.")
+
+              # Sostituzione corretta
+              #for x in new_component.childNodes:
+              #  old_component.append(x)
+              parent.replaceChild(new_component, old_component)
+
+          except Exception as e:
+              print(f"Errore durante la ricostruzione del componente '{id}': {e}")
+    
     async def mount_property(self, tag, widget, attributes):
         #print('Mount:',widget,attributes)
         for key in attributes:
-            value = attributes[key]
-            method_name = f"attribute_{key.replace('-', '_')}"
-            method = getattr(self, method_name, None)
-            if method:
-                await method(widget, attributes, value)
+            await self.set_attribute(widget,attributes,key.replace('-', '_'),attributes[key])
+            
         id = await self.get_attribute(widget,'id')
         
         if not id:
@@ -186,6 +202,19 @@ class port(ABC):
         if factory:
             return factory(tag,inner, props)
         raise NotImplementedError(f"Tag '{tag}' non gestito in compose_view data-driven")
+
+    async def mount_css(self, *services, **constants):
+        await self.apply_css(*services)
+
+    def mount_route(self, file):
+        
+        for setting in untangle.parse(file).get_elements()[0].get_elements():
+            path = setting.get_attribute('path')
+            method = setting.get_attribute('method')
+            typee = setting.get_attribute('type')
+            view = setting.get_attribute('view')
+
+            self.routes[path] = {'view':view,'type':typee,'method':method}
 
     @flow.asynchronous(managers=('storekeeper','messenger'))
     async def mount_view(self,root,data,storekeeper,messenger):
