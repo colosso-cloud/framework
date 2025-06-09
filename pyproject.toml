@@ -1,0 +1,179 @@
+[project]
+name = "my-app"                          # Nome del progetto
+version = "0.1.0"                        # Versione dell'app
+description = "Un'app di esempio"        # Descrizione del progetto
+readme = "README.md"                     # File di documentazione
+requires-python = ">=3.9"                # Versione minima di Python richiesta
+# key = "my-secret-key"                    # Chiave segreta dell'app
+
+# authors = [
+#   { name = "Flet developer", email = "you@example.com" }  # Autore del progetto
+# ]
+
+# dependencies = [
+#   "flet==0.28.3"                         # Libreria Flet come dipendenza
+# ]
+
+
+# [tool.flet]
+# org = "com.example"                      # Dominio inverso per bundle ID (es. com.azienda)
+# product = "My Flet App"                  # Nome visibile dell'app
+# company = "Example Company"              # Nome azienda per "about"
+# copyright = "Copyright (C) 2025"         # Testo copyright
+
+
+# [tool.flet.app]
+# path = "public"                          # Cartella con i file pubblici/app
+
+
+# [tool.uv]
+# dev-dependencies = [
+#   "flet[all]==0.28.3"                    # Dipendenze per sviluppo
+# ]
+
+
+# [tool.poetry]
+# package-mode = false                     # Disattiva modalità pacchetto
+
+
+# [tool.poetry.group.dev.dependencies]
+# flet = {extras = ["all"], version = "0.28.3"}  # Dipendenza Flet con extra
+
+
+# [message.log]
+# adapter = "console"                      # Console come output log
+# file = ""                                # File di log (vuoto = disattivo)
+# level = "debug"                          # Livello log
+# format = "%(asctime)s | %(levelname)-8s | %(process)d | %(message)s"  # Formato
+
+
+# [message.client]
+# adapter = "websocket"
+# url = "ws://localhost:8000/messenger"    # WebSocket locale
+
+
+# [message.server]
+# adapter = "websocket"
+# url = "wss://app.colosso.cloud/messenger" # WebSocket in cloud
+
+
+# [message.chatbot]
+# adapter = "api"
+# domain = "assistant,chat"
+# url = "https://openrouter.ai/api/v1/chat/completions"
+# authorization = "Bearer"
+# accept = "application/json"
+# token = "sk-or-your-token"              # Token API OpenRouter
+
+
+# [message.producer]
+# adapter = "api"
+# domain = "backlog.producer,test"
+# url = "https://openrouter.ai/api/v1/chat/completions"
+# authorization = "Bearer"
+# accept = "application/json"
+# token = "sk-or-your-token"
+
+
+# [message.programmer]
+# adapter = "api"
+# domain = "assistant,bom"
+# url = "https://openrouter.ai/api/v1/chat/completions"
+# authorization = "Bearer"
+# accept = "application/json"
+# token = "sk-or-your-token"
+
+
+# [message.backend]
+# adapter = "redis"
+# host = "localhost"                       # Host Redis
+# port = "6379"                            # Porta Redis
+# database = "0"                           # Numero DB Redis
+# username = "default"
+# password = ""
+
+
+# [presentation.web]
+# adapter = "wasm"                         # Adapter WASM per Web
+# host = "0.0.0.0"
+# port = "8000"
+# view = "src/domain/view/layout/page.xml"
+# routes = "src/application/policy/presentation/web.xml"
+# ssl_keyfile = "key.pem"                 # (opzionale)
+# ssl_certfile = "cert.pem"               # (opzionale)
+
+
+# [presentation.native]
+# adapter = "flutter"
+# view = "application/view/page/auth/login.xml"
+
+
+# [authentication.supabase]
+# adapter = "supabase"
+# url = "https://your-project.supabase.co"
+# key = "your-supabase-service-role-key"
+
+
+# [authentication.github]
+# adapter = "oauth"
+# url = "https://github.com/login/oauth/access_token?client_id={{ GITHUB_OAUTH_ID }}&client_secret={{ GITHUB_OAUTH_SECRET }}"
+# link = "https://github.com/login/oauth/authorize?client_id=Ov23lidpWleO0KCHQVm0&scope=repo,user&state=xyz987"
+# id = "{{ GITHUB_OAUTH_ID }}"
+# secret = "{{ GITHUB_OAUTH_SECRET }}"
+
+
+# [persistence.bot]
+# adapter = "jwt"
+# url = "https://api.github.com"
+# app_id = "{{ GITHUB_COLOSSO_ID }}"
+# installation_id = "{{ GITHUB_COLOSSO_APP }}"
+# key = "public/colosso-cloud.2024-11-24.private-key.pem"
+# autologin = "true"
+
+
+# [persistence.backend]
+# adapter = "redis"
+# host = "localhost"
+# port = "6379"
+# database = "0"
+# username = "default"
+# password = ""
+
+
+# [persistence.supabase]
+# adapter = "supabase"
+# url = "https://your-project.supabase.co"
+# key = "your-supabase-key"
+# token = "{{ session_token_supabase or 'none' }}"
+
+
+# [persistence.github]
+# adapter = "api"
+# url = "https://api.github.com"
+# authorization = "Bearer "
+# accept = "application/vnd.github+json"
+# token = "{{ session.github.access_token if session.github else 'none' }}"
+
+
+# [persistence.workspace]
+# adapter = "fs"                           # File system locale
+
+
+# [actuator.devops]
+# adapter = "ansible"
+# playbook_path = "deploy/site.yml"
+# extra_vars = "env=dev"
+# inventory_file = "inventory.ini"
+# timeout = "300"
+
+
+# [actuator.functions]
+# adapter = "flow"
+# url = "https://your-project.supabase.co/functions/v1/scrum-release"
+# token = "{{ SUPABASE_SECRET }}"
+
+
+# [actuator.github]
+# adapter = "flow"
+# url = "https://your-project.supabase.co/functions/v1/scrum-release"
+# token = "{{ session.get('github.access_token') }}"
