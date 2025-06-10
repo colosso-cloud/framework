@@ -4,6 +4,7 @@ from jinja2 import Environment, select_autoescape,FileSystemLoader,BaseLoader,Ch
 from html import escape
 import uuid
 import untangle
+import markupsafe
 
 modules = {'flow': 'framework.service.flow'}
 
@@ -12,6 +13,7 @@ class port(ABC):
         'Data':{},
         'Resource':{'type': ['image','video','audio']},
         'Media':{'type': ['image', 'video', 'audio', 'embed']},
+        'Navigation':{},
         'View':{},
         'Messenger':{},
         'Defender':{},
@@ -30,12 +32,32 @@ class port(ABC):
     widgets = {
         'Text':{'attributes':['expand']},
         'Video':{'attributes':['expand']},
+        'Image':{},
         'Row':{},
         'Column':{},
         'Container':{},
         'Input':{},
         'Button':{},
         'List':{},
+        'Tree':{},
+        'Table':{},
+        'Modal':{},
+        'Drawer':{},
+        'Map':{},
+        'Chart':{},
+        'Tab':{},
+        'Scroll':{},
+        'Toast':{},
+        'Alert':{},
+        'Card':{},
+        'Window':{},
+        'Breadcrumb':{},
+        'Pagination':{},
+        'Carousel':{},
+        'NavigationRail':{},
+        'NavigationApp':{},
+        'NavigationBar':{},
+        'NavigationMenu':{},
     }
 
     attributes = {
@@ -99,9 +121,11 @@ class port(ABC):
         #http_loader = MyLoader()
         #choice_loader = ChoiceLoader([fs_loader, http_loader])
         
-        #for widget in self.widgets:
-        #    if widget not in self.widget_map:
-        #        raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")
+        for widget in self.widgets:
+            print('widget_'+widget.lower())
+            if not getattr(self,'widget_'+widget.lower()):
+                raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")
+        
         self.env = Environment(loader=fs_loader,autoescape=select_autoescape(["html", "xml"]),undefined=DebugUndefined)
 
     @abstractmethod
@@ -140,10 +164,8 @@ class port(ABC):
         if 'text' in constants:
             text = constants['text']
         else:
-            print(constants)
             text = await self.host(constants)
 
-        print(text)
         template = self.env.from_string(text)
         if 'data' not in constants:
             constants['data'] = {}
@@ -283,7 +305,7 @@ class port(ABC):
                 return output
             case 'Storekeeper':
                 method = att['method'] if 'method' in att else 'overview'
-                new = []
+                inner_context = []
                 payload = att['payload'] if 'payload' in att else ''
                 payload = language.extract_params(payload)
                 filter = att['filter'] if 'filter' in att else ''
@@ -305,12 +327,13 @@ class port(ABC):
 
                 print(transaction,payload,repository,'###333')
                 
-                for y in elements:
-                    built = await self.mount_view(y,data|{'storekeeper':transaction})
-                    new.append(built)
-                table = self.code('div',{'class':'w-100'},new)
-                self.att(table,att)
-                return table
+                for element in elements:
+                    built = await self.mount_view(element,data|{'storekeeper':transaction})
+                    inner_context.append(built)
+                
+                output = await self.compose_view('Container',inner_context)
+                await self.mount_property('Container',output,att)
+                return output
             case 'Media':
                 #resource
                 kind = att['type'] if 'type' in att else 'image'
@@ -372,26 +395,9 @@ class port(ABC):
                         await self.mount_property('Container',output,att)
                         return output
                     case 'button':
-                        print("OOOOOOOOOOOOOK")
                         output = await self.compose_view('Button',inner)
                         await self.mount_property('Button',output,att)
                         return output
-                    case 'submit':
-                        button = self.code('button',{'class':'btn rounded-0','type':'submit','value':valor},inner)
-                        self.att(button,att)
-                        return button
-                    case 'dropdown':
-                        new = []
-                        id = att.get('id','None')
-                        for item in inner[1:]:
-                            li = self.code('li',{'class':'dropdown-item'},[item])
-                            new.append(li)
-                        ul = self.code('ul',{'class':'dropdown-menu','id':f"{id}-ul"},new)
-                        btn = self.code('div',{'class':'d-inline-flex','id':f"{id}-btn"},[inner[0]])
-                        button = self.code('a',{'class':'p-0 m-0','value':valor,'oncontextmenu':'return false;'},[btn,ul])
-                        self.att(btn,{'ddd':'dropdown()'})
-                        self.att(button,att)
-                        return button
                     case _:
                         button = self.code('a',{'class':'btn rounded-0','value':valor},inner)
                         self.att(button,att)
@@ -399,177 +405,54 @@ class port(ABC):
             case 'Window':
                 tipo = att['type'] if 'type' in att else 'None'
                 id = att['id'] if 'id' in att else 'None'
-                action = att['action'] if 'action' in att else 'action'
-                size = att['size'] if 'size' in att else 'lg'
                 match tipo:
-                    case 'canvas':
-                        return self.code('div',{'data-bs-backdrop':'false','id':id,'class':'offcanvas offcanvas-end'},[
-                            self.code('div',{'class':'offcanvas-body p-0 m-0'},inner),
-                        ])
+                    case 'drawer':
+                        output = await self.compose_view('Drawer',inner,**att)
+                        await self.mount_property('Drawer',output,att)
+                        return output
                     case 'window':
-                        url = att['url'] if 'url' in att else ''
-                        obj =  self.code('iframe',{'src':url,'id':id,'style':'border:none;'},inner)
-                        self.att(obj,att)
-                        return obj
+                        output = await self.compose_view('Window',inner,**att)
+                        await self.mount_property('Window',output,att)
+                        return output
                     case 'modal':
-                        btn_act = self.code('button',{'class':'btn btn-success'},[action.capitalize()])
-                        self.att(btn_act,{'click':f"form(id:'form-{action}',action:'{action.lower()}')"})
-                        form = self.code('form',{'id':f'form-{action}','action':'/'+action,'method':'POST'},inner)
-                        # 'onclick':f'document.getElementById(\'form-{action}\').submit();'
-                        return self.code('div',{'id':id,'class':'modal','data-bs-backdrop':'false'},[
-                            self.code('div',{'class':f'modal-dialog modal-{size} modal-dialog-centered modal-dialog-scrollable'},[
-                                self.code('div',{'class':'modal-content'},[
-                                    self.code('div',{'class':'modal-header'}),
-                                    self.code('div',{'class':'modal-body'},[form]),
-                                    self.code('div',{'class':'modal-footer'},[
-                                        self.code('button',{'class':'btn btn-secondary','data-bs-dismiss':'modal'},['Close']),
-                                        btn_act
-                                    ])
-                                ]),
-                            ]),
-                        ])
+                        output = await self.compose_view('Modal',inner,**att)
+                        await self.mount_property('Modal',output,att)
+                        return output
+            case 'Card':
+                output = await self.compose_view('Container',inner,**att)
+                await self.mount_property('Container',output,att)
+                return output
+            case 'Navigation':
+                kind = att['type'] if 'type' in att else 'menu'
+
+                match kind:
+                    case 'app':
+                        output = await self.compose_view('NavigationApp',inner,**att)
+                        await self.mount_property('NavigationApp',output,att)
+                        return output
+                    case 'menu':
+                        output = await self.compose_view('NavigationMenu',inner,**att)
+                        await self.mount_property('NavigationMenu',output,att)
+                        return output
+                    case 'rail':
+                        output = await self.compose_view('NavigationRail',inner,**att)
+                        await self.mount_property('NavigationRail',output,att)
+                        return output
+                    case 'bar':
+                        output = await self.compose_view('NavigationBar',inner,**att)
+                        await self.mount_property('NavigationBar',output,att)
+                        return output
+                    case 'tab':
+                        output = await self.compose_view('Tab',inner,**att)
+                        await self.mount_property('Tab',output,att)
+                        return output
             case 'Group':
                 tipo = att['type'] if 'type' in att else 'None'
-                match tipo:
-                    case 'card':
-                        r = self.code('div',{'class':'card-group'},inner)
-                        self.att(r,att)
-                        return r
-                    case 'button':
-                        gg = self.code('div',{'class':'btn-group'},inner)
-                        self.att(gg,att)
-                        return gg
-                    case 'list':
-                        new = []
-                        for item in inner:
-                            li = self.code('li',{'class':'list-group-item'},[item])
-                            new.append(li)
-                        ul = self.code('ul',{'class':'list-group'},new)
-                        self.att(ul,att)
-                        return ul
-                    case 'pagination':
-                        new = []
-                        for item in inner:
-                            li = self.code('li',{'class':'page-item'},[item])
-                            new.append(li)
-                        ul = self.code('ul',{'class':'pagination'},new)
-                        self.att(ul,att)
-                        return ul
-                    case 'breadcrumb':
-                        new = []
-                        for item in inner:
-                            li = self.code('li',{'class':'breadcrumb-item'},[item])
-                            new.append(li)
-                        ol = self.code('ol',{'class':'breadcrumb m-0'},new)
-                        nav = self.code('nav',{'aria-label':'breadcrumb'},[ol])
-                        self.att(nav,att)
-                        return nav
-                    case 'tab':
-                        self.att(inner[0],{'class':'active show'})
-                        for item in inner:
-                            self.att(item,{'class':'tab-pane fade','role':'tabpanel'})
-                        tab = self.code('div',{'class':'d-flex flex-row tab-content'},inner)
-                        self.att(tab,att)
-                        return tab
-                    case 'nav':
-                        new = []
-                        if len(inner) != 0:
-                            self.att(inner[0],{'class':'active','aria-selected':'true'})   
-                        for item in inner:
-                            li = self.code('li',{'class':'nav-item'},[item])
-                            new.append(li)
-                        tab = self.code('ul',{'class':'nav'},new)
-                        self.att(tab,att)
-                        return tab
-                    case 'tree':
-                        tab = self.code('ul',{'class':'tree p-0'},[
-                            self.code('li',{'class':'pe-4'},inner),
-                        ])
-                        self.att(tab,att)
-                        return tab
-                    case 'input':
-                        new = []
-                        for item in inner:
-                            #print(dir(item))
-                            #item_attr = item._attributes
-                            #tipo = item_attr['type'] if 'type' in item_attr else None
-                            tipo = item.getAttribute('type')
-                            classe = item.getAttribute('class')
-                            if tipo and tipo in ['data','icon','range']:  
-                                expand = 'col' if ' col' in classe else ''
-                                li = self.code('span',{'class':f'input-group-text rounded-0 {expand}'},[item])
-                                new.append(li)
-                            else:
-                                self.att(item,{'class':'rounded-0'})
-                                new.append(item)           
-                               
-                        tab = self.code('div',{'class':'input-group'},new)
-                        self.att(tab,att)
-                        return tab
-                    case 'node':
-                        new = [] 
-                        for item in inner[1:]:
-                            li = self.code('li',{'class':''},[item])
-                            new.append(li)
-
-                        tab = self.code('details',{'class':'','open':'open'},[
-                            self.code('summary',{'class':''},[inner[0]]),
-                            self.code('ul',{'class':''},new)
-                        ])
-                        
-                        self.att(tab,att)
-                        return tab
-                    case 'accordion':
-                        accordion_id = att['id'] if 'id' in att else "accordionExample"
-                        items = []
-                        pair_index = 1  # per collapseOne, collapseTwo...
-
-                        # Sicurezza: assicurati che inner abbia lunghezza pari
-                        if len(inner) % 2 != 0:
-                            inner = inner[:-1]  # Rimuove l'ultimo elemento orfano
-
-                        for i in range(0, len(inner), 2):
-                            header = inner[i]
-                            body = inner[i + 1]
-
-                            # Assicurati che non siano None
-                            if header is None or body is None:
-                                continue
-
-                            collapse_id = f"collapse-{accordion_id}"
-                            #collapse_id = accordion_id
-                            
-                            is_first = (pair_index == 1)
-
-                            button = self.code('button', {
-                                'class': 'accordion-button collapsed',
-                                'type': 'button',
-                                'data-bs-toggle': 'collapse',
-                                'data-bs-target': f"#{collapse_id}",
-                                'aria-expanded': 'false',
-                                'aria-controls': collapse_id
-                            }, [header])
-
-                            header_h2 = self.code('h2', {'class': 'accordion-header'}, [button])
-                            body_inner = self.code('div', {'class': 'accordion-body p-0 m-0'}, [body])
-                            collapse_div = self.code('div', {
-                                'id': collapse_id,
-                                'class': 'accordion-collapse collapse',
-                                'data-bs-parent': f"#{accordion_id}",
-                            }, [body_inner])
-
-                            accordion_item = self.code('div', {'class': 'accordion-item'}, [header_h2, collapse_div])
-                            items.append(accordion_item)
-                            pair_index += 1
-
-                        accordion = self.code('div', {'class': 'accordion', 'id': accordion_id}, items)
-                        self.att(accordion, att)
-                        return accordion
-                    case _:
-                        return self.code('div',{'class':'container-fluid p-0 m-0'},inner)
+                output = await self.compose_view('Container',inner,**att)
+                await self.mount_property('Container',output,att)
+                return output
             case 'Input':
                 #id = att['id'] if 'id' in att else str(uuid.uuid4())
-                print("siamo dentro",att)
                 tipo = att['type'] if 'type' in att else 'text'
                 
                 match tipo:
@@ -625,7 +508,6 @@ class port(ABC):
                 await self.mount_property('Row',output,att)
                 return output
             case 'Container':
-                print('dentro cin',inner)
                 output = await self.compose_view('Container',inner)
                 await self.mount_property('Container',output,att)
                 return output

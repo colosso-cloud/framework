@@ -3,6 +3,7 @@ import flet_video as fv
 import importlib
 import asyncio
 import tinycss2
+import urllib.parse
 
 modules = {'flow': 'framework.service.flow','presentation': 'framework.port.presentation'}
 
@@ -102,7 +103,8 @@ class adapter(presentation.port):
     @flow.asynchronous(managers=('executor',))
     async def attribute_click(self, widget, pr, value, executor):
         async def on_click(e):
-            await executor.act(action=value)
+            #print(dir(e),e.data,e.name,e.target,dir(e.control))
+            await executor.act(action=value,presenter={'id':e.control.id,'event':e.name})
         
         widget.on_click = on_click
 
@@ -216,6 +218,8 @@ class adapter(presentation.port):
         
         self.initialize()
         async def main(page: ft.Page):
+            page.on_route_change = self.apply_route
+            self.document['window'] = page
             #page.window_title_bar_hidden = True
             #page.window_title_bar_buttons_hidden = True
             #page.title = self.config['title']
@@ -229,10 +233,11 @@ class adapter(presentation.port):
             page.padding=0
             #print(self.builder)
             #view = await self.builder(text=aaa)
-            view = await self.apply_view('/')
+            await self.apply_route(url='/')
+            #print(view)
             #print('VIEW',view)
             #await page.add_async(view,)
-            page.add(view)
+            #page.add(view)
         asyncio.create_task(ft.app_async(main))
 
     @staticmethod
@@ -266,21 +271,18 @@ class adapter(presentation.port):
     
     @staticmethod
     def widget_column(tag, inner, props):
-        print(inner)
         widget = ft.Column(controls=inner,spacing=0,alignment=ft.MainAxisAlignment.START)
         widget.tag = tag
         return widget
     
     @staticmethod
     def widget_row(tag, inner, props):
-        print('Row',inner)
         widget = ft.Row(controls=inner,spacing=0,alignment=ft.MainAxisAlignment.START)
         widget.tag = tag
         return widget
     
     @staticmethod
     def widget_container(tag, inner, props):
-        print('Container',inner,props)
         widget = ft.Container(
             content=ft.ResponsiveRow(expand=True,controls=inner,alignment=ft.MainAxisAlignment.START),
             border_radius=0
@@ -291,7 +293,6 @@ class adapter(presentation.port):
     
     
     def widget_button(self, tag, inner, props):
-        print('Button',inner)
         widget = ft.FilledButton(
             content=ft.ResponsiveRow(expand=True,controls=inner),
             style=ft.ButtonStyle(
@@ -302,9 +303,167 @@ class adapter(presentation.port):
         widget.tag = tag
         return widget
     
+    def widget_list(self, tag, inner, props):
+        widget = ft.ListView(
+            controls=inner,
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_tree(self, tag, inner, props):
+        widget = ft.ListView(
+            controls=inner,
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_image(self, tag, inner, props):
+        widget = ft.Image()
+        widget.tag = tag
+        return widget
+    
+    def widget_table(self, tag, inner, props):
+        widget = ft.DataTable(columns=inner,rows=inner)
+        widget.tag = tag
+        return widget
+    
+    def widget_modal(self, tag, inner, props):
+        widget = ft.AlertDialog(content=ft.ResponsiveRow(expand=True,controls=inner))
+        widget.tag = tag
+        return widget
+    
+    def widget_drawer(self, tag, inner, props):
+        widget = ft.NavigationDrawer(controls=inner,position=ft.NavigationDrawerPosition.END)
+        widget.tag = tag
+        return widget
+    
+    def widget_window(self, tag, inner, props):
+        widget = ft.Page()
+        widget.add(inner)
+        widget.tag = tag
+        return widget
+    
+    def widget_map(self, tag, inner, props):
+        widget = ft.Map(expand=True,
+            initial_center=map.MapLatitudeLongitude(15, 10),
+            initial_zoom=4.2,)
+        widget.tag = tag
+        return widget
+    
+    def widget_chart(self, tag, inner, props):
+        widget = ft.LineChart(data=props.get("data", []), **props)
+        widget.tag = tag
+        return widget
+    
+    def widget_tab(self, tag, inner, props):
+        widget = ft.Tabs(tabs=inner,animation_duration=300,selected_index=1,)
+        widget.tag = tag
+        return widget
+    
+    def widget_scroll(self, tag, inner, props):
+        widget = ft.Tabs(tabs=inner,animation_duration=300,selected_index=1,)
+        widget.tag = tag
+        return widget
+    
+    def widget_toast(self, tag, inner, props):
+        widget = ft.SnackBar(content=ft.ResponsiveRow(expand=True,controls=inner))
+        widget.tag = tag
+        return widget
+    
+    def widget_alert(self, tag, inner, props):
+        widget = ft.Banner(
+            content=ft.ResponsiveRow(expand=True,controls=inner),
+            leading=ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color=ft.Colors.AMBER, size=40),
+            actions=[],
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_card(self, tag, inner, props):
+        widget = ft.Card(
+            content=ft.ResponsiveRow(expand=True,controls=inner),
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_breadcrumb(self, tag, inner, props):
+        widget = ft.Card(
+            content=ft.ResponsiveRow(expand=True,controls=inner),
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_pagination(self, tag, inner, props):
+        widget = ft.Card(
+            content=ft.ResponsiveRow(expand=True,controls=inner),
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_carousel(self, tag, inner, props):
+        widget = ft.Card(
+            content=ft.ResponsiveRow(expand=True,controls=inner),
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_navigationbar(self, tag, inner, props):
+        widget = ft.NavigationBar(
+            destinations=[
+                ft.NavigationBarDestination(icon=ft.Icons.EXPLORE, label="Explore"),
+                ft.NavigationBarDestination(icon=ft.Icons.COMMUTE, label="Commute"),
+                ft.NavigationBarDestination(
+                    icon=ft.Icons.BOOKMARK_BORDER,
+                    selected_icon=ft.Icons.BOOKMARK,
+                    label="Favorites",
+                ),
+            ]
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_navigationrail(self, tag, inner, props):
+        widget = ft.NavigationRail(
+            destinations=[
+                ft.NavigationRailDestination(
+                    icon=ft.Icons.FAVORITE_BORDER,
+                    selected_icon=ft.Icons.FAVORITE,
+                    label="First",
+                ),
+                ft.NavigationRailDestination(
+                    icon=ft.Icon(ft.Icons.BOOKMARK_BORDER),
+                    selected_icon=ft.Icon(ft.Icons.BOOKMARK),
+                    label="Second",
+                ),
+                ft.NavigationRailDestination(
+                    icon=ft.Icons.SETTINGS_OUTLINED,
+                    selected_icon=ft.Icon(ft.Icons.SETTINGS),
+                    label_content=ft.Text("Settings"),
+                ),
+            ],
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_navigationapp(self, tag, inner, props):
+        widget = ft.AppBar(
+            leading=ft.Icon(ft.Icons.PALETTE),
+            leading_width=40,
+            title=ft.ResponsiveRow(expand=True,controls=inner),
+        )
+        widget.tag = tag
+        return widget
+    
+    def widget_navigationmenu(self, tag, inner, props):
+        widget = ft.Container(content=ft.MenuBar(
+            expand=True,
+            controls=inner,
+        ))
+        widget.tag = tag
+        return widget
+    
     @staticmethod
     def widget_text(tag, inner, props):
-        print('Text',inner)
         text = ''
         for x in inner:
             if type(x) == type(''):
@@ -317,7 +476,6 @@ class adapter(presentation.port):
     
     @staticmethod
     def widget_input(tag, inner, props):
-        print('Input',inner,props)
         ttype = props.get('type','text')
         match ttype:
             case 'text':
@@ -331,25 +489,28 @@ class adapter(presentation.port):
         return widget
 
     async def apply_route(self, *services, **constants):
-        currentElement = event.target
-        attributeValue = None
-
-        while not attributeValue: 
-            attributeValue = currentElement.getAttribute('route')
-            currentElement = currentElement.parentElement
-
-            # Parsing dell'URL
-            parsed = urllib.parse.urlparse(attributeValue)
-            path = parsed.path
-            query = urllib.parse.parse_qs(parsed.query)
-            fragment = urllib.parse.parse_qs(parsed.fragment)
-            print('BOOM',path,query,fragment)
-            code = await self.builder(url=attributeValue,path=path,query=query,fragment=fragment)
-            js.document.getElementById('main').innerHTML = ''
-            js.document.getElementById('main').prepend(code)
+        if 'url' in constants:
+            window = await self.selector(id="window")
+            window = window[-1]
+            window.route = constants['url']
+            window.update()
+            window.go('/')
+        else:
+            window = await self.selector(id="window")
+            window = window[-1]
+            route = window.route
+            view = await self.apply_view(route)
+            window.add(view)
+        
 
     async def apply_view(self,url):
-        view = await self.builder(url=self.routes.get(url,{}).get('view'))
+        # Parsing dell'URL
+        parsed = urllib.parse.urlparse(url)
+        path = parsed.path
+        query = urllib.parse.parse_qs(parsed.query)
+        fragment = urllib.parse.parse_qs(parsed.fragment)
+        #print('URL:',path,query,fragment)
+        view = await self.builder(url=self.routes.get(path,{}).get('view'),path=path,query=query,fragment=fragment)
         return view
 
     async def apply_style(self ,widget, styles=None):

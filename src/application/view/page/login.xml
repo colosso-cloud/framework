@@ -27,6 +27,9 @@
             <Input name="password-repeat" placeholder="password repetition" type="password" />
             <Action class="primary" click="form(id:'form-registration',action:'registration')" ><Text>Registrazione</Text></Action>
         </Action>
+        <Group type="list">
+            <Text>ciao</Text>
+        </Group>
     </Container>
     <Row expand="fill" >
         <Media expand="fill" type="video" src="https://srv16-suisen.sweetpixel.org/DDL/ANIME/KijinGentoushou/KijinGentoushou_Ep_10_SUB_ITA.mp4"/>
