@@ -1,0 +1,13 @@
+{% extends "mono.xml" %}
+{% block content %}
+<Container width="400" padding="48">
+    <Action type="form" action="/login" id="form-login">
+        <Input name="provider" placeholder="provider" value="supabase" />
+        <Input name="email" type="email" placeholder="email" />
+        <Input name="password" type="password" placeholder="password" />
+        <Action class="primary" click="form(id:'form-login',action:'login')" ><Text>Login</Text></Action>
+    </Action>
+    <Action route="/auth/signup">Don't have an account? Sign up</Action>
+    <Action route="/auth/reset-password">Forgot password? Reset it</Action>
+</Container>
+{% endblock %}

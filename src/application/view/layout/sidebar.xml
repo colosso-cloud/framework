@@ -1,0 +1,37 @@
+{% extends "mobile.xml" %}
+{% block main %}
+<Row expand="fill" >
+    {% block start %}
+    {% endblock %}
+    <Row>
+        <Navigation type="rail">
+        {% block bar %}
+        {% endblock %}
+        </Navigation>
+    </Row>
+    <Column expand="fill">
+        
+            {% block breadcrumb %}
+            {% endblock %}
+        
+        <Row>
+            <Column >
+                <Text>{% block title %}{% endblock %}</Text>
+                <Text >{% block subtitle %}{% endblock %}</Text>
+            </Column>
+            <Row class="position-sticky">
+                <Container>{% block action %}{% endblock %}</Container>
+            </Row>
+        </Row>
+        <Column>
+            <Container id="alerts">
+                
+            </Container>
+            {% block content %}
+            {% endblock %}
+        </Column>
+    </Column>
+    {% block fine %}
+    {% endblock %}
+</Row>
+{% endblock %}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Column id="{{ component.id }}" expand="full">
+    <Row background="#fcfcfc" width="auto" class="border-end">
+        {% block west %}
+        {% endblock %}
+    </Row>
+    <Row expand="dynamic" padding="p-0" margin="m-0" class="overflow-auto">
+        <Column expand="auto" background="#fcfcfc" height="auto" class="border-bottom">
+            {% block north %}
+            {% endblock %}
+        </Column>
+        <Column expand="dynamic" class="overflow-auto">
+            {% block center %}
+            {% endblock %}
+        </Column>
+        <Column expand="auto" background="#fcfcfc" height="auto" class="border-top">
+            {% block south %}
+            {% endblock %}
+        </Column>
+    </Row>
+    <Row background="#fcfcfc" width="auto" class="border-start">
+        {% block east %}
+        {% endblock %}
+    </Row>
+</Column>

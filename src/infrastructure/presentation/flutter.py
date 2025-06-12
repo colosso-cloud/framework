@@ -110,7 +110,15 @@ class adapter(presentation.port):
 
     async def attribute_change(self, widget, pr, value): widget.on_change = value
 
-    async def attribute_route(self, widget, pr, value): widget.route = value
+    async def attribute_route(self, widget, pr, value): 
+        async def on_click(e):
+            route = e.control.route
+            window = await self.selector(id="window")
+            window = window[-1]
+            window.go(route)
+        
+        widget.on_click = on_click
+        widget.route = value
 
     async def attribute_init(self, widget, pr, value): widget.on_init = value
 
@@ -218,6 +226,12 @@ class adapter(presentation.port):
         
         self.initialize()
         async def main(page: ft.Page):
+            def view_pop(view):
+                page.views.pop()
+                top_view = page.views[-1]
+                page.go(top_view.route)
+
+            page.on_view_pop = view_pop
             page.on_route_change = self.apply_route
             self.document['window'] = page
             #page.window_title_bar_hidden = True
@@ -494,23 +508,41 @@ class adapter(presentation.port):
             window = window[-1]
             window.route = constants['url']
             window.update()
-            window.go('/')
+            print(constants['url'])
+            window.go(constants['url'])
+            
         else:
+            
             window = await self.selector(id="window")
             window = window[-1]
+            window.views.clear()
             route = window.route
             view = await self.apply_view(route)
-            window.add(view)
+            #for xx in window.views:
+
+            window.update()
+            window.go(window.route)
+            
+            #window.add(view)
+
+            print(window.route)
         
 
     async def apply_view(self,url):
+        window = await self.selector(id="window")
+        window = window[-1]
         # Parsing dell'URL
         parsed = urllib.parse.urlparse(url)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
         fragment = urllib.parse.parse_qs(parsed.fragment)
         #print('URL:',path,query,fragment)
+        
         view = await self.builder(url=self.routes.get(path,{}).get('view'),path=path,query=query,fragment=fragment)
+        for vvv in window.views:
+            if vvv.route == path: return vvv
+        window.views.append(ft.View(path,[view],padding=0))
+        print(len(window.views))
         return view
 
     async def apply_style(self ,widget, styles=None):

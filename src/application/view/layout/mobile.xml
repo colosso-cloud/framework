@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Column expand="fill">
+    <Row expand="fill">
+        {% block main %}
+        {% endblock %}
+    </Row>
+    <Navigation type="bar">
+
+    </Navigation>
+</Column>

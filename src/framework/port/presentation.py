@@ -235,6 +235,10 @@ class port(ABC):
             method = setting.get_attribute('method')
             typee = setting.get_attribute('type')
             view = setting.get_attribute('view')
+            if view:
+                view = 'application/view/page/'+view
+                if not path:
+                    path = view.replace('.xml','')
 
             self.routes[path] = {'view':view,'type':typee,'method':method}
 
