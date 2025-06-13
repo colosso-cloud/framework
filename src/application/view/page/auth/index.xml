@@ -1,0 +1,7 @@
+{% if user %}
+<View route="">
+</View>
+{% else %}
+<View route="/auth/signin">
+</View>
+{% endif %}
