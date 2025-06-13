@@ -1,0 +1,16 @@
+service = (
+    {'name': 'id', 'type': 'uuid', 'default': 'gen_random_uuid()', 'required': True, 'primary_key': True},
+    {'name': 'name', 'type': 'string', 'required': True},
+    {'name': 'description', 'type': 'string', 'default': None},
+    {'name': 'type', 'type': 'string', 'required': True},
+    {'name': 'status', 'type': 'string', 'default': 'stopped', 'check': ['running', 'stopped', 'paused']},
+    {'name': 'url', 'type': 'string', 'default': None, 'unique': True},
+    {'name': 'ports', 'type': 'jsonb', 'default': []},
+    {'name': 'config', 'type': 'jsonb', 'default': {}},
+    {'name': 'server', 'type': 'uuid', 'default': None, 'foreign_key': {'table': 'servers', 'column': 'id'}},
+    {'name': 'container', 'type': 'uuid', 'default': None, 'foreign_key': {'table': 'containers', 'column': 'id'}, 'on_delete': 'cascade'},
+    {'name': 'created_at', 'type': 'timestamp', 'default': 'now()'},
+    {'name': 'updated_at', 'type': 'timestamp', 'default': 'now()'},
+    {'name': 'owner', 'type': 'uuid', 'default': None, 'foreign_key': {'table': 'auth.users', 'column': 'id'}},
+    {'name': 'image', 'type': 'uuid', 'default': None, 'foreign_key': {'table': 'inventories', 'column': 'identifier'}},
+)

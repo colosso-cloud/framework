@@ -1,0 +1,244 @@
+{% extends "cardinal.xml" %}
+{% set id = component.id %}
+{% block north %}
+<Column expand="horizontal" >
+    <Column expand="dynamic" >
+        <Breadcrumb class="breadcrumb-arrow" margin="ms-1">
+            <Action ><Graph icon="bi-speedometer2"/></Action>
+            <Action click="ide(id:'{{component.id}}',repository:'')" space="1" ><Graph icon="bi-bookmarks-fill"/><Text>Repositories</Text></Action>
+            {% if component.repository and component.repository != '' %}
+            <Action space="1" ><Graph icon="bi-bookmark-fill"/><Text>{{ component.repository.name }}</Text></Action>
+            {% endif %}
+        </Breadcrumb>
+    </Column>
+    <Container>
+        <!-- TabNav -->
+        <Group type="nav" margin="m-0" padding="p-0" >
+            <Action route="tab:tab-plan" class="d-inline-flex gap-2"><Graph icon="bi-kanban-fill"/><Text>Plan</Text></Action>
+            <Action route="tab:tab-code" class="d-inline-flex gap-2"><Graph icon="bi-code-slash"/><Text>Code</Text></Action>
+            <Action route="tab:tab-build" class="d-inline-flex gap-2"><Graph icon="bi-tools"/><Text>Build</Text></Action>
+            <Action route="tab:tab-test" class="d-inline-flex gap-2"><Graph icon="bi-play-fill"/><Text>Test</Text></Action>
+            <Action route="tab:tab-release" class="d-inline-flex gap-2"><Graph icon="bi-box-seam-fill"/><Text>Package</Text></Action>
+            <Action route="tab:tab-release" class="d-inline-flex gap-2"><Graph icon="bi-rocket-fill"/><Text>Deploy</Text></Action>
+        </Group>
+    </Container>
+</Column>
+{% endblock %}
+<!-- West -->
+{% block west %}
+{% if component.repository and component.repository != '' %}
+<Column expand="vertical" >
+    <!-- TabNav -->
+    <Row expand="vertical">
+        <Group type="nav" margin="m-0" padding="p-0" alignment-content="vertical" expand="vertical">
+            <Action width="75px" route="tab:tab-explore" ><Graph icon="bi-archive"/><Text>Explore</Text></Action>
+            <Action width="75px" route="tab:tab-view" ><Graph icon="bi-view-list"/><Text>Views</Text></Action>
+            <Action width="75px" route="tab:tab-model" ><Graph icon="bi-file-earmark-spreadsheet"/><Text>Models</Text></Action>
+            <Action width="75px" route="tab:tab-action" ><Graph icon="bi-play-circle"/><Text>Actions</Text></Action>
+            <Action width="75px" route="tab:tab-data" ><Graph icon="bi-database"/><Text>Data</Text></Action>
+            <Action width="75px" route="tab:tab-policy" ><Graph icon="bi-file-medical"/><Text>Policies</Text></Action>
+            <Action width="75px" route="tab:tab-assets" ><Graph icon="bi-image-alt"/><Text>Assets</Text></Action>
+            <Action width="75px" route="tab:tab-tool" ><Graph icon="bi-tools"/><Text>Tools</Text></Action>
+            <Action width="75px" route="tab:tab-assistant" ><Graph icon="bi-stars"/><Text>Copilot</Text></Action>
+        </Group>
+        <Action route="tab:tab-code"  border="top"><Graph icon="bi bi-plus-square"/></Action>
+    </Row>
+    <!-- Tab -->
+    <Storekeeper expand="dynamic" flow="auto" repository='repository' payload="test(owner:'{{component.repository.owner}}',name:'{{component.repository.name}}')" >
+        <Group type="tab" expand="full">
+            <!-- Explore -->
+            <Container id="tab-explore" expand="vertical" border="start" width="250px" height="100%" >
+                <Row expand="full">
+                    <Group type="button" margin="m-0" padding="p-0" class="w-100">
+                        <Action expand="2" route="tab:tab-views" tooltip="Policies" ><Graph icon="bi-file-medical"/></Action>
+                        <Action expand="2" route="tab:tab-data" tooltip="Datasource"><Graph icon="bi-database"/></Action>
+                        <Action expand="2" route="tab:tab-actions" tooltip="Actions"><Graph icon="bi-play-circle"/></Action>
+                        <Action expand="2" route="tab:tab-models" tooltip="Models"><Graph icon="bi-ui-radios"/></Action>
+                        <Action expand="2" route="tab:tab-views" tooltip="Views"><Graph icon="bi-view-list"/></Action>
+                        <Action expand="2" route="tab:tab-views" tooltip="Routes"><Graph icon="bi-sign-turn-left"/></Action>
+                    </Group>
+                    <Input class="rounded-0" ></Input>
+                    <Tree expand="dynamic" path="/" />
+                </Row>
+            </Container>
+            <!-- Repository -->
+            <Container id="tab-action" expand="vertical" width="250px" border="start" padding="p-0">
+                <Tre expand="dynamic" path="/src/application/action/" extent="py" />
+            </Container>
+            <!-- Repository -->
+            <Container id="tab-model" expand="vertical" width="250px" border="start" padding="p-0">
+                <Tre expand="dynamic" path="/src/application/model/" extent="py" />
+            </Container>
+            <!-- Repository -->
+            <Container id="tab-data" expand="vertical" width="250px" border="start" padding="p-0">
+                <Tre expand="dynamic" path="/src/application/repository/" extent="py" />
+            </Container>
+            <!-- Repository -->
+            <Container id="tab-assets" expand="vertical" width="250px" border="start" padding="p-0">
+                <Tre expand="dynamic" path="/public/" extent="*" />
+            </Container>
+            <!-- Repository -->
+            <Container id="tab-policy" expand="vertical" width="250px" border="start" padding="p-0">
+                <Tre expand="dynamic" path="/src/application/policy/" extent="*" />
+            </Container>
+            <!-- Repository -->
+            <Container id="tab-view" expand="vertical" width="250px" border="start" padding="p-0">
+                <Tre expand="dynamic" path="/src/application/view/" extent="xml" />
+            </Container>
+            <!-- Tool -->
+            <Container id="tab-tool" expand="vertical" width="200px" border="start" padding="p-0">
+                <!-- Layout -->
+                <Row id="box" style="font-size: 40px;" >
+                    <Group type="accordion">
+                        <Action><Text>Layout</Text></Action>
+                        <Container>
+                            <Action id="maker-container" draggable="element" draggable-component="container" ><Graph icon="bi-crop" /></Action>
+                            <Action id="maker-column" draggable="element" draggable-component="column" ><Graph icon="bi-layout-three-columns" /></Action>
+                            <Action id="maker-row" draggable="element" draggable-component="row" ><Graph icon="bi-columns" /></Action>
+                            <Action id="maker-window" draggable="element" draggable-component="window" ><Graph icon="bi-window" /></Action>
+                        </Container>
+                        <Action><Text>Content</Text></Action>
+                        <Container>
+                            <Action id="maker-alert" draggable="element" draggable-component="image"  ><Graph icon="bi-image" /></Action>
+                            <Action id="maker-text" draggable="element" draggable-component="text" ><Graph icon="bi-textarea-t" /></Action>
+                        </Container>
+                        <Action><Text>Forms</Text></Action>
+                        <Container>
+                            <Action id="maker-block" draggable="element" draggable-component="input" ><Graph icon="bi-input-cursor" /></Action>
+                            <Action id="maker-button" draggable="element" draggable-component="button" ><Graph icon="bi-command" /></Action>
+                        </Container>
+                        <Action><Text>Components</Text></Action>
+                        <Container>
+                        </Container>
+                    </Group>
+                </Row>
+            </Container>
+            <!-- AI -->
+            <Window id="modal-ia" type="modal" size="xl" title="chat" action="chat.programmer" >
+                <Messenger id="chat-ai" domain="chat" view="Chat" />
+                <Input identifier="sender" collapse="full" type="text" value="user" />
+                <Input identifier="domain" collapse="full" type="text" value="chat" />
+                <Input id="window-ai-file" identifier="file" collapse="full" type="text" value="" />
+                <Input id="window-ai-location" identifier="location" collapse="full" type="text" value="" />
+                <Input identifier="message" type="textarea" class="rounded-0" />
+            </Window>
+            <Container id="tab-assistant" expand="vertical" width="250px" border="start">
+                <View content="tab/assistant.xml" />
+            </Container>
+        </Group>
+    </Storekeeper>
+</Column>
+{% endif %}
+{% endblock %}
+{% block center %}
+{% if component.repository and component.repository != '' %}
+<Row expand="dynamic" class="overflow-auto">
+    <!-- Tab -->
+    <Group type="tab" expand="full">
+        <Container id="tab-plan" expand="full">
+            <Storekeeper method="gather" repository='notes' filter="project(eq: {'location':'{{component.repository.owner}}/{{component.repository.name}}'})" >
+                <Scrum location="{{component.repository.owner}}/{{component.repository.name}}" />
+            </Storekeeper>
+        </Container>
+        <Container id="tab-code" class="w-100 h-100" >
+            <Row expand="full">
+                <Column alignment-content="center" alignment-vertical="center">
+                    <Group type="nav" margin="m-0" padding="p-0" background="#ededed" expand="dynamic" border="bottom">
+                        <Action id="nav-1" route="tab:framework"  class="d-inline-flex"><Input class="input-as-paragraph"/><Action padding="p-0" click="close(target:'framework')|close(target:'nav-1')"><Graph icon="bi-x"/></Action></Action>
+                        <Action id="nav-2" route="tab:infrastructure"  class="d-inline-flex"><Input class="input-as-paragraph"/><Action padding="p-0" click="close(target:'infrastructure')|close(target:'nav-2')"><Graph icon=" bi-x"/></Action></Action>
+                    </Group>
+                    <Action route="#tab-code" height="100%" class="border-bottom border-start"><Graph icon="bi bi-plus-square"/></Action>
+                </Column>
+                <Group type="tab" expand="dynamic" class="overflow-auto">
+                    <Container id="framework" class="overflow-auto" expand="full">
+                        <Column expand="full">
+                            <Row droppable="window" class="col overflow-auto">
+                                
+                            </Row>
+                            <Row droppable="window" class="col overflow-auto">
+                                
+                            </Row>
+                        </Column>
+                    </Container>
+                    <Container id="infrastructure" class="overflow-auto" expand="full">
+                        <Column expand="full">
+                            <Row droppable="window" class="col overflow-auto">
+                                
+                            </Row>
+                            <Row droppable="window" class="col overflow-auto">
+                                
+                            </Row>
+                        </Column>
+                    </Container>
+                </Group>
+            </Row>
+        </Container>
+        <Container id="tab-build" expand="full">
+            <Text>2</Text>
+        </Container>
+        <Container id="tab-test" expand="full">
+            <Column expand="full">
+                <Row expand="4">
+                    <Action type="form" id="form-terminal-test" action="/terminal" method="POST">
+                        <Group type="input">
+                            <Input type="text" identifier="target" placeholder="Name" value="terminal-test" collapse="full" />
+                            <Input type="text" identifier="host" placeholder="host" />
+                            <Input type="text" identifier="username" placeholder="username" value="root" />
+                            <Input type="password" identifier="password" placeholder="password" />
+                        </Group>
+                    </Action>
+                    <Action type="button" click="form(id:'form-terminal-test',action:'terminal')" >
+                        <Graph icon="bi bi-terminal-plus"/>
+                    </Action>
+                    <Container id="terminal-test" expand="dynamic" height="100%" padding="p-0"></Container>
+                </Row>
+                <Row expand="dynamic">
+                    <Group type="input" >
+                        <Action type="button" click="iframe(id:'test-iframe',target:'input-url')" >
+                            <Graph icon="bi-arrow-repeat"/>
+                        </Action>
+                        <Input id="input-url" type="text" identifier="url" placeholder="url" value="https://" />
+                        <Action type="button" >
+                            <Graph icon="bi-arrows-fullscreen"/>
+                        </Action>
+                    </Group>
+                    <Window id="test-iframe" expand="dynamic" type="window" height="100%" url=""></Window>
+                </Row>
+                
+            </Column>
+        </Container>
+        <Container id="tab-release" expand="full">
+            <Text>4</Text>
+        </Container>
+    </Group>
+</Row>
+{% else %}
+<Container padding="p-5" margin="my-5" expand="horizontal" background="#fafafa" class="border-top border-bottom">
+    <Action route="link:https://github.com/login/oauth/authorize?client_id=Ov23lidpWleO0KCHQVm0&amp;scope=repo,user,delete_repo&amp;state=xyz987">
+    <Text>GitHub OAuth Login</Text>
+</Action>
+    <Table repository="repository" filter="{'eq':{'owner':'SottoMonte'}}" view="repository" >
+        <Text click="table(id:'{{ component or '' }}',sortField:'name')">Repository</Text>
+        <Text>Description</Text>
+        <Text>Type</Text>
+        <Text>Platform</Text>
+        <Text>Language</Text>
+        <Text>Updated</Text>
+        <Text>Actions</Text>
+    </Table>
+</Container>
+{% endif %}
+{% endblock %}
+{% block south %}
+{% if component.repository and component.repository != '' %}
+    
+{% endif %}
+{% endblock %}
+{% block east %}
+{% if component.repository and component.repository != '' %}
+<Row expand="full">
+    <Tru class="h-50" flow="auto" id="preview-content"/>
+    <Editor class="h-50" id="editor-property" />
+</Row>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+<flow>
+  <case name="scrum-release">
+      <description>Scrum Release</description>
+      <schedule>
+        <day>5</day> <!-- Sabato -->
+        <hour>0</hour>
+        <minute>0</minute>
+        <interval>weekly</interval>
+      </schedule>
+      <action>
+        <https>
+          <url>https://ljeowpqmovaavxghpsne.supabase.co/functions/v1/scrum-release</url>
+          <method>POST</method>
+          <headers>
+            <header name="Authorization">Bearer {{ token }}</header>
+            <header name="Accept">application/json</header>
+            <header name="Content-Type">application/json</header>
+          </headers>
+          <payload>{"example": "data"}</payload>
+        </https>
+      </action>
+  </case>
+</flow>

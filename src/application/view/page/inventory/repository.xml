@@ -1,0 +1,154 @@
+{% extends "sidebar.xml" %}
+
+{% block start %}
+<!-- [('owner', '{{query.owner.0}}'),('name', '{{query.name.0}}')] -->
+<Storekeeper method="gather" alignment-content="horizontal" repository="repository"
+             filter="project(eq: {'owner':'{{query.owner.0}}','name':'{{query.name.0}}'})">
+{% endblock %}
+
+{% block fine %}
+</Storekeeper>
+{% endblock %}
+
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml"><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/repositories.xml"><Graph icon="bi-bookmarks-fill"/><Text>Repositories</Text></Action>
+<Action><Graph icon="bi-bookmark-fill"/><Text storekeeper="result.0.name"/></Action>
+{% endblock %}
+
+{% block title %}Repository <Text storekeeper="result.0.name"/>{% endblock %}
+{% block subtitle %}#{{query.name.0}} — <Text storekeeper="result.0.description"/>{% endblock %}
+
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/repositories.xml"/>
+{% endblock %}
+
+{% block action %}
+<Window id="window-delete" type="modal" position="centered" size="xl" title="Delete" action="delete">
+    <View url="application/view/content/wizard/repository.xml" data="result.0"/>
+</Window>
+
+<Window id="window-update" type="modal" position="centered" size="xl" title="Update" action="update">
+    <View url="application/view/content/wizard/repository.xml" data="result.0"/>
+</Window>
+
+<Group type="button">
+    <Action type="button" route="modal:window-update" class="d-inline-flex btn-outline-warning" space="2">
+        <Graph icon="bi-pencil-fill"/><Text class="text-uppercase">Update</Text>
+    </Action>
+    <Action type="button" route="modal:window-delete" class="d-inline-flex btn-outline-danger" space="2">
+        <Graph icon="bi-trash3"/><Text class="text-uppercase">Delete</Text>
+    </Action>
+</Group>
+{% endblock %}
+
+{% block content %}
+<Container class="card-group" padding="p-4">
+
+    <!-- Info generali -->
+    <Container class="card">
+        <Container class="card-header"><Text>Generali</Text></Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            {% for field, label in [
+                ('id', 'ID'),
+                ('name', 'Name'),
+                ('description', 'Description'),
+                ('driver', 'Platform'),
+                ('language', 'Language'),
+                ('tags', 'Tags'),
+                ('owner', 'Owner'),
+                ('visibility', 'Visibility')
+            ] %}
+            <Column alignment-content="between"><Text>{{ label }}:</Text><Text storekeeper="result.0.{{ field }}"/></Column>
+            {% endfor %}
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text>Created:</Text><Text type="data" storekeeper="result.0.created"/>
+                <Text>Updated:</Text><Text type="data" storekeeper="result.0.updated"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <!-- Repository Info -->
+    <Container class="card">
+        <Container class="card-header"><Text>Repository Info</Text></Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text>Main Branch:</Text><Text storekeeper="result.0.branch"/></Column>
+            <Column alignment-content="between">
+                <Text>Stars:</Text><Text storekeeper="result.0.stars"/>
+                <Text>Forks:</Text><Text storekeeper="result.0.forks"/>
+            </Column>
+            <Text>Commits: 124</Text>
+            <Text>Releases: 5</Text>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text>Commit:</Text><Text type="data" storekeeper="result.0.commit"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <!-- Collaborazione -->
+    <Container class="card">
+        <Container class="card-header"><Text>Collaborazione</Text></Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Maintainers: alice, marco</Text>
+            <Text>Collaboratori: 5</Text>
+            <Text>Access: read/write</Text>
+            <Text>Merge Policy: 1 approval required</Text>
+        </Group>
+        <Container class="card-footer"><Text>Branch Protection: Active</Text></Container>
+    </Container>
+
+    <!-- Sicurezza -->
+    <Container class="card">
+        <Container class="card-header"><Text>Sicurezza Policy</Text></Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Secrets: GIT_TOKEN, API_KEY</Text>
+            <Text>Vulnerabilities: 0</Text>
+            <Text>Pipeline: GitHub Actions</Text>
+            <Text>Deploy: auto-prod.yml</Text>
+        </Group>
+        <Container class="card-footer"><Text>Audit: Last scan 2025-04-09</Text></Container>
+    </Container>
+
+</Container>
+
+<!-- Navigation -->
+<Group type="nav" margin="m-0" padding="p-0" class="border-bottom">
+    {% for tab in [
+        ('overview', 'bi-code', 'Code'),
+        ('issues', 'bi-exclamation-circle', 'Issues'),
+        ('pulls', 'bi-git', 'Pull Requests'),
+        ('actions', 'bi-play-circle', 'Actions'),
+        ('project', 'bi-kanban', 'Project'),
+        ('wiki', 'bi-book', 'Wiki'),
+        ('security', 'bi-shield-exclamation', 'Security'),
+        ('settings', 'bi-gear', 'Settings'),
+        ('logs', 'bi-clock-history', 'Activity')
+    ] %}
+    <Action class="d-inline-flex" route="tab:{{ tab[0] }}" space="2">
+        <Graph icon="{{ tab[1] }}"/><Text class="text-uppercase">{{ tab[2] }}</Text>
+    </Action>
+    {% endfor %}
+</Group>
+
+<!-- Tabs -->
+<Group type="tab" background="#fafafa" padding="p-0" class="border-bottom" expand="full">
+    <Container expand="dynamic" id="overview"><Text>Codice sorgente...</Text></Container>
+    <Container expand="dynamic" id="issues"><Text>Lista Issues</Text></Container>
+    <Container expand="dynamic" id="pulls"><Text>Lista Pull Requests</Text></Container>
+    <Container expand="dynamic" id="actions"><Text>Lista Pull Requests</Text></Container>
+    <Container expand="dynamic" id="project">
+        <Storekeeper method="gather" repository="notes"
+                     filter="project(eq: {'location':'{{query.owner.0}}/{{query.name.0}}'})">
+            <Scrum location="{{query.owner.0}}/{{query.name.0}}"/>
+        </Storekeeper>
+    </Container>
+    <Container expand="dynamic" id="security"><Text>Sicurezza</Text></Container>
+    <Container expand="dynamic" id="wiki"><Text>Wiki</Text></Container>
+    <Container expand="dynamic" id="settings"><Text>Configurazioni repo</Text></Container>
+    <Container expand="dynamic" id="logs"><Text>Storico attività</Text></Container>
+</Group>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "sidebar.xml" %}
+{% block start %}
+<Storekeeper method="gather" alignment-content="horizontal" repository='containers' filter="project(eq: {'id':'{{query.id.0}}'})" >
+{% endblock %}
+{% block fine %}
+</Storekeeper>
+{% endblock %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/containers.xml" space="1" ><Graph icon="bi-box-seam-fill"/><Text>Containers</Text></Action>
+<Action space="1" ><Graph icon="bi-box-seam-fill"/><Text storekeeper="result.0.name"/></Action>
+{% endblock %}
+{% block title %}Container <Text storekeeper="result.0.name"/>{% endblock %}
+{% block subtitle %}<Text storekeeper="result.0.description"/>{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/containers.xml"/>
+{% endblock %}
+{% block action %}
+<Group type="button">
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-success"><Graph icon="bi-play-fill"/><Text class="text-uppercase">Start</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-warning"><Graph icon="bi-stop"/><Text class="text-uppercase">Pause</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-warning"><Graph icon="bi-arrow-repeat"/><Text class="text-uppercase">Restart</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-danger"><Graph icon="bi-power"/><Text class="text-uppercase">Shutdown</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-danger"><Graph icon="bi-trash"/><Text class="text-uppercase">Delete</Text></Action>
+</Group>
+{% endblock %}
+{% block content %}
+<Container class="card-group" padding="p-4">
+    <Container class="card">
+        <Container class="card-header">
+            <Text>General</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">ID:</Text><Text storekeeper="result.0.id"/></Column>
+            <Column alignment-content="between"><Text type="text">Name:</Text><Text storekeeper="result.0.name"/></Column>
+            <Column alignment-content="between"><Text type="text">Description:</Text><Text storekeeper="result.0.description"/></Column>
+            <Column alignment-content="between"><Text type="text">Image:</Text><Text storekeeper="result.0.image"/></Column>
+            <Column alignment-content="between"><Text type="text">Tags:</Text><Text storekeeper="result.0.tags"/></Column>
+            <Column alignment-content="between"><Text type="text">Owner:</Text><Text storekeeper="result.0.owner"/></Column>
+            <Column alignment-content="between"><Text type="text">Location:</Text><Text storekeeper="result.0.location"/></Column>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Created:</Text><Text type="data" storekeeper="result.0.created_at"/>
+                <Text type="text">Updated:</Text><Text type="data" storekeeper="result.0.updated_at"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Resources</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">CPU:</Text><Text storekeeper="result.0.cpu"/></Column>
+            <Column alignment-content="between"><Text type="text">RAM:</Text><Text storekeeper="result.0.ram"/></Column>
+            <Column alignment-content="between"><Text type="text">Disk:</Text><Text storekeeper="result.0.disk"/></Column>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">State:</Text><Text storekeeper="result.0.state"/>
+                <Text type="text">Uptime:</Text><Text storekeeper="result.0.state"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Networking</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>IP: 192.168.1.103</Text>
+            <Text>Gateway: 192.168.1.1</Text>
+            <Text>DNS: 8.8.8.8</Text>
+            <Text>MAC: 00:16:3e:7f:11:22</Text>
+            <Text>Alias DNS: proxy.local</Text>
+            <Text>Network: Internal</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Health: 🟢 Up | Last Check: 2025-04-16 08:10</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Configuration</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Start command: nginx -g "daemon off;"</Text>
+            <Text>Environment: ENV=production</Text>
+            <Text>Volumes: /data/logs</Text>
+            <Text>Secrets: Certificato SSL</Text>
+            <Text>Logging Level: Info</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Policy: Restart on failure</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Sicurezza</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Security Profile: default</Text>
+            <Text>Snapshot: Nessuno</Text>
+            <Text>Firewall: Attivo</Text>
+            <Text>Seccomp: enabled</Text>
+            <Text>AppArmor: enforced</Text>
+            <Text>Capabilities dropped: NET_RAW</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last Audit: 2025-04-14</Text>
+        </Container>
+    </Container>
+</Container>
+
+<Container background="#f8f9fa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Group type="nav" class="border-bottom">
+        <Action route="tab:overview"><Graph icon="bi-info-circle"/><Text class="text-uppercase">Overview</Text></Action>
+        <Action route="tab:logs"><Graph icon="bi-journal-richtext"/><Text class="text-uppercase">Logs</Text></Action>
+        <Action route="tab:events"><Graph icon="bi-lightning"/><Text class="text-uppercase">Events</Text></Action>
+        <Action route="tab:settings"><Graph icon="bi-gear"/><Text class="text-uppercase">Settings</Text></Action>
+        <Action route="tab:security"><Graph icon="bi-shield-check"/><Text class="text-uppercase">Security</Text></Action>
+        <Action route="tab:history"><Graph icon="bi-clock-history"/><Text class="text-uppercase">History</Text></Action>
+    </Group>
+    <Group type="tab">
+        <Container id="overview"><Text>Panoramica Container</Text></Container>
+        <Container id="logs"><Text>Log recenti</Text></Container>
+        <Container id="events"><Text>Eventi generati</Text></Container>
+        <Container id="settings"><Text>Parametri configurazione</Text></Container>
+        <Container id="security"><Text>Stato di sicurezza</Text></Container>
+        <Container id="history"><Text>Cronologia attività</Text></Container>
+    </Group>
+</Container>
+{% endblock %}

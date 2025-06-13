@@ -1,0 +1,122 @@
+{% extends "sidebar.xml" %}
+{% block start %}
+<Storekeeper method="gather" alignment-content="horizontal" repository='volumes' filter="project(eq: {'id':'{{query.id.0}}'})" >
+{% endblock %}
+{% block fine %}
+</Storekeeper>
+{% endblock %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/volumes.xml" space="1" ><Graph icon="bi bi-database-fill"/><Text>volumes</Text></Action>
+<Action space="1" ><Graph icon="bi-hdd-fill"/><Text storekeeper="result.0.name" /></Action>
+{% endblock %}
+{% block title %}Volume{% endblock %}
+{% block subtitle %}volume #<Text storekeeper="result.0.id" />.{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/volumes.xml"/>
+{% endblock %}
+{% block action %}
+<Group type="button">
+    <Action type="button" route="tab:mount" class="d-inline-flex btn-outline-success"><Graph icon="bi-link"/><Text class="text-uppercase">Mount</Text></Action>
+    <Action type="button" route="tab:backup" class="d-inline-flex btn-outline-primary"><Graph icon="bi-cloud-upload"/><Text class="text-uppercase">Backup</Text></Action>
+    <Action type="button" route="tab:settings" class="d-inline-flex btn-outline-danger"><Graph icon="bi-trash3"/><Text class="text-uppercase">Delete</Text></Action>
+</Group>
+{% endblock %}
+{% block content %}
+<Container class="card-group" padding="p-4">
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Informazioni Generali</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">ID:</Text><Text storekeeper="result.0.id"/></Column>
+            <Column alignment-content="between"><Text type="text">Name:</Text><Text storekeeper="result.0.name"/></Column>
+            <Column alignment-content="between"><Text type="text">Description:</Text><Text storekeeper="result.0.description"/></Column>
+            <Column alignment-content="between"><Text type="text">Mount:</Text><Text storekeeper="result.0.mount"/></Column>
+            <Column alignment-content="between"><Text type="text">Driver:</Text><Text storekeeper="result.0.driver"/></Column>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Created:</Text><Text type="data" storekeeper="result.0.created_at"/>
+                <Text type="text">Updated:</Text><Text type="data" storekeeper="result.0.updated_at"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Capacità  Utilizzo</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">Size:</Text><Text storekeeper="result.0.size"/></Column>
+            <Text>Used: 45.3 GB</Text>
+            <Text>Available: 54.7 GB</Text>
+            <Text>Usage: 45%</Text>
+            <Text>Compression: zstd</Text>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">State:</Text><Text storekeeper="result.0.state"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Snapshot  Backup</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Snapshots: 3 (daily)</Text>
+            <Text>Last Snapshot: 2025-04-15 02:00</Text>
+            <Text>Backups: Enabled</Text>
+            <Text>Backup Location: /mnt/backup/volumes</Text>
+            <Text>Encryption: AES-256</Text>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Last Backup:</Text><Text storekeeper="result.0.last"/>
+                <Text type="text">Next Backup:</Text><Text storekeeper="result.0.next"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Policy Sicurezza</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Read-only: No</Text>
+            <Text>Access Control: Restricted</Text>
+            <Text>Replication: Enabled</Text>
+            <Text>Integrity Check: CRC</Text>
+            <Text>Audit Log: Active</Text>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Policy:</Text><Text storekeeper="result.0.last"/>
+                <Text type="text">Alerte:</Text><Text storekeeper="result.0.next"/>
+            </Column>
+        </Container>
+    </Container>
+
+</Container>
+
+<Group type="nav">
+    <Action route="tab:overview"><Graph icon="bi-info-circle"/><Text class="text-uppercase">Overview</Text></Action>
+    <Action route="tab:mount"><Graph icon="bi-link"/><Text class="text-uppercase">Mounts</Text></Action>
+    <Action route="tab:snapshots"><Graph icon="bi-camera"/><Text class="text-uppercase">Snapshots</Text></Action>
+    <Action route="tab:backup"><Graph icon="bi-hdd-network"/><Text class="text-uppercase">Backup</Text></Action>
+    <Action route="tab:log"><Graph icon="bi-journal-text"/><Text class="text-uppercase">Log</Text></Action>
+    <Action route="tab:settings"><Graph icon="bi-sliders"/><Text class="text-uppercase">Settings</Text></Action>
+</Group>
+<Container background="#f8f9fa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Group type="tab">
+        <Container id="overview"><Text>Dettagli generali del volume</Text></Container>
+        <Container id="mount"><Text>Volume montato su...</Text></Container>
+        <Container id="snapshots"><Text>Gestione snapshot</Text></Container>
+        <Container id="backup"><Text>Backup pianificati</Text></Container>
+        <Container id="log"><Text>Registro eventi volume</Text></Container>
+        <Container id="settings"><Text>Configurazione avanzata</Text></Container>
+    </Group>
+</Container>
+{% endblock %}

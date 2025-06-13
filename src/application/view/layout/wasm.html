@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+{% block main %}
+<div id="loading" class="d-flex justify-content-center align-items-center position-fixed w-100 h-100" style="background: #444;">
+    <img class="img" src="static/logo.svg" style=" height:50px;">
+    <div class="spinner-border text-success" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endblock %}
+{% block style %}
+<link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css" rel="stylesheet" />
+<style>
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+}
+
+.message {
+  padding: 10px 15px;
+  margin: 5px 0;
+  border-radius: 18px;
+  max-width: 70%;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+/* Messaggi del mittente (allineati a destra) */
+.sender {
+  background-color: #dcf8c6;
+  align-self: flex-end;
+  border-bottom-right-radius: 0;
+}
+
+/* Messaggi del destinatario (allineati a sinistra) */
+.receiver {
+  background-color: #f1f0f0;
+  align-self: flex-start;
+  border-bottom-left-radius: 0;
+}
+
+</style>
+
+<style>
+input.input-as-paragraph {
+  border: none;
+  background-color: transparent;
+  font-size: 1rem;
+  font-family: inherit;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-shadow: none;
+  line-height: inherit;
+  display: inline;
+  width: auto;
+}
+</style>
+<style>
+.breadcrumb-arrow {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  font-family: sans-serif;
+  font-size: 0.875rem;
+}
+
+.breadcrumb-item::before {
+  content: none !important;
+  display: none !important;
+}
+
+.breadcrumb-arrow li {
+  position: relative;
+  padding: 0px 25px 0px 25px !important;
+  margin: 0px !important;
+  background: #2fcc76;
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 12px) 0, 
+    100% 50%, 
+    calc(100% - 12px) 100%, 
+    0 100%, 
+    12px 50%
+  );
+  height:28px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.3s;
+}
+
+.breadcrumb-arrow li:hover {
+  background: #2fcca2;
+  color: white;
+}
+
+.breadcrumb-arrow li:last-child {
+  background: #6c757d;
+  color: white;
+  pointer-events: none;
+}
+
+.breadcrumb-arrow li:last-child:hover {
+  background: #6c757d;
+  color: white;
+}
+
+.breadcrumb-arrow li a {
+  color: white;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+</style>
+<style>
+
+.tree {
+  --spacing: 1.5rem;
+  --radius: 10px;
+}
+
+.tree li {
+  display: block;
+  position: relative;
+  padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+}
+
+.tree ul {
+  padding-left: 0px !important;
+  margin-left: calc(var(--radius) - var(--spacing));
+  
+}
+
+.tree ul li {
+  border-left: 2px solid #ddd;
+}
+
+.tree ul li:last-child {
+  border-color: transparent;
+}
+
+.tree ul li::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: calc(var(--spacing) / -2);
+  left: -2px;
+  width: calc(var(--spacing) + 2px);
+  height: calc(var(--spacing) + 1px);
+  border: solid #ddd;
+  border-width: 0 0 2px 2px;
+}
+
+.tree summary {
+  display: block;
+  cursor: pointer;
+}
+
+.tree summary::marker,
+.tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree summary:focus {
+  outline: none;
+}
+
+.tree summary:focus-visible {
+  outline: 1px dotted #000;
+}
+
+.tree li::after,
+.tree summary::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: calc(var(--spacing) / 2 - var(--radius));
+  left: calc(var(--spacing) - var(--radius) - 1px);
+  width: calc(2 * var(--radius));
+  height: calc(2 * var(--radius));
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.tree summary::before {
+  z-index: 1;
+  background: #696 url('expand-collapse.svg') 0 0;
+}
+
+.tree details[open] > summary::before {
+  background-position: calc(-2 * var(--radius)) 0;
+}
+
+
+.reset summary {
+  all: unset;
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  position: static;
+  box-sizing: border-box;
+}
+
+.reset ul,
+.reset li {
+  margin: 0px !important;
+  padding: 0px !important;
+  border: 0px !important;
+  background-color: #e4e4e4;
+}
+
+/* Rimuove le pseudo decorazioni */
+.reset *::before,
+.reset *::after {
+  content: none !important;
+  display: none !important;
+  margin: 0px !important;
+  padding: 0px !important;
+  border: 0px !important;
+}
+
+/* Optional: se vuoi ripristinare summary */
+.reset summary {
+  cursor: default;
+  outline: none;
+}
+
+.btn {
+  --bs-btn-border-width:0px;
+  --bs-btn-hover-color:#2fcc76;
+  --bs-btn-active-color:#2fcc76;
+}
+
+.btn:focus::after,
+.btn:active::after,.btn.active {
+  border-bottom: 5px solid #2fcc76;
+}
+
+/* other */
+    .nested {
+        padding: 4px 0;
+        border: 1px groove #bbb;
+    }
+
+    .item {
+        padding: 8px;
+    }
+
+  /* Stile di default per l'elemento di destinazione */
+  .drop-target {
+    border: 2px dashed transparent;
+  }
+
+  /* Stile quando l'elemento è sopra la destinazione (bordo evidenziato) */
+  .drop-target.highlight {
+    border-color: #4caf50;
+    border-width: 2px;
+    margin: 2px;
+  }
+</style>
+{% endblock %}
+{% block body_script %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Inclusione di Prism.js e del componente Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markdown.min.js"></script>
+
+<script>
+  function renderMarkdownFromElement(el) {
+    const raw = el.innerText;
+    const rendered = marked.parse(raw);
+    el.innerHTML = rendered;
+  }
+
+  
+
+  // Osserva modifiche al contenuto
+  const observer2 = new MutationObserver((mutationsList, observer) => {
+
+    const toasts = document.querySelectorAll('.language-markdown');
+
+    toasts.forEach(toastEl => {
+      Prism.highlightAll();
+    });
+    
+  });
+
+  observer2.observe(markdownContainer, {
+    characterData: true,
+    childList: true,
+    subtree: true
+  });
+
+</script>
+
+
+<script>
+  const showNewToasts = () => {
+    const toasts = document.querySelectorAll('.toast:not(.shown)');
+
+    toasts.forEach(toastEl => {
+      toastEl.classList.add('shown'); // per evitare di mostrarlo due volte
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    });
+  };
+
+  // Mostra quelli esistenti subito
+  document.addEventListener('DOMContentLoaded', showNewToasts);
+
+  // Osserva nuovi nodi nel DOM
+  const observer = new MutationObserver(showNewToasts);
+  observer.observe(document.body, { childList: true, subtree: true });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.5/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  /*function updateDragula() {
+    // Seleziona tutti gli elementi con classe 'editor'
+    var editors = document.querySelectorAll('.editor');
+    
+    // Itera su ogni elemento con la classe 'editor'
+    editors.forEach(function(editorElement) {
+      // Ottieni l'id dell'elemento
+      var editorId = editorElement.id;
+      
+      // Inizializza o aggiorna l'istanza ACE per ciascun editor con il suo id
+      if (editorId && !editorElement._ace) {
+        // Inizializza ACE solo se non è già stato fatto
+        //var aceEditor = ace.edit(editorId);
+
+        var aceEditor = ace.edit(editorId, {
+        mode: "ace/mode/python",
+        autoScrollEditorIntoView: true,
+        minLines: 100,
+        hasCssTransforms: true,
+        });
+        
+        // Memorizza l'istanza ACE nell'elemento (per evitare di crearne più di una)
+        editorElement._ace = aceEditor;
+      }
+    });
+  }
+
+  // Crea un MutationObserver per rilevare le modifiche al DOM
+  var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+          if (mutation.addedNodes.length || mutation.removedNodes.length) {
+          updateDragula();
+          }
+      });
+  });
+
+  // Configura l'osservatore per monitorare le modifiche ai figli
+  var config = { childList: true, subtree: true };
+
+  // Avvia l'osservazione del nodo radice
+  observer.observe(document.body, config);*/
+</script>
+<script>
+    /*// Inizializza Dragula
+    var drake = dragula([].slice.apply(document.querySelectorAll('.nested')));
+
+    // Funzione per aggiornare Dragula con i nuovi elementi
+    function updateDragula() {
+        drake.containers = [].slice.apply(document.querySelectorAll('.nested'));
+    }
+
+    // Crea un MutationObserver per rilevare le modifiche al DOM
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length || mutation.removedNodes.length) {
+            updateDragula();
+            }
+        });
+    });
+
+    // Configura l'osservatore per monitorare le modifiche ai figli
+    var config = { childList: true, subtree: true };
+
+    // Avvia l'osservazione del nodo radice
+    observer.observe(document.body, config);*/
+</script>
+{% endblock %}
+{% block head_script %}
+
+<script>
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+    //ev.dataTransfer.setData("text", 'drag1');
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        //var data = ev.dataTransfer.getData("text");
+        ev.target.appendChild(document.getElementById('img'));
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+</script>
+<script>
+            // init pyodide and show sys.version when it's loaded successfully
+            async function main() {
+                let pyodide = await loadPyodide({
+                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.0/full/",
+                });
+                await pyodide.loadPackage("micropip");
+                const micropip = pyodide.pyimport("micropip");
+                await micropip.install('kink');
+                
+                await micropip.install('tomli');
+                await micropip.install('jinja2');
+                await micropip.install('untangle');
+                await micropip.install('aiofiles');
+                await micropip.install('bs4');
+                
+                /*const dirHandle = await window.showDirectoryPicker();
+                const permissionStatus = await dirHandle.requestPermission({
+                  mode: "readwrite",
+                });
+
+                if (permissionStatus !== "granted") {
+                  throw new Error("readwrite access to directory not granted");
+                }
+
+                const nativefs = await pyodide.mountNativeFS("/mount_dir", dirHandle);*/
+
+                pyodide.runPython(await (await fetch("framework/service/language.py")).text());
+                
+                pyodide.runPython(await (await fetch("static/app.py")).text());
+                
+                return pyodide;
+            }
+
+            // run the main function
+            let pyodideReadyPromise = main();
+
+            async function evaluatePython(test) {
+                let pyodide = await pyodideReadyPromise;
+                try {
+                    pyodide.runPython(`
+                        import io
+                        sys.stdout = io.StringIO()
+                    `);
+                    let result = pyodide.runPython(test);
+                    let stdout = pyodide.runPython("sys.stdout.getvalue()");
+                    //console.log(stdout);
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+</script>
+{% endblock %}

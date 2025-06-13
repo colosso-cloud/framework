@@ -1,0 +1,122 @@
+{% extends "sidebar.xml" %}
+{% block start %}
+<Storekeeper method="gather" alignment-content="horizontal" repository='domains' filter="project(eq: {'id':'{{query.id.0}}'})" >
+{% endblock %}
+{% block fine %}
+</Storekeeper>
+{% endblock %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/domains.xml" space="1" ><Graph icon="bi-globe"/><Text>Domains</Text></Action>
+<Action space="1" ><Graph icon="bi-file-earmark-post-fill"/><Text storekeeper="result.0.domain"/></Action>
+{% endblock %}
+{% block title %}Domain <Text storekeeper="result.0.domain"/>{% endblock %}
+{% block subtitle %}domain #<Text storekeeper="result.0.description"/>{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/domains.xml"/>
+{% endblock %}
+{% block action %}
+<Group type="button">
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-success"><Graph icon="bi-arrow-up-right-circle"/><Text class="text-uppercase">Open</Text></Action>
+    <Action type="button" route="tab:settings" class="d-inline-flex btn-outline-primary"><Graph icon="bi-gear"/><Text class="text-uppercase">Manage</Text></Action>
+    <Action type="button" route="tab:security" class="d-inline-flex btn-outline-danger"><Graph icon="bi-lock-fill"/><Text class="text-uppercase">Lock</Text></Action>
+</Group>
+{% endblock %}
+{% block content %}
+<Container class="card-group" padding="p-4">
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Informazioni Generali</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">Domain:</Text><Text storekeeper="result.0.domain"/></Column>
+            <Column alignment-content="between"><Text type="text">Description:</Text><Text storekeeper="result.0.description"/></Column>
+            <Column alignment-content="between"><Text type="text">Registrar:</Text><Text storekeeper="result.0.registrar"/></Column>
+            <Column alignment-content="between"><Text type="text">Registrant:</Text><Text storekeeper="result.0.registrant"/></Column>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Created:</Text><Text type="data" storekeeper="result.0.created_at"/>
+                <Text type="text">Updated:</Text><Text type="data" storekeeper="result.0.updated_at"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>DNS  Networking</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>IP: 192.0.2.1</Text>
+            <Text>Nameservers: ns1.example.com, ns2.example.com</Text>
+            <Text>DNSSEC: Enabled</Text>
+            <Text>Reverse DNS: r.example.com</Text>
+            <Text>Zone File: Managed</Text>
+            <Text>Aliases: www.example.com, api.example.com</Text>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">State:</Text><Text storekeeper="result.0.state"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Sicurezza  Certificati</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>SSL: Let's Encrypt</Text>
+            <Text>Cert Status: 🟢 Valid</Text>
+            <Text>Expires: 2025-06-12</Text>
+            <Text>HSTS: Enabled</Text>
+            <Text>Redirect HTTPS: Yes</Text>
+            <Text>Firewall: Active</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last SSL Check: 2025-04-14 22:00</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Policy  Configurazione</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Privacy Protection: Enabled</Text>
+            <Text>WHOIS: Restricted</Text>
+            <Text>Transfer Lock: Active</Text>
+            <Text>Domain Forwarding: Disabled</Text>
+            <Text>Email Routing: Active</Text>
+            <Text>SPF/DKIM: Configurati</Text>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Auto-renew:</Text><Text storekeeper="result.0.policy"/>
+                <Text type="text">Expires:</Text><Text type="data" storekeeper="result.0.expires"/>
+            </Column>
+        </Container>
+    </Container>
+
+</Container>
+
+<Group type="nav" class="border-bottom">
+    <Action route="tab:overview"><Graph icon="bi-info-circle"/><Text class="text-uppercase">Overview</Text></Action>
+    <Action route="tab:dns"><Graph icon="bi-ethernet"/><Text class="text-uppercase">DNS</Text></Action>
+    <Action route="tab:security"><Graph icon="bi-shield-lock"/><Text class="text-uppercase">Security</Text></Action>
+    <Action route="tab:ssl"><Graph icon="bi-lock"/><Text class="text-uppercase">SSL</Text></Action>
+    <Action route="tab:log"><Graph icon="bi-journal-text"/><Text class="text-uppercase">Log</Text></Action>
+    <Action route="tab:settings"><Graph icon="bi-sliders"/><Text class="text-uppercase">Settings</Text></Action>
+</Group>
+<Container background="#f8f9fa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Group type="tab">
+        <Container id="overview"><Text>Panoramica del dominio</Text></Container>
+        <Container id="dns"><Text>Configurazione DNS</Text></Container>
+        <Container id="security"><Text>Sicurezza del dominio</Text></Container>
+        <Container id="ssl"><Text>Dettagli certificato</Text></Container>
+        <Container id="log"><Text>Registro attività</Text></Container>
+        <Container id="settings"><Text>Configurazioni avanzate</Text></Container>
+    </Group>
+</Container>
+{% endblock %}

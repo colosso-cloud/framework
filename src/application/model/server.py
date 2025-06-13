@@ -1,0 +1,18 @@
+server = (
+    {'name': 'id', 'type': 'uuid', 'default': 'gen_random_uuid()', 'required': True},
+    {'name': 'name', 'type': 'string', 'required': True},
+    {'name': 'description', 'type': 'string', 'default': 'None'},
+    {'name': 'os', 'type': 'string', 'required': True},
+    {'name': 'cpu', 'type': 'string', 'required': True},
+    {'name': 'ram', 'type': 'string', 'required': True},
+    {'name': 'disk', 'type': 'string', 'required': True},
+    {'name': 'ip_address', 'type': 'string', 'unique': True, 'required': True},
+    {'name': 'state', 'type': 'string', 'default': 'inactive', 'regex': r'^(active\.running|active\.starting|active\.restarting|inactive\.stopped|inactive\.deallocating|inactive\.deallocated|inactive\.terminated|inactive\.suspended|inactive\.paused|inactive\.failed|transition\.provisioning|transition\.deprovisioning|transition\.saving|error\.unreachable|error\.configuration|error\.crashed)$'},
+    {'name': 'firewall_enabled', 'type': 'boolean', 'default': True},
+    {'name': 'backup_enabled', 'type': 'boolean', 'default': False},
+    {'name': 'actions', 'type': 'jsonb', 'default': '[]'},
+    {'name': 'tags', 'type': 'list', 'default': '[]'},
+    {'name': 'owner', 'type': 'uuid', 'required': True},
+    {'name': 'created_at', 'type': 'timestamp', 'default': 'now()'},
+    {'name': 'updated_at', 'type': 'timestamp', 'default': 'now()'},
+)

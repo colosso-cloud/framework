@@ -1,0 +1,105 @@
+{% extends "sidebar.xml" %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/politics.xml" space="1" ><Graph icon="bi-globe"/><Text>Policies</Text></Action>
+<Action space="1" ><Graph icon="bi-file-earmark-post-fill"/><Text>block</Text></Action>
+{% endblock %}
+{% block title %}Policy{% endblock %}
+{% block subtitle %}policy #plc-001{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/politics.xml"/>
+{% endblock %}
+{% block action %}
+<Group type="button">
+    <Action type="button" route="tab:edit" class="d-inline-flex btn-outline-warning"><Graph icon="bi-pencil-square"/><Text class="text-uppercase">Modifica</Text></Action>
+    <Action type="button" route="tab:enable" class="d-inline-flex btn-outline-success"><Graph icon="bi-shield-check"/><Text class="text-uppercase">Abilita</Text></Action>
+    <Action type="button" route="tab:disable" class="d-inline-flex btn-outline-danger"><Graph icon="bi-shield-x"/><Text class="text-uppercase">Disabilita</Text></Action>
+</Group>
+{% endblock %}
+{% block content %}
+<Container class="card-group" padding="p-4">
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Informazioni Generali</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>ID: plc-001</Text>
+            <Text>Name: Access Control Policy</Text>
+            <Text>Description: Regola di accesso per i servizi web</Text>
+            <Text>Status: 🟢 Attiva</Text>
+            <Text>Created: 2024-10-01</Text>
+            <Text>Scope: Containers, Services</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last updated: 2025-03-21 09:45</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Regole e Condizioni</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Rule 1: Deny all external SSH</Text>
+            <Text>Rule 2: Allow HTTP/HTTPS from subnet 10.0.0.0/16</Text>
+            <Text>Rule 3: Block FTP access</Text>
+            <Text>Conditions: Time-based (8:00 - 18:00)</Text>
+            <Text>Severity: High</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Rules Count: 3 | Inherited: No</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Enforcement  Sicurezza</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Mode: Enforcing</Text>
+            <Text>Fallback: Log-only</Text>
+            <Text>Exception List: 2 objects</Text>
+            <Text>Signed: Yes (SHA-256)</Text>
+            <Text>Tamper-proof: Enabled</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Security Level: 🔐 Strong</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Compliance  Audit</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Audit Enabled: ✅</Text>
+            <Text>Last Audit: 2025-04-15 15:00</Text>
+            <Text>Compliant with: GDPR, ISO 27001</Text>
+            <Text>Violations Detected: 0</Text>
+            <Text>Audit Log Size: 1.2MB</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Next Audit: 2025-05-01</Text>
+        </Container>
+    </Container>
+
+</Container>
+
+<Container background="#f8f9fa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Group type="nav" class="border-bottom">
+        <Action route="tab:overview"><Graph icon="bi-shield-lock"/><Text class="text-uppercase">Overview</Text></Action>
+        <Action route="tab:rules"><Graph icon="bi-list-check"/><Text class="text-uppercase">Rules</Text></Action>
+        <Action route="tab:audit"><Graph icon="bi-clipboard-data"/><Text class="text-uppercase">Audit</Text></Action>
+        <Action route="tab:settings"><Graph icon="bi-gear"/><Text class="text-uppercase">Settings</Text></Action>
+        <Action route="tab:log"><Graph icon="bi-journal-text"/><Text class="text-uppercase">Log</Text></Action>
+    </Group>
+    <Group type="tab">
+        <Container id="overview"><Text>Policy overview</Text></Container>
+        <Container id="rules"><Text>Regole configurate</Text></Container>
+        <Container id="audit"><Text>Report di audit</Text></Container>
+        <Container id="settings"><Text>Configurazioni avanzate</Text></Container>
+        <Container id="log"><Text>Log eventi di policy</Text></Container>
+    </Group>
+</Container>
+{% endblock %}

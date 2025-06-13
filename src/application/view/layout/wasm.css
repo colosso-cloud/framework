@@ -1,0 +1,277 @@
+
+.sticker-note {
+  min-height: 150px;
+  padding: 16px;
+  color: #1f2328;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1.5px solid #d0d7de;
+  border-radius: 6px;
+  box-shadow: 2px 2px 8px rgba(140, 149, 159, 0.2);
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.sticker-note:hover {
+  transform: scale(1.02);
+}
+
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+}
+
+.message {
+  padding: 10px 15px;
+  margin: 5px 0;
+  border-radius: 18px;
+  max-width: 70%;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+/* Messaggi del mittente (allineati a destra) */
+.sender {
+  background-color: #dcf8c6;
+  align-self: flex-end;
+  border-bottom-right-radius: 0;
+}
+
+/* Messaggi del destinatario (allineati a sinistra) */
+.receiver {
+  background-color: #f1f0f0;
+  align-self: flex-start;
+  border-bottom-left-radius: 0;
+}
+
+
+input.input-as-paragraph {
+  border: none;
+  background-color: transparent;
+  font-size: 1rem;
+  font-family: inherit;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-shadow: none;
+  line-height: inherit;
+  display: inline;
+  width: auto;
+}
+
+.breadcrumb-arrow {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  font-family: sans-serif;
+  font-size: 0.875rem;
+}
+
+.breadcrumb-item::before {
+  content: none !important;
+  display: none !important;
+}
+
+.breadcrumb-arrow li {
+  position: relative;
+  padding: 0px 25px 0px 25px !important;
+  margin: 0px !important;
+  background: #2fcc76;
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 12px) 0, 
+    100% 50%, 
+    calc(100% - 12px) 100%, 
+    0 100%, 
+    12px 50%
+  );
+  height:28px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.3s;
+}
+
+.breadcrumb-arrow li:hover {
+  background: #2fcca2;
+  color: white;
+}
+
+.breadcrumb-arrow li:last-child {
+  background: #6c757d;
+  color: white;
+  pointer-events: none;
+}
+
+.breadcrumb-arrow li:last-child:hover {
+  background: #6c757d;
+  color: white;
+}
+
+.breadcrumb-arrow li a {
+  color: white;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.tree {
+  --spacing: 1.5rem;
+  --radius: 10px;
+}
+
+.tree li {
+  display: block;
+  position: relative;
+  padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+}
+
+.tree ul {
+  padding-left: 0px !important;
+  margin-left: calc(var(--radius) - var(--spacing));
+  
+}
+
+.tree ul li {
+  border-left: 2px solid #ddd;
+}
+
+.tree ul li:last-child {
+  border-color: transparent;
+}
+
+.tree ul li::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: calc(var(--spacing) / -2);
+  left: -2px;
+  width: calc(var(--spacing) + 2px);
+  height: calc(var(--spacing) + 1px);
+  border: solid #ddd;
+  border-width: 0 0 2px 2px;
+}
+
+.tree summary {
+  display: block;
+  cursor: pointer;
+}
+
+.tree summary::marker,
+.tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree summary:focus {
+  outline: none;
+}
+
+.tree summary:focus-visible {
+  outline: 1px dotted #000;
+}
+
+.tree li::after,
+.tree summary::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: calc(var(--spacing) / 2 - var(--radius));
+  left: calc(var(--spacing) - var(--radius) - 1px);
+  width: calc(2 * var(--radius));
+  height: calc(2 * var(--radius));
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.tree summary::before {
+  z-index: 1;
+  background: #696 url('expand-collapse.svg') 0 0;
+}
+
+.tree details[open] > summary::before {
+  background-position: calc(-2 * var(--radius)) 0;
+}
+
+
+.reset summary {
+  all: unset;
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  position: static;
+  box-sizing: border-box;
+}
+
+.reset ul,
+.reset li {
+  margin: 0px !important;
+  padding: 0px !important;
+  border: 0px !important;
+  background-color: #e4e4e4;
+}
+
+/* Rimuove le pseudo decorazioni */
+.reset *::before,
+.reset *::after {
+  content: none !important;
+  display: none !important;
+  margin: 0px !important;
+  padding: 0px !important;
+  border: 0px !important;
+}
+
+/* Optional: se vuoi ripristinare summary */
+.reset summary {
+  cursor: default;
+  outline: none;
+}
+
+.btn {
+  --bs-btn-border-width:0px;
+  --bs-btn-hover-color:#2fcc76;
+  --bs-btn-active-color:#2fcc76;
+}
+
+.btn:focus::after,
+.btn:active::after,.btn.active {
+  border-bottom: 5px solid #2fcc76;
+}
+
+/* other */
+    .nested {
+        padding: 4px 0;
+        border: 1px groove #bbb;
+    }
+
+    .item {
+        padding: 8px;
+    }
+
+  /* Stile di default per l'elemento di destinazione */
+  .drop-target {
+    border: 2px dashed transparent;
+  }
+
+  /* Stile quando l'elemento è sopra la destinazione (bordo evidenziato) */
+  .drop-target.highlight {
+    border-color: #4caf50;
+    border-width: 2px;
+    margin: 2px;
+  }

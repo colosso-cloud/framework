@@ -1,0 +1,24 @@
+{% extends "sidebar.xml" %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/domains.xml" space="1"><Graph icon="bi-bookmarks-fill"/><Text>Domains</Text></Action>
+{% endblock %}
+{% block title %}Overview{% endblock %}
+{% block subtitle %}Keep track of your inventory{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/domains.xml"/>
+{% endblock %}
+{% block content %}
+<Container background="#fafafa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Table repository="domains" view="domain" >
+        <Text>Domain</Text>
+        <Text>Description</Text>
+        <Text>Status</Text>
+        <Text>SSL</Text>
+        <Text>DNS</Text>
+        <Text>Server</Text>
+        <Text>Container</Text>
+        <Text>Service</Text>
+    </Table>
+</Container>
+{% endblock %}

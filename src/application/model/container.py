@@ -1,0 +1,15 @@
+container = (
+    {'name': 'id', 'type': 'uuid', 'default': 'gen_random_uuid()', 'required': True},
+    {'name': 'name', 'type': 'string', 'required': True, 'default': 'None'},
+    {'name': 'description', 'type': 'string', 'default': 'None'},
+    {'name': 'os', 'type': 'string', 'required': True, 'default': 'None'},
+    {'name': 'image', 'type': 'string', 'required': True, 'default': 'None'},
+    {'name': 'status', 'type': 'string', 'required': True, 'default': 'stopped', 'regex': r'^(running|stopped|paused)$'},
+    {'name': 'ip_address', 'type': 'string', 'default': 'None', 'unique': True},
+    {'name': 'ports', 'type': 'list', 'default': '[]'},
+    {'name': 'environment', 'type': 'list', 'default': '{}'},
+    {'name': 'server', 'type': 'uuid', 'default': 'None', 
+     'foreign_key': {'table': 'virtual_machines', 'column': 'id', 'on_delete': 'CASCADE'}},
+    {'name': 'created_at', 'type': 'timestamp', 'default': 'now()'},
+    {'name': 'updated_at', 'type': 'timestamp', 'default': 'now()'},
+)

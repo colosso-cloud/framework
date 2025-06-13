@@ -1,0 +1,23 @@
+{% extends "sidebar.xml" %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/repositories.xml" space="1" ><Graph icon="bi-bookmarks-fill"/><Text>Repositories</Text></Action>
+{% endblock %}
+{% block title %}Overview{% endblock %}
+{% block subtitle %}Keep track of your inventory{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/repositories.xml"/>
+{% endblock %}
+{% block content %}
+<Container background="#fafafa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Table repository="repository" filter="{'eq':{'owner':'SottoMonte'}}" view="repository" create="wizard" delete="wizard" update="wizard">
+        <Text click="table(id:'{{ component or '' }}',sortField:'name')">Repository</Text>
+        <Text>Description</Text>
+        <Text>Type</Text>
+        <Text>Platform</Text>
+        <Text>Language</Text>
+        <Text>Updated</Text>
+        <Text>Actions</Text>
+    </Table>
+</Container>
+{% endblock %}

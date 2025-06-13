@@ -1,0 +1,128 @@
+{% extends "sidebar.xml" %}
+{% block start %}
+<Storekeeper method="gather" alignment-content="horizontal" repository='services' filter="project(eq: {'id':'{{query.id.0}}'})" >
+{% endblock %}
+{% block fine %}
+</Storekeeper>
+{% endblock %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/services.xml" space="1"><Graph icon="bi-boxes"/><Text>Services</Text></Action>
+<Action space="1"><Graph icon="bi-box-fill"/><Text>api service</Text></Action>
+{% endblock %}
+{% block title %}Service{% endblock %}
+{% block subtitle %}service #api-service{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/services.xml"/>
+{% endblock %}
+{% block action %}
+<Group type="button">
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-success"><Graph icon="bi-play-fill"/><Text class="text-uppercase">Start</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-warning"><Graph icon="bi-arrow-repeat"/><Text class="text-uppercase">Restart</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-danger"><Graph icon="bi-trash"/><Text class="text-uppercase">Delete</Text></Action>
+</Group>
+{% endblock %}
+{% block content %}
+<Container class="card-group" padding="p-4">
+    <Container class="card">
+        <Container class="card-header">
+            <Text>General</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>ID: svc-api-01</Text>
+            <Text>Name: api-service</Text>
+            <Text>Description: Servizio backend REST</Text>
+            <Text>Image: node:20-alpine</Text>
+            <Text>Tags: Backend, API</Text>
+            <Text>Owner: team-dev</Text>
+            <Text>Replicas: 3</Text>
+            <Text>Location: Cluster A</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>State: 🟢 Active | Uptime: 5h 42m</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Networking</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Cluster IP: 10.96.0.15</Text>
+            <Text>External IP: 192.168.1.200</Text>
+            <Text>Port: 80 → 3000/TCP</Text>
+            <Text>DNS: api.internal.local</Text>
+            <Text>Gateway: 192.168.1.1</Text>
+            <Text>Load Balancer: Enabled</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Health: 🟢 OK | Last Check: 2025-04-16 09:10</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Configuration</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Environment: NODE_ENV=production</Text>
+            <Text>Command: node server.js</Text>
+            <Text>Args: --port=3000</Text>
+            <Text>Volumes: /config, /data</Text>
+            <Text>Secrets: JWT_SECRET, DB_PASSWORD</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Restart Policy: Always</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Monitoring</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>CPU Usage: 1.2%</Text>
+            <Text>Memory Usage: 150MB</Text>
+            <Text>Requests: CPU: 500m, RAM: 256Mi</Text>
+            <Text>Limits: CPU: 1000m, RAM: 512Mi</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last Scaled: 2025-04-15 17:00</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Sicurezza</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Text>Security Context: Non-root</Text>
+            <Text>AppArmor: Enabled</Text>
+            <Text>Network Policy: Isolated</Text>
+            <Text>Service Account: api-sa</Text>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last Audit: 2025-04-14</Text>
+        </Container>
+    </Container>
+</Container>
+
+<Group type="nav" class="border-bottom">
+    <Action route="tab:overview"><Graph icon="bi-info-circle"/><Text class="text-uppercase">Overview</Text></Action>
+    <Action route="tab:logs"><Graph icon="bi-journal-richtext"/><Text class="text-uppercase">Logs</Text></Action>
+    <Action route="tab:events"><Graph icon="bi-lightning"/><Text class="text-uppercase">Events</Text></Action>
+    <Action route="tab:metrics"><Graph icon="bi-bar-chart"/><Text class="text-uppercase">Metrics</Text></Action>
+    <Action route="tab:security"><Graph icon="bi-shield-check"/><Text class="text-uppercase">Security</Text></Action>
+    <Action route="tab:history"><Graph icon="bi-clock-history"/><Text class="text-uppercase">History</Text></Action>
+</Group>
+<Container background="#f8f9fa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Group type="tab">
+        <Container id="overview"><Text>Overview del servizio</Text></Container>
+        <Container id="logs"><Text>Log recenti</Text></Container>
+        <Container id="events"><Text>Eventi generati</Text></Container>
+        <Container id="metrics"><Text>Metriche</Text></Container>
+        <Container id="security"><Text>Policy di sicurezza</Text></Container>
+        <Container id="history"><Text>Cronologia attività</Text></Container>
+    </Group>
+</Container>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "sidebar.xml" %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/virtual-machines.xml" space="1" ><Graph icon="bi-pc-horizontal"/><Text>virtual machines</Text></Action>
+{% endblock %}
+{% block title %}Overview{% endblock %}
+{% block subtitle %}Keep track of your inventory{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/virtual-machines.xml"/>
+{% endblock %}
+{% block content %}
+<Container background="#fafafa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Table repository="servers" view="vm" >
+        <Text>Nome</Text>
+        <Text>Description</Text>
+        <Text>OS</Text>
+        <Text>IP</Text>
+        <Text>Stato</Text>
+        <Text>Firewall</Text>
+        <Text>Backup</Text>
+        <Text>Environment</Text>
+    </Table>
+</Container>
+{% endblock %}

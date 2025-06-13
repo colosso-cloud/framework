@@ -1,0 +1,170 @@
+{% extends "sidebar.xml" %}
+{% block start %}
+<Storekeeper method="gather" alignment-content="horizontal" repository='servers' filter="project(eq: {'id':'{{query.id.0}}'})" >
+{% endblock %}
+{% block fine %}
+</Storekeeper>
+{% endblock %}
+{% block breadcrumb %}
+<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/virtual-machines.xml" space="1"><Graph icon="bi-pc-horizontal"/><Text>virtual machines</Text></Action>
+<Action space="1"><Graph icon="bi-pc-horizontal"/><Text storekeeper="result.0.name"/></Action>
+{% endblock %}
+{% block title %}Virtual Machine{% endblock %}
+{% block subtitle %}vm #<Text storekeeper="result.0.id"/>{% endblock %}
+{% block bar %}
+<SideBar from="inventory" select="application/view/page/inventory/virtual-machines.xml"/>
+{% endblock %}
+{% block action %}
+<Group type="button">
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-success"><Graph icon="bi-play-fill"/><Text class="text-uppercase">Start</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-warning"><Graph icon="bi-stop"/><Text class="text-uppercase">Pause</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-warning"><Graph icon="bi-arrow-clockwise"/><Text class="text-uppercase">Reboot</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-danger"><Graph icon="bi-power"/><Text class="text-uppercase">Shutdown</Text></Action>
+    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-danger"><Graph icon="bi-trash"/><Text class="text-uppercase">Delete</Text></Action>
+</Group>
+{% endblock %}
+{% block content %}
+<Container class="card-group" padding="p-4">
+    <Container class="card">
+        <Container class="card-header">
+            <Text>General</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">ID:</Text><Text storekeeper="result.0.id"/></Column>
+            <Column alignment-content="between"><Text type="text">Name:</Text><Text storekeeper="result.0.name"/></Column>
+            <Column alignment-content="between"><Text type="text">Description:</Text><Text storekeeper="result.0.description"/></Column>
+            <Column alignment-content="between"><Text type="text">OS:</Text><Text storekeeper="result.0.os"/></Column>
+            <Column alignment-content="between"><Text type="text">Tags:</Text><Text storekeeper="result.0.tags"/></Column>
+            <Column alignment-content="between"><Text type="text">Owner:</Text><Text storekeeper="result.0.owner"/></Column>
+            <Column alignment-content="between"><Text type="text">Location:</Text><Text storekeeper="result.0.location"/></Column>
+            
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">Created:</Text><Text type="data" storekeeper="result.0.created_at"/>
+                <Text type="text">Updated:</Text><Text type="data" storekeeper="result.0.updated_at"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Hardware</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">CPU:</Text><Text storekeeper="result.0.cpu"/></Column>
+            <Column alignment-content="between"><Text type="text">RAM:</Text><Text storekeeper="result.0.ram"/></Column>
+            <Column alignment-content="between"><Text type="text">Disk:</Text><Text storekeeper="result.0.disk"/></Column>
+            <Column alignment-content="between"><Text type="text">GPU:</Text><Text storekeeper="result.0.gpu"/></Column>
+            <Column alignment-content="between"><Text type="text">Snapshots:</Text><Text storekeeper="result.0.snapshots"/></Column>
+            <Column alignment-content="between"><Text type="text">Backup:</Text><Text storekeeper="result.0.backup"/></Column>
+        </Group>
+        <Container class="card-footer">
+            <Column alignment-content="between">
+                <Text type="text">State:</Text><Text storekeeper="result.0.state"/>
+                <Text type="text">Uptime:</Text><Text storekeeper="result.0.state"/>
+            </Column>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Networking</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between"><Text type="text">Network:</Text><Text storekeeper="result.0.network"/></Column>
+            <Column alignment-content="between"><Text type="text">VLAN:</Text><Text storekeeper="result.0.vlan"/></Column>
+            <Column alignment-content="between"><Text type="text">IP:</Text><Text storekeeper="result.0.ip_address"/></Column>
+            <Column alignment-content="between"><Text type="text">MAC:</Text><Text storekeeper="result.0.mac_address"/></Column>
+            <Column alignment-content="between"><Text type="text">Gateway:</Text><Text storekeeper="result.0.gateway"/></Column>
+            <Column alignment-content="between"><Text type="text">DNS:</Text><Text storekeeper="result.0.dns"/></Column>
+            <Column alignment-content="between"><Text type="text">SSH Key:</Text><Text storekeeper="result.0.ssh_key"/></Column>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last Check: 2025-04-16 09:10 | Health: 🟢 Up</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Configuration</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between">
+                <Text type="text">Hostname:</Text>
+                <Text storekeeper="result.0.hostname"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Cloud-init:</Text>
+                <Text storekeeper="result.0.cloud_init"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Boot Order:</Text>
+                <Text storekeeper="result.0.boot_order"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Console Type:</Text>
+                <Text storekeeper="result.0.console_type"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Backup Enabled:</Text>
+                <Text storekeeper="result.0.backup_enabled"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Auto-restart Policy:</Text>
+                <Text storekeeper="result.0.auto_restart"/>
+            </Column>
+        </Group>
+        <Container class="card-footer">
+            <Text>Policy: Auto-restart</Text>
+        </Container>
+    </Container>
+
+    <Container class="card">
+        <Container class="card-header">
+            <Text>Sicurezza</Text>
+        </Container>
+        <Group type="list" class="list-group-flush" expand="vertical">
+            <Column alignment-content="between">
+                <Text type="text">Firewall:</Text>
+                <Text storekeeper="result.0.firewall_status"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">SSH Key:</Text>
+                <Text storekeeper="result.0.ssh_key"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Antivirus:</Text>
+                <Text storekeeper="result.0.antivirus_status"/>
+            </Column>
+            <Column alignment-content="between">
+                <Text type="text">Vulnerabilità rilevate:</Text>
+                <Text storekeeper="result.0.vulnerabilities"/>
+            </Column>
+        </Group>
+        <Container class="card-footer">
+            <Text>Last Scan: 2025-04-15</Text>
+        </Container>
+    </Container>
+</Container>
+
+<Group type="nav" margin="m-0" padding="p-0" >
+    <Action route="tab:overview"><Graph icon="bi-display"/><Text class="text-uppercase">Overview</Text></Action>
+    <Action route="tab:logs"><Graph icon="bi-journal-text"/><Text class="text-uppercase">Logs</Text></Action>
+    <Action route="tab:snapshots"><Graph icon="bi-camera"/><Text class="text-uppercase">Snapshots</Text></Action>
+    <Action route="tab:monitoring"><Graph icon="bi-activity"/><Text class="text-uppercase">Monitoring</Text></Action>
+    <Action route="tab:terminal"><Icon name="bi-terminal-fill"/><Text class="text-uppercase">Console</Text></Action>
+    <Action route="tab:settings"><Graph icon="bi-gear"/><Text class="text-uppercase">Settings</Text></Action>
+</Group>
+<Container background="#fafafa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Group type="tab">
+        <Container id="overview"><Text>VM dashboard overview...</Text></Container>
+        <Container id="logs"><Text>Log attività della macchina</Text></Container>
+        <Container id="snapshots"><Text>Elenco snapshot</Text></Container>
+        <Container id="monitoring"><Text>Metriche CPU, RAM, disco</Text></Container>
+        <Container id="terminal"><Text>Terminal</Text></Container>
+        <Container id="settings"><Text>Impostazioni avanzate</Text></Container>
+    </Group>
+</Container>
+{% endblock %}

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Column size="full">
+    <Row color="#ededed" width="250px">
+        <Route url="application/view/page/orakom/dashboard.xml"><Text><Icon icon="bi-speedometer" color="white"/>Dashboard</Text></Route>
+        <Route url="application/view/page/orakom/clients.xml"><Text><Icon icon="bi-people" color="white"/>Clients</Text></Route>
+        <Route url="application/view/page/orakom/contracts.xml"><Text><Icon icon="bi-pass" color="white"/>Contracts</Text></Route>
+        <Route url="application/view/page/orakom/invoices.xml"><Text><Icon icon="bi-receipt" color="white"/>Invoices</Text></Route>
+    </Row>
+    <Row size="fluid">
+        <Storekeeper  model="client" identifier="{{ href.replace('#','') }}" >
+        <Column margin="m-5" >
+            <Row size="full">
+                <Text type="h1" color="white" var="storekeeper.result.name">Cliente </Text>
+                <Text color="white">Il cliente - {{ href }}</Text>
+            </Row>
+            <Container></Container>
+        </Column>
+
+        <Row type="container-fluid">
+            <Alert type="danger">Errore</Alert>
+        </Row>
+
+        
+            <Column class="card-group" margin="mx-3" >
+                <Container class="card" padding="p-0" margin="m-0">
+                    <Container class="card-header"><Text>Profilo</Text></Container>
+                    <Column class="card-body">
+                        <Row>
+                            <Text>Codice Cliente</Text>
+                            <Text>Nome</Text>
+                            <Text>Cognome</Text>
+                            <Text>Nato</Text>
+                            <Text>Codice Fiscale</Text>
+                        </Row>
+                        <Row>
+                            <Text var="storekeeper.result.identifier" />
+                            <Text var="storekeeper.result.person.first" />
+                            <Text var="storekeeper.result.person.last" />
+                            <Text var="storekeeper.result.person.cf" />
+                            <Text var="storekeeper.result.person.cf" />
+                        </Row>
+                    </Column>
+                </Container>
+                <Container class="card" padding="p-0" margin="m-0">
+                    <Container class="card-header"><Text>Pagamenti</Text></Container>
+                    <Column class="card-body">
+                        <Row>
+                            <Text>Metodo Di Pagamento</Text>
+                            <Text>IBAN</Text>
+                        </Row>
+                        <Row>
+                            <Text var="storekeeper.result.payment.method" />
+                            <Text var="storekeeper.result.payment.iban" />
+                        </Row>
+                    </Column>
+                </Container>
+                <Container class="card" padding="p-0" margin="m-0">
+                    <Container class="card-header"><Text>Contatti</Text></Container>
+                    <Column class="card-body">
+                        <Row>
+                            <Text>Telefono</Text>
+                            <Text>Cellulare</Text>
+                            <Text>Email</Text>
+                            <Text>Provincia</Text>
+                            <Text>Città</Text>
+                            <Text>Indirizzo</Text>
+                        </Row>
+                        <Row>
+                            <Text var="storekeeper.result.person.contact.phone" />
+                            <Text var="storekeeper.result.person.contact.cellular" />
+                            <Text var="storekeeper.result.person.contact.email" />
+                            <Text var="storekeeper.result.person.contact.location.province" />
+                            <Text var="storekeeper.result.person.contact.location.city" />
+                            <Text var="storekeeper.result.person.contact.location.address" />
+                        </Row>
+                    </Column>
+                </Container>
+            </Column>
+        </Storekeeper>
+        <!-- TabNav -->
+        <Nav class="nav-tabs" margin="m-0;mt-5;" padding="p-0" color="#999">
+            <Route href="#contracts" data-bs-toggle="tab"><Icon icon="bi-pass"/><Text>Contracts</Text></Route>
+            <Route href="#invoices" data-bs-toggle="tab"><Icon icon="bi-receipt"/><Text>Invoices</Text></Route>
+            <Route href="#credit-notes" data-bs-toggle="tab"><Icon icon="bi-journal-bookmark"/><Text>Credit Notes</Text></Route>
+            <Route href="#calls" data-bs-toggle="tab"><Icon icon="bi-telephone"/><Text>Calls</Text></Route>
+            <Route href="#tickets" data-bs-toggle="tab"><Icon icon="bi-ticket-perforated"/><Text>Tickets</Text></Route>
+            <Route href="#historical" data-bs-toggle="tab"><Icon icon="bi-clock-history"/><Text>Historical</Text></Route>
+        </Nav>
+        <!-- Tab -->
+        <Tab color="#ccc">
+            <Container id="contracts">
+                <Storekeeper  model="client" identifier="{{ href.replace('#','') }}" >
+                    <Container class="card" padding="p-0" margin="m-0">
+                        <Container class="card-header"><Text>Profilo</Text></Container>
+                        <Column class="card-body">
+                            <Row>
+                                <Text>Codice Cliente</Text>
+                                <Text>Nome</Text>
+                                <Text>Cognome</Text>
+                                <Text>Nato</Text>
+                                <Text>Codice Fiscale</Text>
+                            </Row>
+                            <Row>
+                                <Text var="storekeeper.result.identifier" />
+                                <Text var="storekeeper.result.person.first" />
+                                <Text var="storekeeper.result.person.last" />
+                                <Text var="storekeeper.result.person.cf" />
+                                <Text var="storekeeper.result.person.cf" />
+                            </Row>
+                        </Column>
+                    </Container>
+                </Storekeeper>
+            </Container>
+            <Container id="invoices">
+                <Text>2</Text>
+            </Container>
+            <Container id="credit-notes">
+                <Text>3</Text>
+            </Container>
+            <Container id="calls">
+                <Text>4</Text>
+            </Container>
+            <Container id="tickets">
+                <Text>5</Text>
+            </Container>
+            <Container id="historical">
+                <Text>6</Text>
+            </Container>
+        </Tab>
+    </Row>
+</Column>

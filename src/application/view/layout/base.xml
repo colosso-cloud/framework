@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Container color="light" size="true" margin="m-0" padding="p-0" >
+    <Nav color="dark">
+        <Column size="2" padding="x-2">
+            <Img src="static/logo.svg" height="50px" />
+        </Column>
+        <Row>
+            <Column><Route data-bs-toggle="collapse" href="#company" ><Icon icon="bi-cloudy-fill"/><Text color="white" type="h5" >Company</Text></Route></Column>
+            <Column><Route data-bs-toggle="collapse" href="#cloud" ><Icon icon="bi-cloudy-fill"/><Text color="white" type="h5" >Cloud</Text></Route></Column>
+            <Column><Route data-bs-toggle="collapse" href="#software" ><Icon icon="bi-cloudy-fill"/><Text color="white" type="h5" >Software</Text></Route></Column>
+            <Column><Route data-bs-toggle="collapse" href="#robotic" ><Icon icon="bi-cloudy-fill"/><Text color="white" type="h5" >Robotic</Text></Route></Column>
+        </Row>
+        <Column size="2" content="end" >
+            <Button id="button2" icon="REMOVE" target="#exampleModal" on_click="setting::men_click" >Sign In</Button>
+            <Button id="button2" icon="REMOVE" target="#exampleModal" on_click="setting::men_click" >Sign Up</Button>
+        </Column>
+        <Window id="exampleModal">
+            <Text>Finestra</Text>
+        </Window>
+        <Container id="company" color="success" size="none" style=" collapse position-fixed w-100 h-100" position="top:66px;" >
+            <Container padding="-5">
+                <Text color="white" type="h3" >Chi siamo ?</Text>
+            </Container>
+        </Container>
+        <Container id="cloud" color="primary" size="none" style=" collapse position-fixed w-100 h-100" position="top:66px;" >
+            <Container padding="-5">
+                <Text color="white" type="h1" >Cloud services</Text>
+                <Text type="h4">Dedicated Server</Text>
+                <Text>Physical servers dedicated exclusively to a single customer, offering maximum performance and complete control.</Text>
+                <Text type="h4">Cloud VPS (Virtual Private Server)</Text>
+                <Text>It offers dedicated resources on a virtual server, ideal for websites with medium-high traffic or applications that require specific resources.</Text>
+                <Text type="h4">Serverless Computing</Text>
+                <Text>Run code without having to manage servers, paying only for execution time.</Text>
+                <Text type="h4">Container</Text>
+                <Text>Lightweight virtualized environments to run applications in isolation, using technologies like Docker and Kubernetes.</Text>
+                <Text type="h4">Hosting Web App</Text>
+                <Text>Platforms for hosting and managing web applications, with support for various programming languages and frameworks.</Text>
+                <Text type="h4">Content Delivery Network (CDN)</Text>
+                <Text>Distributing web content across a global server network to improve loading speed.</Text>
+                <Text type="h4">Hosting Game</Text>
+                <Text>Dedicated server or VPS to host online games, ensuring low latency and high performance for gamers.</Text>
+                <Text type="h4">Hosting Web</Text>
+                <Text>Server space to host websites, with various plans that can include domains, SSL certificates, email, and more.</Text>
+                <Text type="h4">Storage</Text>
+                <Text>Scalable storage for files, business data, backups and disaster recovery, accessible from anywhere.</Text>
+                <Text type="h4">Security Services</Text>
+                <Text>Protection against DDoS attacks, WAF firewall, identity and access management and policing.</Text>
+                <Text type="h4">Networking Services</Text>
+                <Text>VPN, load balancing, virtual networks to connect and protect cloud resources.</Text>
+            </Container>
+        </Container>
+        <Container id="software" color="danger" size="none" style=" collapse position-fixed w-100 h-100" position="top:66px;" >
+            <Container padding="-5">
+                <Text color="white" type="h1" >Software as a service</Text>
+                <Text type="h4">GitLab (git)</Text>
+                <Text>GitLab is a complete software development platform that offers source code management, continuous integration and delivery (CI/CD), project management tools, advanced security, and efficient collaboration. Ideal for teams of all sizes, GitLab supports the entire software lifecycle.</Text>
+                <Text type="h4">Bitwarden Password Manager</Text>
+                <Text>password manager cloud lets you save and sync your passwords across all your devices. It uses advanced encryption to protect your credentials and offers features like autofill, strong password generation, and two-factor authentication. It is an ideal solution to keep your sensitive information safe and easily accessible wherever you are.</Text>
+                <Text type="h4">AppBuild</Text>
+                <Text>Complete software development platform that offers source code management, web IDE, continuous integration and delivery (CI/CD), project management tools, advanced security, and efficient collaboration. Ideal for teams of all sizes</Text>
+                <Text type="h4">API Cloud Control </Text>
+                <Text>Manage cloud infrastructure with a consistent set of APIs</Text>
+                <Text type="h4">LinkSphere (UCS)</Text>
+                <Text>Discover our Unified Communications solution: integrate chat, IP telephony, video conferencing, email and more in a single intuitive platform. Improve your team's productivity and collaboration with instant access to all communication channels from a single interface.</Text>
+                <Text type="h4">NotifyCloud</Text>
+                <Text>NotifyCloud is a fully managed messaging service that facilitates communication between applications and users.</Text>
+                <Text type="h4">Custom websites and web apps</Text>
+                <Text type="h4">Accademy/Assistenza/Forum/Social</Text>
+                <Text type="h4">Web Application Firewall (WAF)</Text>
+                <Text>enable you to protect your web applications from malicious attacks and unwanted Internet traffic, including bots, injections, and application-layer denial of service (DoS). WAF will allow you to define and manage rules to avoid Internet threats, including IP addresses, HTTP headers, HTTP body, URI strings, cross-site scripting (XSS), SQL injection, and other OWASP-defined vulnerabilities.</Text>
+            </Container>
+        </Container>
+        <Container id="robotic" color="warning" size="none" style=" collapse position-fixed w-100 h-100" position="top:66px;" >
+            <Container>
+                <Text color="white" type="h3" >Chi siamo ?</Text>
+            </Container>
+        </Container>
+    </Nav>
+    <Nav color="body" type="" style=" d-flex flex-wrap shadow-sm">
+        <Route url="static/test.xml"><Icon icon="bi-cloudy-fill"/><Text>Colosso</Text></Route>
+        <Route url=""><Icon icon="bi-basket3-fill"/><Text>Inventory</Text></Route>
+        <Route url=""><Icon icon="bi-shield-fill"/><Text>Security</Text></Route>
+        <Route url=""><Icon icon="bi-easel-fill"/><Text>Monitoring</Text></Route>
+        <Route url=""><Icon icon="bi-mortarboard-fill"/><Text>Academy</Text></Route>
+        <Route url=""><Icon icon="bi-chat-dots-fill"/><Text>Social</Text></Route>
+        <Route url=""><Icon icon="bi-rocket-takeoff-fill"/><Text>Partnership</Text></Route>
+        <Route url=""><Icon icon="bi-bank2"/><Text>Forum</Text></Route>
+        <Route url=""><Icon icon="bi-bag-fill"/><Text>Market</Text></Route>
+        <Route url=""><Icon icon="bi-building-fill"/><Text>Data Center</Text></Route>
+        <Route url=""><Icon icon="bi-gear-fill"/><Text>Setting</Text></Route>
+    </Nav>
+    <Container id="main" size="fluid" type="main"  space="bottom" padding="-0" style="h-100" >
+        <Row size="full">
+            <Column size="auto" color="success-subtle">
+                <Text>Dashboard</Text>
+                <Text>Clients</Text>
+                <Text>Contracts</Text>
+                <Text>Invoices</Text>
+                <Text>Partner Retailer</Text>
+                <Text>News</Text>
+            </Column>
+            <Column >
+                <Alert type="danger">Errore</Alert>
+                <Container color="dark" size="fluid" expand="True">
+                    <Input disabled="True"></Input>
+                    <Input type="range"></Input>
+                </Container>
+
+                <Container color="dark" size="fluid" expand="True">
+                    <Input disabled="True"></Input>
+                    <Input type="range"></Input>
+                </Container>
+            </Column>
+        </Row>
+    </Container>
+    <Container type="footer" color="body" size="fluid">
+        <Container color="body">
+            <Row>
+                <Column><Text>Colosso Copyright © 2023. All rights reserved. </Text></Column>
+                <Column size="5"><Text>Privacy Policy Security, Compliance and Privacy Cookie Notice</Text></Column>
+                <Column size="2"><Text>Version 0.5.0</Text></Column>
+            </Row>
+        </Container>
+        
+    </Container>
+</Container>

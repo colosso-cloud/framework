@@ -1,0 +1,7 @@
+{% extends "mono.xml" %}
+{% block mono %}
+
+<IDE id="ide"></IDE>
+
+
+{% endblock %}

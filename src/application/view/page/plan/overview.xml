@@ -1,0 +1,6 @@
+{% extends "mono.xml" %}
+{% block mono %}
+<Storekeeper method="gather" repository='notes' payload="project(location:'SottoMonte/framework')" >
+    <Scrum></Scrum>
+</Storekeeper>
+{% endblock %}

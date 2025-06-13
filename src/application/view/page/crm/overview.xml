@@ -1,0 +1,16 @@
+{% extends "sidebar.xml" %}
+{% block title %}Overview{% endblock %}
+{% block subtitle %}Keep track of your company{% endblock %}
+{% block bar %}
+<SideBar from="crm" select="application/view/page/crm/overview.xml"/>
+{% endblock %}
+{% block breadcrumb %}
+{% endblock %}
+{% block content %}
+<Container background="#fafafa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
+    <Input disabled="True"></Input>
+</Container>
+<Container background="#fafafa" size="fluid" margin="mt-4" padding="p-4" expand="True" class="border-top border-bottom">
+    <Text>Ciao</Text>
+</Container>
+{% endblock %}

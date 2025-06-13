@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Column expand="full">
-    {% block mono %}
+<Container size="full">
+    <Group type="nav" padding="px-5;py-0" margin="m-0" class="nav-scroller bg-body shadow-sm">
+        {% block bar %}
+        {% endblock %}
+    </Group>
+    {% block content %}
     {% endblock %}
-</Column>
+</Container>

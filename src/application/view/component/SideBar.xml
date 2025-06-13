@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Row>
+    {% set actions = {
+        'inventory': [
+            {'route': 'application/view/page/inventory/overview.xml', 'icon': 'bi-view-list', 'text': 'Overview'},
+            {'route': 'application/view/page/inventory/virtual-machines.xml', 'icon': 'bi-pc-horizontal', 'text': 'Virtual machines'},
+            {'route': 'application/view/page/inventory/containers.xml', 'icon': 'bi-box-seam', 'text': 'Containers'},
+            {'route': 'application/view/page/inventory/services.xml', 'icon': 'bi-boxes', 'text': 'Services'},
+            {'route': 'application/view/page/inventory/domains.xml', 'icon': 'bi-globe', 'text': 'Domains'},
+            {'route': 'application/view/page/inventory/volumes.xml', 'icon': 'bi-database', 'text': 'Volumes'},
+            {'route': 'application/view/page/inventory/repositories.xml', 'icon': 'bi-bookmarks', 'text': 'Repository'},
+            {'route': 'application/view/page/inventory/policies.xml', 'icon': 'bi-file-ruled', 'text': 'Politics'},
+            {'route': 'application/view/page/inventory/secrets.xml', 'icon': 'bi-key', 'text': 'Secrets'}
+        ], 
+        'crm': [
+            {'route': 'application/view/page/crm/overview.xml', 'icon': 'bi-view-list', 'text': 'Overview'},
+            {'route': 'application/view/page/crm/clients.xml', 'icon': 'bi-people', 'text': 'Clients'},
+            {'route': 'application/view/page/crm/contracts.xml', 'icon': 'bi-pass', 'text': 'Contracts'},
+            {'route': 'application/view/page/crm/invoices.xml', 'icon': 'bi-receipt', 'text': 'Invoices'},
+            {'route': 'application/view/page/crm/tickets.xml', 'icon': 'bi-ticket-detailed', 'text': 'Tickets'},
+            {'route': 'application/view/page/crm/partnerships.xml', 'icon': 'bi-rocket', 'text': 'Partnership'},
+            {'route': 'application/view/page/crm/academy.xml', 'icon': 'bi-mortarboard', 'text': 'Academy'}
+        ],
+        } 
+    %}
+    
+    {% for action in actions[component.attributes.from] %}
+        {% if component.attributes.select %}
+        <Action route="{{ action.route }}" class="{% if component.attributes.select == action.route %}active{% endif %}">
+            <Graph icon="{{ action.icon }}" />
+            <Text>{{ action.text }}</Text>
+        </Action>
+        {% else %}
+        <Action route="{{ action.route }}">
+            <Graph icon="{{ action.icon }}" />
+            <Text>{{ action.text }}</Text>
+        </Action>
+        {% endif %}
+    {% endfor %}
+</Row>

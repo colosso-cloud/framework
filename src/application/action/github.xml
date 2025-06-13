@@ -1,0 +1,17 @@
+<flow>
+  <case name="invite-collaborator">
+    <description>Invita collaboratore a un repo GitHub</description>
+    <action>
+      <https>
+        <url>https://api.github.com/repos/{{owner}}/{{repo}}/collaborators/{{username}}</url>
+        <method>PUT</method>
+        <headers>
+          <header name="Authorization">Bearer {{ github_token }}</header>
+          <header name="Accept">application/vnd.github+json</header>
+          <header name="Content-Type">application/json</header>
+        </headers>
+        <payload>{"permission": "push"}</payload>
+      </https>
+    </action>
+  </case>
+</flow>

@@ -1,0 +1,16 @@
+inventories = (
+    {'name': 'id', 'type': 'integer', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'identifier', 'type': 'string','required': True, 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'name', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'description', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'version', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'amount', 'type': 'integer','required': True, 'default': 0},
+    {'name': 'type', 'type': 'string','required': True, 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'producer', 'type': 'integer', 'default': 0},
+    {'name': 'state', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'expiration', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'owner', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'location', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'updated_at', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+    {'name': 'created_at', 'type': 'string', 'default': 'None','regex': r'^[a-zA-Z0-9_-]+$'},
+)

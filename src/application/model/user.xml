@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<user>
+    <field model="identifier"/>
+    <field name="username" model="name"/>
+    <field model="password"/>
+    <field name="role" model="string"/>
+    <field name="avatar" model="url"/>
+</user>
