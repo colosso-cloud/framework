@@ -17,6 +17,10 @@ class presenter():
         driver = language.last(self.providers)
         out = await driver.builder(**constants)
         return out
+    
+    async def navigate(self,**constants):
+        driver = language.last(self.providers)
+        out = await driver.apply_route(**constants)
 
     async def component(self,**constants):
         name = constants.get('name','')

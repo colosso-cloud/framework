@@ -7,7 +7,36 @@ class adapter:
 
     
     async def whoami(self, **data):
-       pass
+        """
+        Recupera le informazioni del profilo utente da GitHub utilizzando l'access_token.
+        """
+        access_token = data.get("access_token")
+        if not access_token:
+            raise ValueError("Access token mancante.")
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+            "User-Agent": "flet-app"
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://api.github.com/user", headers=headers) as response:
+                if response.status == 200:
+                    user_data = await response.json()
+                    return {
+                        "id": user_data.get("id"),
+                        "username": user_data.get("login"),
+                        "name": user_data.get("name"),
+                        "avatar_url": user_data.get("avatar_url"),
+                        "email": user_data.get("email"),
+                        "url": user_data.get("html_url"),
+                        "provider": "github",
+                        "raw": user_data
+                    }
+                else:
+                    print(f"Errore durante whoami: {response.status} - {await response.text()}")
+                    return None
     
     async def logout(self,**data):
         pass
@@ -15,27 +44,8 @@ class adapter:
     async def registration(self,**data):
         pass
 
-    async def authenticate(self,**data):
-        """Obtain the request token from github.
-        Given the client id, client secret and request issued out by GitHub, this method
-        should give back an access token
-        Parameters
-        ----------
-        CLIENT_ID: str
-            A string representing the client id issued out by github
-        CLIENT_SECRET: str
-            A string representing the client secret issued out by github
-        request_token: str
-            A string representing the request token issued out by github
-        Throws
-        ------
-        ValueError:
-            if CLIENT_ID or CLIENT_SECRET or request_token is empty or not a string
-        Returns
-        -------
-        access_token: str
-            A string representing the access token issued out by github
-        """
+    '''async def authenticate(self,**data):
+        
         url = self.url+f"&code={data.get('code','')}"
         headers = {
             'accept': 'application/json'
@@ -49,4 +59,42 @@ class adapter:
                     print(data,'github')
                     return data
                 else:
+                    return None'''
+    
+    async def authenticate(self, **data):
+        """
+        Esegue l'autenticazione con GitHub (OAuth) e restituisce una sessione normalizzata.
+        """
+        url = self.url + f"&code={data.get('code', '')}"
+        headers = {
+            'accept': 'application/json'
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers) as response:
+                if response.status == 200:
+                    token_data = await response.json()
+                    access_token = token_data.get("access_token")
+                    token_type = token_data.get("token_type", "bearer")
+                    scope = token_data.get("scope", "")
+
+                    if not access_token:
+                        return None
+                    
+                    user = await self.whoami(access_token=access_token)
+
+                    # Costruzione della sessione in formato coerente
+                    session_data = {
+                        "tokens":{
+                            "access_token": access_token,
+                            "refresh_token": None,
+                            "token_type": token_type,
+                            "scope": scope,
+                        },
+                        "user": user,
+                    }
+
+                    return session_data
+                else:
+                    print(f"Auth error {response.status}: {await response.text()}")
                     return None

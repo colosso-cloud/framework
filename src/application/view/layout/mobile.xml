@@ -5,6 +5,8 @@
         {% endblock %}
     </Row>
     <Navigation type="bar">
-
+        <Action type="nav" icon="SWITCH_ACCOUNT" ><Text>SottoMonte</Text></Action>
+        <Action type="nav" icon="INVENTORY" ><Text>Inventary</Text></Action>
+        <Action type="nav" icon="SETTINGS" ><Text>Setting</Text></Action>
     </Navigation>
 </Column>

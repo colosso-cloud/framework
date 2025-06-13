@@ -10,51 +10,50 @@ class defender:
         """
         self.sessions = {}
         self.providers = constants.get('providers', [])
-
-    #@flow.asynchronous(managers=('messenger',))
-    async def unionsession(self,**constants):
-        id = constants.get('identifier', '')
-        if id not in self.sessions:
-            self.sessions[id] = constants.get('session', {})
-        else:
-            self.sessions[id] |= constants.get('session', {})
-
-        print(self.sessions,'session.updated')
+        self.session = {'user':{},'metadata':{},'tokens':{},"ip": "192.168.1.1",'identifier':'asdasdasd'}
+        example = {
+        "user": {
+            "id": "...",                     # ID univoco utente
+            "email": "...",                  # Email principale
+            "email_verified": True,         # Stato verifica
+            "provider": "email",            # email / github / google
+            "created_at": "...",            # Quando è stato creato
+            "last_sign_in_at": "...",       # Ultimo accesso
+            "is_anonymous": False,          # Guest?
+            "role": "authenticated",        # Ruolo (può essere utile per autorizzazioni)
+            "metadata": {                   # Qualsiasi dato extra custom
+            ...
+            }
+        },
+        "tokens": {
+            "access_token": "...",          # Per autenticare richieste API
+            "refresh_token": "...",         # Per ottenere nuovo token
+            "expires_at": 1234567890,       # Unix timestamp di scadenza
+            "token_type": "bearer"
+        },
+        "provider": "supabase",           # Sistema che ha generato il login
+        "session_id": "...",              # Opzionale: id della sessione
+        "ip": "...",                      # Opzionale: IP per logging o sicurezza
+        "ua": "...",                      # Opzionale: User-agent
+        "auth_time": "2025-06-13T12:34"   # Quando è stato autenticato
+        }
     
-    '''async def authenticate(self,**constants):
-        """
-        Autentica un utente utilizzando i provider configurati.
-
-        :param constants: Deve includere 'identifier', 'ip' e credenziali.
-        :return: Token di sessione se l'autenticazione ha successo, altrimenti None.
-        """
-        identifier = constants.get('identifier', '')
-        ip = constants.get('ip', '')
-        if identifier not in self.sessions:
-            self.sessions[identifier] = {'ip': ip,}
-
-        for backend in self.providers:
-            session = await backend.authenticate(**constants)
-            print(session,backend,'auth.defender')
-            if session:
-                self.sessions[identifier] |= {backend.config.get('profile',''): session}
-        return self.sessions[identifier]'''
-    
-    async def authenticate(self, **constants):
+    async def authenticate2(self, **constants):
         """
         Autentica un utente utilizzando i provider configurati.
 
         :param constants: Deve includere 'identifier', 'ip' e credenziali.
         :return: Dizionario di sessione aggiornato se l'autenticazione ha successo, altrimenti None.
         """
-        identifier = constants.get('identifier')
-        ip = constants.get('ip')
+        #identifier = constants.get('identifier')
+        #ip = constants.get('ip')
 
-        if not identifier or not ip:
-            print("Errore: 'identifier' e 'ip' sono obbligatori per l'autenticazione.")
-            return None
+        #if not identifier or not ip:
+        #    print("Errore: 'identifier' e 'ip' sono obbligatori per l'autenticazione.")
+        #    return None
 
         # Inizializza la sessione se non esiste
+        #session = self.sessions.setdefault(identifier, {'ip': ip})
         session = self.sessions.setdefault(identifier, {'ip': ip})
 
         authenticated = False
@@ -78,6 +77,49 @@ class defender:
         else:
             print(f"Autenticazione fallita per identifier: {identifier}")
             return None
+        
+    async def authenticate(self, **constants):
+        """
+        Autentica un utente utilizzando i provider configurati.
+
+        :param constants: Deve includere 'identifier', 'ip' e credenziali.
+        :return: Dizionario di sessione aggiornato se l'autenticazione ha successo, altrimenti None.
+        """
+
+        # Recupera o inizializza la sessione utente
+        session = self.session
+        authenticated = False
+
+        for backend in self.providers:
+            try:
+                backend_session = await backend.authenticate(**constants)
+                print(f"[auth.defender] ✅ Provider: {backend} - Risultato: {backend_session}", constants)
+
+                if backend_session:
+                    profile = backend.config.get("profile", "")
+                    '''if profile:
+                        session[profile] = backend_session
+                    else:
+                        session.update(backend_session)'''
+                    session['tokens'][profile] = backend_session['tokens']
+                    session['metadata'][profile] = backend_session['metadata']
+                    # Salva l'identità se presente
+                    if "user" in backend_session:
+                        session["user"] |= backend_session["user"]
+
+                    authenticated = True
+
+            except Exception as e:
+                print(f"⚠️ Errore durante l'autenticazione con {backend}: {e}")
+
+        if authenticated:
+            #self.sessions[identifier] = session
+            self.session = session  # ✅ salva la sessione corrente attiva
+            #print(f"✅ Autenticazione riuscita per '{identifier}'")
+            return session
+
+        #print(f"❌ Autenticazione fallita per identifier: {identifier}")
+        return None
 
     async def registration(self, **constants) -> Any:
         """
@@ -122,11 +164,12 @@ class defender:
         :param constants: Deve includere 'ip'.
         :return: Identificatore dell'utente se trovato, altrimenti None.
         """
-        ip = constants.get('ip', '')
+        return self.session.get('user',None)
+        '''ip = constants.get('ip', '')
         for identifier, session in self.sessions.items():
             if session.get('ip') == ip:
                 return identifier
-        return None
+        return None'''
     
     async def whoami2(self, **constants) -> Any:
         

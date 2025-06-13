@@ -36,6 +36,8 @@ def convert_value(prop, val):
         return int(val.replace("px", "").strip())
     if val.lower() in COLOR_MAP:
         return COLOR_MAP[val.lower()]
+    if type({}) == type(prop) and prop.get('icon') == val:
+        return getattr(ft.Icons,val)
     return val
 
 def parse_css_tinycss2(css_text):
@@ -128,6 +130,9 @@ class adapter(presentation.port):
 
     async def attribute_space(self, widget, pr, value): widget.spacing = value
 
+    async def attribute_icon(self, widget, pr, value): 
+        widget.icon = convert_value(pr,value)
+
     async def attribute_expand(self, widget, pr, value):
         if value == "fill":
             widget.expand = True
@@ -197,6 +202,8 @@ class adapter(presentation.port):
 
         if method:
             await method(widget, attributes, value)
+        else:
+            setattr(widget,field,value)
 
     async def get_attribute(self, widget, field):
         match field:
@@ -218,6 +225,24 @@ class adapter(presentation.port):
             match key:
                 case 'id':
                     return [self.document[value]]
+                
+    def find_parent_of_control(self, target: ft.Control) -> str | None:
+        def has_child_recursive(control, target):
+            # Se il controllo è contenitore (Column, Row, Container con content o controls, ecc.)
+            if hasattr(control, "content"):
+                if control.content == target:
+                    return True
+                return has_child_recursive(control.content, target)
+            if hasattr(control, "controls"):
+                for c in control.controls:
+                    if c == target or has_child_recursive(c, target):
+                        return True
+            return False
+
+        for id, widget in self.document.items():
+            if has_child_recursive(widget, target):
+                return id  # oppure: return widget
+        return None
         
 
     def __init__(self,**constants):
@@ -255,23 +280,6 @@ class adapter(presentation.port):
         asyncio.create_task(ft.app_async(main))
 
     @staticmethod
-    def widget_button(tag, inner, props):
-        variant = props.get("variant", "text")
-        if variant == "icon":
-            widget = ft.IconButton(
-                icon=props.get("icon", ft.icons.PLAY_ARROW),
-                icon_size=props.get("icon_size", 24),
-                on_click=props.get("on_click"),
-            )
-        widget = ft.TextButton(
-            text=props.get("text", "Click Me"),
-            on_click=props.get("on_click"),
-        )
-    
-        widget.tag = tag
-        return widget
-
-    @staticmethod
     def widget_video(tag, inner, props):
         widget = fv.Video(playlist=inner)
         widget.tag = tag
@@ -307,13 +315,38 @@ class adapter(presentation.port):
     
     
     def widget_button(self, tag, inner, props):
-        widget = ft.FilledButton(
-            content=ft.ResponsiveRow(expand=True,controls=inner),
-            style=ft.ButtonStyle(
-                padding=0,
-                shape=ft.RoundedRectangleBorder(radius=0),
-            ),
-        )
+        text = ''
+        tt = props.get('type','button')
+        for x in inner:
+            text = x.value
+        #print(inner)
+        match tt:
+            case 'button':
+                widget = ft.FilledButton(
+                    content=ft.ResponsiveRow(expand=True,controls=inner),
+                    text=text,
+                    style=ft.ButtonStyle(
+                        padding=0,
+                        shape=ft.RoundedRectangleBorder(radius=0),
+                    ),
+                )
+            case 'nav':
+                widget = ft.NavigationBarDestination(label=text)
+            case 'submit':
+                async def on_click(e):
+                    id = self.find_parent_of_control(e.control)
+                    parents = await self.selector(id=id)
+                    parent = parents[-1]
+                    await self.action_form(id=id,action=parent.action.replace('/',''))
+                widget = ft.FilledButton(
+                    content=ft.ResponsiveRow(expand=True,controls=inner),
+                    text=text,
+                    style=ft.ButtonStyle(
+                        padding=0,
+                        shape=ft.RoundedRectangleBorder(radius=0),
+                    ),
+                )
+                widget.on_click = on_click
         widget.tag = tag
         return widget
     
@@ -322,6 +355,7 @@ class adapter(presentation.port):
             controls=inner,
         )
         widget.tag = tag
+        
         return widget
     
     def widget_tree(self, tag, inner, props):
@@ -422,16 +456,9 @@ class adapter(presentation.port):
         return widget
     
     def widget_navigationbar(self, tag, inner, props):
+        print(inner)
         widget = ft.NavigationBar(
-            destinations=[
-                ft.NavigationBarDestination(icon=ft.Icons.EXPLORE, label="Explore"),
-                ft.NavigationBarDestination(icon=ft.Icons.COMMUTE, label="Commute"),
-                ft.NavigationBarDestination(
-                    icon=ft.Icons.BOOKMARK_BORDER,
-                    selected_icon=ft.Icons.BOOKMARK,
-                    label="Favorites",
-                ),
-            ]
+            destinations=inner
         )
         widget.tag = tag
         return widget

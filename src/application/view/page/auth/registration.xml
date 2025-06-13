@@ -5,7 +5,7 @@
         <Input name="email" placeholder="email" />
         <Input name="password" placeholder="password" type="password" />
         <Input name="password-repeat" placeholder="password repetition" type="password" />
-        <Action class="primary" click="form(id:'form-registration',action:'registration')" ><Text>Registrazione</Text></Action>
+        <Action class="primary" type="submit" ><Text>Registrazione</Text></Action>
     </Action>
     <Action route="/auth/signin">Already have an account? Sign in</Action>
 </Container>

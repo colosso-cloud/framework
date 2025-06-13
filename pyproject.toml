@@ -108,10 +108,11 @@ adapter = "flutter"
 route = "route.xml"
 
 
-# [authentication.supabase]
-# adapter = "supabase"
-# url = "https://your-project.supabase.co"
-# key = "your-supabase-service-role-key"
+# Configurazione dell'autenticazione
+[authentication.supabase]
+adapter = "supabase"
+url = "https://ljeowpqmovaavxghpsne.supabase.co"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZW93cHFtb3ZhYXZ4Z2hwc25lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNDI3NDEsImV4cCI6MjA1NjkxODc0MX0.IAIJo8-x2WIa9tk7HQwLxgmAX1JTX0aK3kLTb7FQTG8"
 
 
 # [authentication.github]

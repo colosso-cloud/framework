@@ -34,9 +34,44 @@ else:
         return user.get('session',{}).get('access_token',None)
     
     async def backend_login(supabase,**data):
-        user = supabase.auth.sign_in_with_password(data)
-        data = user.dict()
-        return data.get('session',{}).get('access_token',None)
+        """
+        Effettua il login e restituisce una sessione utente semplificata.
+        
+        :param supabase: istanza del client Supabase
+        :param credentials: dict con 'email' e 'password'
+        :return: dict con dati sessione ordinati
+        """
+        user_response = supabase.auth.sign_in_with_password(data)
+        auth_data = user_response.dict()
+
+        raw_user = auth_data.get("user", {})
+        raw_session = auth_data.get("session", {})
+
+        # Struttura ordinata
+        session = {
+            "user": {
+                "id": raw_user.get("id"),
+                "email": raw_user.get("email"),
+                "email_verified": raw_user.get("user_metadata", {}).get("email_verified"),
+                "provider": raw_user.get("app_metadata", {}).get("provider", "email"),
+                "created_at": raw_user.get("created_at").isoformat() if raw_user.get("created_at") else None,
+                "last_sign_in_at": raw_user.get("last_sign_in_at").isoformat() if raw_user.get("last_sign_in_at") else None,
+                "is_anonymous": raw_user.get("is_anonymous", False),
+                "role": raw_user.get("role", "authenticated"),
+            },
+            "tokens": {
+                "access_token": raw_session.get("access_token"),
+                "refresh_token": raw_session.get("refresh_token"),
+                "expires_at": raw_session.get("expires_at"),
+                "token_type": raw_session.get("token_type", "bearer")
+            },
+            "metadata": raw_user.get("user_metadata", {})
+            #"provider": raw_session.get("user", {}).get("app_metadata", {}).get("provider", "email"),
+            #"session_id": raw_session.get("session_id", None),
+            #"auth_time": datetime.utcnow().isoformat(),
+        }
+
+        return session
 
 class adapter:
     def __init__(self, **constants):

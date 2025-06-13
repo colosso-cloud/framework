@@ -73,6 +73,7 @@ class port(ABC):
         'change': {},
         'route': {},
         'init': {},
+        'action':{},
         # ------ layout -----
         'width':{},
         'height':{},
@@ -159,8 +160,8 @@ class port(ABC):
             text = file.read()
             return text
     
-    #@flow.asynchronous()
-    async def builder(self,**constants):
+    @flow.asynchronous(managers=('defender',))
+    async def builder(self, defender,**constants):
         if 'text' in constants:
             text = constants['text']
         else:
@@ -172,8 +173,8 @@ class port(ABC):
         if 'view' not in constants:
             constants['view'] = {}
         
-        #if self.user:
-        #    constants['user'] = self.user
+        constants['user'] = await defender.whoami()
+        print(constants)
 
         content = template.render(constants)
         #print('CONTENT',content)
@@ -361,6 +362,11 @@ class port(ABC):
                 elif 'code' in data and 'code' in att:
                     print('View-data:',data)
                     view = await self.builder(**data|{'text':data['code']})
+                elif 'route' in att:
+                    #await self.apply_route(url=att['route'])
+                    #output = await self.compose_view('Container',inner,**att)
+                    #await self.mount_property('Container',output,att)
+                    return await self.apply_view(att['route'])
                 elif 'url' in att:
                     dataview = None
                     if 'data' in att:
@@ -398,8 +404,16 @@ class port(ABC):
                         output = await self.compose_view('Container',inner)
                         await self.mount_property('Container',output,att)
                         return output
+                    case 'submit':
+                        output = await self.compose_view('Button',inner,**att)
+                        await self.mount_property('Button',output,att)
+                        return output
                     case 'button':
                         output = await self.compose_view('Button',inner)
+                        await self.mount_property('Button',output,att)
+                        return output
+                    case 'nav':
+                        output = await self.compose_view('Button',inner,**att)
                         await self.mount_property('Button',output,att)
                         return output
                     case _:
@@ -574,3 +588,48 @@ class port(ABC):
 
                 self.att(view, att|{'component':tag})
                 return view
+    
+    
+    @staticmethod
+    @flow.asynchronous(managers=('messenger','presenter','executor'))
+    async def action_form(messenger,presenter,executor,**constants):
+        target = constants.get('id','')
+        action = constants.get('action','')
+        form_data = {}
+        # Ottieni il form e i dati
+        
+        form = await presenter.selector(id=target)
+        print(type(form))
+        elements = await presenter.get_attribute(widget=form[-1],field="elements")
+        print('form:',form,target,elements)
+        for input in elements:
+            name = await presenter.get_attribute(widget=input,field="name")
+            if name:
+                if name.endswith('[]'):
+                    key = name[:-2]
+                    form_data.setdefault(key, []).append(input.value)
+                else:
+                    form_data[name] = input.value
+        print(form_data)
+
+        max_len = max((len(v) for v in form_data.values() if isinstance(v, list)), default=1)
+        items = []
+        # Cicla su ogni elemento da aggiornare
+        for i in range(max_len):
+            item = {}
+            for key, value in form_data.items():
+                if isinstance(value, list):
+                    item[key] = value[i] if i < len(value) else None
+                else:
+                    item[key] = value
+            items.append(item)
+
+        print('items:', items,form_data)
+        #await executor.act(action=action,**form_data|{'items':items})
+        
+        if not any(isinstance(v, list) for v in form_data.values()):
+            print('Single item submission')
+            await executor.act(action=action, **form_data)
+        else:
+            for item in items:
+                await executor.act(action=action, **item)

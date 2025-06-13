@@ -5,7 +5,7 @@
     <Text>Enter the email associated with your account, and we will send you a password reset link</Text>
     <Action type="form" action="/registration" id="form-registration">
         <Input name="email" placeholder="email" />
-        <Action class="primary" click="form(id:'form-registration',action:'registration')" ><Text>Send password reset email</Text></Action>
+        <Action class="primary" type="submit" ><Text>Send password reset email</Text></Action>
     </Action>
     <Action route="/auth/signin">Go back to signin</Action>
 </Container>
