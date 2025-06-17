@@ -5,10 +5,10 @@
         <Input name="provider" placeholder="provider" value="supabase" />
         <Input name="email" type="email" placeholder="email" />
         <Input name="password" type="password" placeholder="password" />
-        <Action class="primary" type="submit" ><Text>Login</Text></Action>
+        <Action class="primary" type="submit" ></Action>
     </Action>
-    <Action route="/auth/signup">Don't have an account? Sign up</Action>
-    <Action route="/auth/reset-password">Forgot password? Reset it</Action>
-    <Action route="/profile">rp</Action>
+    <Action route="/auth/signup"><Text>Don't have an account? Sign up</Text></Action>
+    <Action route="/auth/reset-password"><Text>Forgot password? Reset it</Text></Action>
+    <Action route="/profile"><Text>Login</Text></Action>
 </Container>
 {% endblock %}

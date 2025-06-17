@@ -209,22 +209,25 @@ class port(ABC):
           except Exception as e:
               print(f"Errore durante la ricostruzione del componente '{id}': {e}")
     
-    async def mount_property(self, tag, widget, attributes):
-        #print('Mount:',widget,attributes)
-        for key in attributes:
-            await self.set_attribute(widget,attributes,key.replace('-', '_'),attributes[key])
-            
-        id = await self.get_attribute(widget,'id')
-        
-        if not id:
-            await self.attribute_id(widget,attributes,str(uuid.uuid4()))
-
-    async def compose_view(self, tag, inner, **props):
+    async def build_widget(self, tag, inner, attributes):
         method_name = f"widget_{tag.lower().replace('-', '_')}"
         factory = getattr(self, method_name, None)
-        if factory:
-            return factory(tag,inner, props)
-        raise NotImplementedError(f"Tag '{tag}' non gestito in compose_view data-driven")
+
+        if not factory:
+            raise NotImplementedError(f"Tag '{tag}' non gestito in compose_view data-driven")
+
+        widget = factory(tag, inner, attributes)
+
+        # Mount properties
+        for key in attributes:
+            widget = await self.set_attribute(widget, attributes, key.replace('-', '_'), attributes[key])
+
+        # Ensure widget has an id
+        wid = await self.get_attribute(widget, 'id')
+        if not wid:
+            await self.set_attribute(widget, attributes, 'id', str(uuid.uuid4()))
+
+        return widget
 
     async def mount_css(self, *services, **constants):
         await self.apply_css(*services)
@@ -401,25 +404,17 @@ class port(ABC):
                         #form = self.code('form',{'action':action,'method':'POST'},inner)
                         #self.att(form,att)
                         
-                        output = await self.compose_view('Container',inner)
-                        await self.mount_property('Container',output,att)
-                        return output
+                        return await self.build_widget('Container', inner, att)
                     case 'submit':
-                        output = await self.compose_view('Button',inner,**att)
-                        await self.mount_property('Button',output,att)
-                        return output
+                        return await self.build_widget('Button', inner, att)
                     case 'button':
-                        output = await self.compose_view('Button',inner)
-                        await self.mount_property('Button',output,att)
-                        return output
+                        return await self.build_widget('Button', inner, att)
                     case 'nav':
                         output = await self.compose_view('Button',inner,**att)
                         await self.mount_property('Button',output,att)
                         return output
                     case _:
-                        button = self.code('a',{'class':'btn rounded-0','value':valor},inner)
-                        self.att(button,att)
-                        return button
+                        return await self.build_widget('Button', inner, att)
             case 'Window':
                 tipo = att['type'] if 'type' in att else 'None'
                 id = att['id'] if 'id' in att else 'None'
@@ -435,6 +430,10 @@ class port(ABC):
                     case 'modal':
                         output = await self.compose_view('Modal',inner,**att)
                         await self.mount_property('Modal',output,att)
+                        return output
+                    case _:
+                        output = await self.compose_view('Window',inner,**att)
+                        #await self.mount_property('Window',output,att)
                         return output
             case 'Card':
                 output = await self.compose_view('Container',inner,**att)
@@ -461,9 +460,7 @@ class port(ABC):
                         await self.mount_property('NavigationBar',output,att)
                         return output
                     case 'tab':
-                        output = await self.compose_view('Tab',inner,**att)
-                        await self.mount_property('Tab',output,att)
-                        return output
+                        return await self.build_widget('Button', inner, att)
             case 'Group':
                 tipo = att['type'] if 'type' in att else 'None'
                 output = await self.compose_view('Container',inner,**att)
@@ -475,13 +472,9 @@ class port(ABC):
                 
                 match tipo:
                     case 'text':
-                        output = await self.compose_view('Input',inner,**att)
-                        await self.mount_property('Input',output,att)
-                        return output
+                        return await self.build_widget('Input', inner, att)
                     case _:
-                        output = await self.compose_view('Input',inner,**att)
-                        await self.mount_property('Input',output,att)
-                        return output
+                        return await self.build_widget('Input', inner, att)
             case 'Text':
                 #text-muted text-truncate
                 tipo = att['type'] if 'type' in att else 'text'
@@ -501,9 +494,7 @@ class port(ABC):
                         self.att(pre,att)
                         return pre
                     case 'text':
-                        output = await self.compose_view('Text',[text])
-                        await self.mount_property('Text',output,att)
-                        return output
+                        return await self.build_widget('Text', inner, att)
                     case 'data':
                         if text:
                             text = escape(text)
@@ -522,17 +513,11 @@ class port(ABC):
             case 'Data':
                 return await self.compose_view('VideoMedia',text)
             case 'Row':
-                output = await self.compose_view('Row',inner)
-                await self.mount_property('Row',output,att)
-                return output
+                return await self.build_widget('Row', inner, att)
             case 'Container':
-                output = await self.compose_view('Container',inner)
-                await self.mount_property('Container',output,att)
-                return output
+                return await self.build_widget('Container', inner, att)
             case 'Column':
-                output = await self.compose_view('Column',inner)
-                await self.mount_property('Column',output,att)
-                return output
+                return await self.build_widget('Column', inner, att)
             case _:
                 def elements_to_xml_string(elements):
                     # Crea un elemento root temporaneo

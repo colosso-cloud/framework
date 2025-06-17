@@ -358,8 +358,8 @@ def load_main(lang,**c):
 
 # Definizione dei campi richiesti in base all'adapter
 ADAPTER_FIELDS = {
-    "wasm": ["host", "port", "view", "routes"],
-    "starlette": ["host", "port", "view", "routes"],
+    "wasm": ["host", "port", "route"],
+    "starlette": ["host", "port", "route"],
     "logging": ["host", "port", "persistence"],
     "websocket": ["url"],
     "api": ["url",'authorization','accept',],
