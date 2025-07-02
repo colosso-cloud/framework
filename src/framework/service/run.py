@@ -1,9 +1,12 @@
 import asyncio
 import sys
 
-loader = language.load_main(language,area="framework",service='service',adapter='loader')
+#loader = language.load_main(language,area="framework",service='service',adapter='loader')
 
-#modules = {'loader': 'framework.service.loader','language': 'framework.service.language'}
+resources = {
+    'flow': 'framework/service/flow.py',
+    'loader': 'framework/service/loader.py'
+}
 
 import os
 import requests
@@ -52,20 +55,52 @@ def sync_github_repo(local_base_dir, github_user, repo, branch='main'):
     api_url = f"https://api.github.com/repos/{github_user}/{repo}/contents/src?ref={branch}"
     sync_directory_recursive(api_url, local_base_dir)
 
-def build():
-    pass
 
-#@flow.synchronous(managers=('tester',))
-def application(tester=None, **constants):
-    try:
-        if tester and '--test' in constants.get('args',[]):
-            tester.run()
+def test():
+    import unittest
+    async def discover_tests():
+        # Pattern personalizzato per i test
+        test_dir = './src'
+        test_suite = unittest.TestSuite()
+        
+        # Scorri tutte le sottocartelle e i file
+        for root, dirs, files in os.walk(test_dir):
+            for file in files:
+                if file.endswith('.test.py'):
+                    # Crea il nome del modulo di test per ciascun file trovato
+                    module_name = os.path.splitext(file)[0]
+                    module_path = os.path.join(root, file)
+                    print(f"Importing test module: {module_path}")
+                    # Importa il modulo di test dinamicamente
+                    try:
+                        module_path = module_path.replace('./src/','')
+                        print(f"Module path: {module_path}")
+                        #module = language.get_module_os(module_path,language)
+                        module = await language.resource(language, path=module_path,adapter=module_name.replace('.test.py',''))
+                        # Aggiungi i test dal modulo
+                        test_suite.addTest(unittest.defaultTestLoader.loadTestsFromModule(module))
+                    except ImportError as e:
+                        print(f"Errore nell'importazione del modulo: {module_path}, {e}")
+        return test_suite
+    
+    suite = asyncio.run(discover_tests())
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+
+#@flow.asynchronous(managers=('tester',))
+def application(tester=None,**constants):
+    print("Starting application...", constants)
+    try: 
+        
         if '--update' in constants.get('args',[]):
             sync_github_repo("src", "colosso-cloud", "framework", "main")
-        event_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(event_loop)
-        event_loop.create_task(loader.bootstrap())
-        event_loop.run_forever()
+        if '--test' in constants.get('args',[]):
+            test()
+        else:
+            event_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(event_loop)
+            event_loop.create_task(loader.bootstrap())
+            event_loop.run_forever()
     except KeyboardInterrupt:
         # Interruzione manuale con Ctrl+C
         #asyncio.create_task(messenger.post(msg="Interruzione da tastiera (Ctrl + C)."))
@@ -85,4 +120,3 @@ def application(tester=None, **constants):
             event_loop.stop()
         event_loop.close()'''
         #logging.info(msg="Event loop chiuso.")
-        pass

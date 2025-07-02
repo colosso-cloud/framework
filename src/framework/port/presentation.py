@@ -9,107 +9,6 @@ import markupsafe
 modules = {'flow': 'framework.service.flow'}
 
 class port(ABC):
-    tags = {
-        'Data':{},
-        'Resource':{'type': ['image','video','audio']},
-        'Media':{'type': ['image', 'video', 'audio', 'embed']},
-        'Navigation':{},
-        'View':{},
-        'Messenger':{},
-        'Defender':{},
-        'Column':{},
-        'Column':{},
-        'Row':{},
-        'Storekeeper':{},
-        'Input':{'type': ['text', 'select', 'checkbox', 'textarea', 'radio', 'switch', 'color', 'range']},
-        'Action':{},
-        'Window':{},
-        'Text':{},
-        'Group':{},
-        'Layout':{},
-    }
-
-    widgets = {
-        'Text':{'attributes':['expand']},
-        'Video':{'attributes':['expand']},
-        'Image':{},
-        'Row':{},
-        'Column':{},
-        'Container':{},
-        'Input':{},
-        'Button':{},
-        'List':{},
-        'Tree':{},
-        'Table':{},
-        'Modal':{},
-        'Drawer':{},
-        'Map':{},
-        'Chart':{},
-        'Tab':{},
-        'Scroll':{},
-        'Toast':{},
-        'Alert':{},
-        'Card':{},
-        'Window':{},
-        'Breadcrumb':{},
-        'Pagination':{},
-        'Carousel':{},
-        'NavigationRail':{},
-        'NavigationApp':{},
-        'NavigationBar':{},
-        'NavigationMenu':{},
-    }
-
-    attributes = {
-        # ------ matter -----
-        'id':{},
-        'name':{},
-        'tooltip':{},
-        'placeholder':{},
-        'value':{},
-        'state':{'options':['readonly','disabled','selected','enabled']},
-        # ------ Event ------
-        'click': {},
-        'change': {},
-        'route': {},
-        'init': {},
-        'action':{},
-        # ------ layout -----
-        'width':{},
-        'height':{},
-        'space':{},
-        'expand':{'options':['fill','vertical','horizontal','auto']},
-        'collapse':{},
-        'border':{},
-        'border-top': {},
-        'border-bottom': {},
-        'border-left': {},
-        'border-right': {},
-        #'border-radius': lambda v: f"rounded-{v}",
-        'margin':{'unit':['px','enum']},
-        'margin-top': {},
-        'margin-bottom': {},
-        'margin-left': {},
-        'margin-right': {},
-        'padding':{},
-        'padding-top': {},
-        'padding-bottom': {},
-        'padding-left': {},
-        'padding-right': {},
-        'collapse':{},
-        'size':{'unit':['px','enum','rem','%']},
-        'alignment-horizontal':{'options':['start', 'end', 'center', 'between', 'around', 'evenly']},
-        'alignment-vertical':{'options':['start', 'end', 'center', 'baseline', 'stretch']},
-        'alignment-content':{'options':['vertical','horizontal','center','between','around','evenly']},
-        'position':{'options':['sticky','static','relative','absolute','fixed']},
-        # --- STYLE ----
-        'style':{},
-        'shadow':{},
-        'opacity':{},
-        'background-color':{},
-        'class':{},
-    }
-
 
     def initialize(self):
         self.components = {}
@@ -404,7 +303,7 @@ class port(ABC):
                         #form = self.code('form',{'action':action,'method':'POST'},inner)
                         #self.att(form,att)
                         
-                        return await self.build_widget('Container', inner, att)
+                        return await self.build_widget('Form', inner, att)
                     case 'submit':
                         return await self.build_widget('Button', inner, att)
                     case 'button':
@@ -432,9 +331,7 @@ class port(ABC):
                         await self.mount_property('Modal',output,att)
                         return output
                     case _:
-                        output = await self.compose_view('Window',inner,**att)
-                        #await self.mount_property('Window',output,att)
-                        return output
+                        return await self.build_widget('Window', inner, att)
             case 'Card':
                 output = await self.compose_view('Container',inner,**att)
                 await self.mount_property('Container',output,att)

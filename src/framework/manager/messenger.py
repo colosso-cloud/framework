@@ -1,7 +1,7 @@
 import sys
 import asyncio
 
-modules = {'flow': 'framework.service.flow'}
+modules = {'flow': 'framework/service/flow.py'}
 
 class messenger():
 

@@ -151,6 +151,16 @@ class adapter(presentation.port):
     def widget_image(self, tag, inner, props):
         return self.code('image',{},inner)
     
+    def widget_form(self, tag, inner, props):
+        path = props.get('action','/')
+        method = self.routes.get(path,{}).get('method')
+        return self.code('form',{'method':method},inner)
+    
+    def widget_editor(self, tag, inner, props):
+        path = props.get('action','/')
+        method = self.routes.get(path,{}).get('method')
+        return self.code('form',{'method':method},inner)
+    
     def widget_table(self, tag, inner, props):
         return self.code('table',{},inner)
     
@@ -193,16 +203,7 @@ class adapter(presentation.port):
     def widget_carousel(self, tag, inner, props):
         return self.code('div', {'class': 'modal'}, inner)
     
-    def widget_navigationbar(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_navigationrail(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_navigationapp(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_navigationmenu(self, tag, inner, props):
+    def widget_navigation(self, tag, inner, props):
         return self.code('div', {'class': 'modal'}, inner)
     
     def widget_text(self, tag, inner, props):
@@ -461,7 +462,7 @@ class adapter(presentation.port):
         # Aggiorna attributi
         if root and attr:
             for key, value in attr.items():
-                root[key] = value
+                root[key] = value + root[key] 
 
         # Aggiungi nuovi figli
         if root and inner:

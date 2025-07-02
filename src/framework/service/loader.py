@@ -94,9 +94,6 @@ async def bootstrap() -> None:
             item.loader(loop=event_loop)
         else:
             await messenger.post(domain='debug',message=f"L'elemento {item} non ha un metodo 'loader'.")
-
-
-
     
     
     

@@ -45,13 +45,7 @@ def asynchronous(**constants):
     return decorator
 
 def synchronous(**constants):
-    inject = []
-    
-    # Prepara i manager se specificati nei constants
-    if 'managers' in constants:
-        for manager in constants['managers']:
-            if manager in di:
-                inject.append(di[manager])
+    inject = [di[manager] for manager in constants.get('managers', [])]
 
     def decorator(function):
         def wrapper(*args, **kwargs):

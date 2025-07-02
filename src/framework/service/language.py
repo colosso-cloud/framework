@@ -10,104 +10,117 @@ import re
 import fnmatch
 from datetime import datetime, timezone
 import uuid
+import json
 
-def extract_params2(s):
-            match = re.search(r"\w+\((.*)\)", s)
-            if not match:
-                return {}
+from cerberus import Validator, TypeDefinition
 
-            content = match.group(1)
+class CustomBuilderValidator(Validator):
+    _definition_schema = {
+        'default_generate_identifier': {'type': 'string', 'allowed': ['generate_identifier']},
+        'default_time_now_utc': {'type': 'string', 'allowed': ['time_now_utc']},
+    }
 
-            # Split sicuro che tiene conto di {}
-            pairs = []
-            temp = ''
-            depth = 0
-            for char in content:
-                if char == ',' and depth == 0:
-                    pairs.append(temp.strip())
-                    temp = ''
-                else:
-                    if char == '{':
-                        depth += 1
-                    elif char == '}':
-                        depth -= 1
-                    temp += char
-            if temp:
-                pairs.append(temp.strip())
+    def _normalize_default_generate_identifier(self, definition):
+        return generate_identifier()
 
-            result = {}
-            for pair in pairs:
-                if ':' not in pair:
-                    continue
-                key, value = pair.split(':', 1)
-                key = key.strip()
-                value = value.strip()
-                # Se è una stringa con apici singoli, rimuovili
-                if value.startswith("'") and value.endswith("'"):
-                    result[key] = value[1:-1]
-                else:
-                    result[key] = eval(value)  # valore grezzo
+    def _normalize_default_time_now_utc(self, definition):
+        return time_now_utc()
 
-            return result
+    # Se vuoi, puoi definire un custom coercer per forzare il tipo a lista
+    # Questo è un esempio, la regola 'type: list' + 'default: []' è già robusta
+    def _normalize_coerce_to_list_if_none(self, field, value):
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            return [value]
+        return value
+    
+async def schema(schema_definition, value=None, lang=None):
+    """
+    Genera e/o valida un dizionario basato sullo schema Cerberus specificato.
+    Popola i valori di default dinamici e normalizza il documento.
+    """
+    value = value or {} # Assicura che value sia un dizionario
+
+    # Gestione del caricamento dinamico dello schema come stringa
+    if isinstance(schema_definition, str):
+        try:
+            # Questa parte dovrebbe caricare lo schema effettivo.
+            # Per questo esempio, usiamo una mappatura diretta.
+            if schema_definition == 'transaction':
+                loaded_schema = globals().get('transaction_schema_definition') # Ottieni dallo scope globale
+                if not loaded_schema:
+                    raise AttributeError(f"Schema '{schema_definition}' non definito.")
+                schema_definition = loaded_schema
+            else:
+                # Qui potresti implementare la logica per load_module da un path effettivo
+                # Per semplicità, in questo esempio specifico, gestiamo solo 'transaction'
+                raise NotImplementedError(f"Caricamento di schema da '{schema_definition}' non supportato per questo esempio minimale.")
+
+            # Ricorsione con lo schema caricato
+            return await builder(schema_definition, value, lang)
+        except Exception as e:
+            print(f"Errore durante il caricamento dello schema '{schema_definition}': {e}")
+            raise # Rilancia l'eccezione dopo averla loggata
+    
+    if not isinstance(schema_definition, dict):
+        raise TypeError("Lo schema deve essere un dizionario o una stringa che punta a uno schema definito.")
+
+    # Inizializza il validatore con il nostro CustomBuilderValidator
+    # Questo permette a Cerberus di gestire i default dinamici
+    validator = CustomBuilderValidator(schema_definition)
+
+    # Valida e normalizza il documento.
+    # Il metodo 'validate' applica i default e le coercizioni prima di validare.
+    if not validator.validate(value):
+        print(f"❌ Errori di validazione Cerberus: {validator.errors}")
+        raise ValueError("Errore di validazione Cerberus: i dati non sono conformi allo schema.")
+    
+    # Restituisce il documento pulito e normalizzato da Cerberus
+    return validator.normalized(value)
+
 
 def extract_params(s):
+    """
+    Estrae i parametri da una stringa, assumendo che i parametri siano
+    formattati come un oggetto JSON valido all'interno delle parentesi.
+
+    Esempio: "funzione(param1: 'valore', param2: 123, param3: [1,2,3])"
+    Verrà convertito in "{'param1': 'valore', 'param2': 123, 'param3': [1,2,3]}"
+    e poi valutato come JSON.
+
+    Args:
+        s (str): La stringa da cui estrarre i parametri.
+
+    Returns:
+        dict: Un dizionario dei parametri estratti, o un dizionario vuoto in caso di errore.
+    """
     match = re.search(r"\w+\((.*)\)", s)
     if not match:
         return {}
 
-    content = match.group(1)
+    content = match.group(1).strip()
 
-    # Split sicuro che tiene conto di {} e []
-    pairs = []
-    temp = ''
-    depth_curly = 0
-    depth_square = 0
-    in_string = False
-    string_char = ''
+    if not content: # Se non ci sono parametri
+        return {}
 
-    for char in content:
-        if char in ("'", '"'):
-            if not in_string:
-                in_string = True
-                string_char = char
-            elif string_char == char:
-                in_string = False
-        if not in_string:
-            if char == '{':
-                depth_curly += 1
-            elif char == '}':
-                depth_curly -= 1
-            elif char == '[':
-                depth_square += 1
-            elif char == ']':
-                depth_square -= 1
+    json_content = re.sub(r'(\b\w+)\s*:', r'"\1":', content)
+    
+    json_content = re.sub(r"'(.*?)'", r'"\1"', json_content)
 
-        if char == ',' and depth_curly == 0 and depth_square == 0 and not in_string:
-            pairs.append(temp.strip())
-            temp = ''
-        else:
-            temp += char
-    if temp:
-        pairs.append(temp.strip())
+    # In Python, True/False/None sono maiuscoli, in JSON sono lowercase.
+    json_content = json_content.replace("True", "true").replace("False", "false").replace("None", "null")
 
-    result = {}
-    for pair in pairs:
-        if ':' not in pair:
-            continue
-        key, value = pair.split(':', 1)
-        key = key.strip()
-        value = value.strip()
-        if value.startswith("'") and value.endswith("'"):
-            result[key] = value[1:-1]
-        elif value.startswith('"') and value.endswith('"'):
-            result[key] = value[1:-1]
-        else:
-            try:
-                result[key] = eval(value)
-            except Exception:
-                result[key] = value  # fallback, ritorna come stringa grezza
+    # Avvolgi il contenuto in parentesi graffe per renderlo un oggetto JSON completo
+    final_json_string = "{" + json_content + "}"
 
-    return result
+    try:
+        # Usa json.loads per analizzare la stringa JSON
+        return json.loads(final_json_string)
+    except json.JSONDecodeError as e:
+        print(f"Errore di decodifica JSON: {e}")
+        print(f"Stringa JSON tentata: {final_json_string}")
+        return {} # Ritorna un dizionario vuoto in caso di errore di parsing JSON
 
 
 def generate_identifier():
@@ -138,7 +151,7 @@ async def extract_modules_from_code(code):
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign):
                 for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id == "modules":
+                    if isinstance(target, ast.Name) and target.id == "resources":
                         extracted_modules = ast.literal_eval(node.value)
                         break
     except Exception as e:
@@ -146,55 +159,11 @@ async def extract_modules_from_code(code):
     return extracted_modules if extracted_modules is not None else {}
 
 
-def get_module_os(path, lang):
-    try:
-        # Apriamo il file per la lettura
-        with open(path, 'r') as file:
-            aa = file.read()  # Leggi il contenuto del file
-
-        # Rimuoviamo l'estensione .py
-        nettt = path.split('/')
-        module_name = last(nettt).replace('.py','')
-        # Otteniamo il nome del modulo dall'ultima parte del percorso
-
-        # Creiamo il modulo dinamicamente
-        spec = importlib.util.spec_from_loader(module_name, loader=None)
-        module = importlib.util.module_from_spec(spec)
-
-        # Aggiungiamo l'attributo 'language' al modulo
-        setattr(module, 'language', lang)
-
-        # Eseguiamo il codice Python contenuto nel file
-        exec(aa, module.__dict__)
-
-        return module
-    except Exception as e:
-        print(f"Error loading 'infrastructure module': {str(e)}")
-
-
-def get_var(accessor_string, input_dict, default=None):
-    """Gets data from a dictionary using a dotted accessor-string"""
-    current_data = input_dict
-    for chunk in accessor_string.split('.'):
-        if isinstance(current_data, list):
-            try:
-                current_data = current_data[int(chunk)]
-            except (IndexError, ValueError, TypeError):
-                return default if default is not None else None
-        elif isinstance(current_data, dict):
-            if chunk in current_data:
-                current_data = current_data[chunk]
-            else:
-                return default if default is not None else None
-        else:
-            return default if default is not None else None
-    return current_data if current_data is not None else default
-
-
 if sys.platform != 'emscripten':
     async def backend(**constants):
-        area, service, adapter = constants["path"].split(".")
-        f = open(f"src/{area}/{service}/{adapter}.py", "r")
+        
+        path = constants["path"]
+        f = open(f"src/{path}", "r")
         ok = f.read()
         f.close() 
         return ok
@@ -213,47 +182,72 @@ else:
         return a
     
 
-async def load_module(lang, **constants):
+async def json_to_pydict(content: str, adapter_name: str):
+    """Parsa il contenuto di un file JSON e restituisce un dizionario."""
+    try:
+        parsed_json = json.loads(content)
+        print(f"✅ Risorsa JSON '{adapter_name}' caricata con successo.")
+        return parsed_json
+    except json.JSONDecodeError as e:
+        raise ValueError(f"⚠️ Errore durante il parsing del JSON per '{adapter_name}': {e}")
+    
+async def resource(lang, **constants):
+    """
+    Carica una risorsa (modulo Python o file JSON) dinamicamente.
+    """
+    path = constants.get("path", "")
+    adapter = constants.get("adapter", 'NaM').replace('.test', '')
+    
     try:
         if 'code' in constants:
-            module_code = constants['code']
-            adapter = 'Test'
+            # Caso in cui il codice è fornito direttamente
+            resource_content = constants['code']
+            adapter_name_for_logging = 'Test_Code'
         else:
-            # Estrae il nome del modulo
-            area, service, adapter = constants["path"].split(".")
+            # Recupera il contenuto della risorsa dal backend
+            resource_content = await backend(**constants)
+            adapter_name_for_logging = adapter
+
+        if not resource_content:
+            raise FileNotFoundError(f"⚠️ Contenuto della risorsa '{adapter_name_for_logging}' non valido o vuoto.")
+
+        # Determina il tipo di risorsa basandosi sull'estensione del path
+        if path.endswith('.json'):
+            adapter_name = constants.get("adapter", "default_adapter")
+            content = await backend(**constants)
+            return await json_to_pydict(content, adapter_name)
+        elif path.endswith('.py'):
+            # Se è un file Python, continua con la logica esistente
+            module_code = resource_content
             
-            # Recupera il codice del modulo dal backend
-            module_code = await backend(**constants)
-            if not module_code or not isinstance(module_code, str):
-                raise ValueError(f"⚠️ Codice del modulo '{adapter}' non valido o vuoto.")
-        
-        
-            
+            # Controlla le dipendenze del modulo (solo per codice Python)
+            # Ho adattato il nome della tua funzione per coerenza
+            modules_to_install = await extract_modules_from_code(module_code)
 
-        # Controlla le dipendenze del modulo
-        modules_to_install = await extract_modules_from_code(module_code)
+            # Crea un nuovo modulo dinamico
+            spec = importlib.util.spec_from_loader(adapter, loader=None)
+            module = importlib.util.module_from_spec(spec)
+            module.language = lang
 
-        # Crea un nuovo modulo dinamico
-        spec = importlib.util.spec_from_loader(adapter, loader=None)
-        module = importlib.util.module_from_spec(spec)
-        module.language = lang
+            # Carica le risorse richieste ricorsivamente
+            # Qui usiamo load_resource (la funzione corrente) per gestire sia .py che .json
+            for resource_name, resource_path in modules_to_install.items():
+                # Passa l'adapter originale se non specificato, altrimenti il nome della risorsa
+                setattr(module, resource_name, await resource(lang, path=resource_path, adapter=resource_name))
 
-        # Carica i moduli richiesti ricorsivamente
-        for module_name, module_path in modules_to_install.items():
-            setattr(module, module_name, await load_module(lang, path=module_path))
+            # Esegue il codice nel contesto del modulo
+            exec(module_code, module.__dict__)
 
-        # Esegue il codice nel contesto del modulo
-        exec(module_code, module.__dict__)
-
-        # Registra il modulo in sys.modules per permettere future importazioni
-        #sys.modules[adapter] = module
-
-        print(f"✅ Modulo '{adapter}' caricato con successo.")
-        return module
+            print(f"✅ Modulo Python '{adapter_name_for_logging}' caricato con successo.")
+            return module
+        else:
+            # Gestisci altri tipi di file o un tipo non riconosciuto
+            print(f"⚠️ Tipo di risorsa non supportato per '{adapter_name_for_logging}': '{os.path.splitext(path)[1]}'. Restituzione del contenuto grezzo.")
+            return resource_content # O solleva un errore, a seconda della tua politica
 
     except Exception as e:
-        print(f"❌ Errore durante il caricamento del modulo '{adapter}': {e}")
-        return None
+        print(f"❌ Errore durante il caricamento della risorsa '{adapter}': {e}")
+        #raise FileNotFoundError(f"⚠️ Contenuto della risorsa  non valido o vuoto.")
 
 async def load_provider(lang,**constants):
         adapter = constants.get('adapter', '')
@@ -297,85 +291,6 @@ async def load_manager(lang,**constants):
             print(constants)
             print(f"❌ Error: loading 'infrastructure.{service}.{adapter}': {repr(e)}")
     
-def loader_provider_test(**constants):
-
-        
-        adapter = constants['adapter'] if 'adapter' in constants else ''
-        service = constants['service'] if 'service' in constants else ''
-        payload = constants['payload'] if 'payload' in constants else ''
-        area = constants['area'] if 'area' in constants else 'application'
-            
-        req = js.XMLHttpRequest.new()
-        req.open("GET", f"{area}/{service}/{adapter}.py", False)
-        req.send()
-
-        req2 = js.XMLHttpRequest.new()
-        req2.open("GET", f"framework/service/language.py", False)
-        req2.send()
-
-        spec2 = importlib.util.spec_from_loader('language', loader=None)
-        module2 = importlib.util.module_from_spec(spec2)
-        exec(req2.response, module2.__dict__)
-        
-        spec = importlib.util.spec_from_loader(adapter, loader=None)
-        module = importlib.util.module_from_spec(spec)
-        module.language = module2
-        exec(req.response, module.__dict__)
-
-        
-
-        return module
-
-def ttt(**constants):
-    adapter = constants['adapter'] if 'adapter' in constants else ''
-    service = constants['service'] if 'service' in constants else ''
-    area = constants['area'] if 'area' in constants else ''
-    payload = constants['payload'] if 'payload' in constants else ''
-
-    spec=importlib.util.spec_from_file_location(adapter,f"src/{area}/{service}/{adapter}.py")
- 
-    # creates a new module based on spec
-    foo = importlib.util.module_from_spec(spec)
-
-    spec_lang=importlib.util.spec_from_file_location('language','src/framework/service/language.py')
-    foo_lang = importlib.util.module_from_spec(spec_lang)
-    spec_lang.loader.exec_module(foo_lang)
-    setattr(foo,'language',foo_lang)
-    
-    # executes the module in its own namespace
-    # when a module is imported or reloaded.
-    spec.loader.exec_module(foo)
-
-    return foo
-
-def load_main(lang,**c):
-    
-    if sys.platform == 'emscripten':
-        a = loader_provider_test(**c)
-        return a
-    else:
-        return ttt(**c)
-
-# Definizione dei campi richiesti in base all'adapter
-ADAPTER_FIELDS = {
-    "wasm": ["host", "port", "route"],
-    "starlette": ["host", "port", "route"],
-    "logging": ["host", "port", "persistence"],
-    "websocket": ["url"],
-    "api": ["url",'authorization','accept',],
-    "flow": [],
-    "mqtt": ["url", "port", "username", "password"],
-    'oauth': ['url','id','secret'],
-    "jwt": ["url", "app_id", "installation_id", "key", "autologin"],
-    "supabase": ["url", "key"],
-    "fs": [],
-    "flutter": [],
-    "ansible": ['playbook_path','inventory_file','extra_vars','timeout'],
-    "log": ['format','level','file'],
-    "console": ['format','level','file'],
-    "redis": ['host','port','database','password'],
-}
-
 
 def validate_toml(content):
     
@@ -395,7 +310,8 @@ def validate_toml(content):
                 continue  # Saltiamo la validazione se non c'è un adapter
 
             adapter = fields["adapter"]
-            required_fields = ADAPTER_FIELDS.get(adapter)
+            #required_fields = ADAPTER_FIELDS.get(adapter)
+            required_fields = {}
 
             if required_fields is None:
                 errors.append(f"❌ Adapter sconosciuto '{adapter}' nella sezione [{full_name}]")
@@ -417,7 +333,7 @@ def validate_toml(content):
 
 def get_confi(**constants):
     jinjaEnv = Environment()
-    jinjaEnv.filters['get'] = get_safe
+    jinjaEnv.filters['get'] = get
     if sys.platform != 'emscripten':
         with open('pyproject.toml', 'r') as f:
             text = f.read()
@@ -437,41 +353,7 @@ def get_confi(**constants):
         config = tomli.loads(content)
         return config
 
-def get(domain,dictionary={}):
-        output = None
-        lista = [] 
-        
-        piec = domain.split('.')
-        puntatore = dictionary.copy()
-        for idx,key in enumerate(piec):
-            if key.isnumeric():
-                key = int(key)
-            
-            if key == '*':
-                arr = get('.'.join(piec[:idx]),dictionary)
-                for x in range(len(arr)):
-                    aa = piec
-                    aa[idx] = str(x)
-                    nnnome = '.'.join(aa)
-                    #print(nnnome)
-                    lista.append(get(nnnome,dictionary))
-                return lista
-
-            if type(key) == type(10):
-                if key > len(puntatore):
-                    return None
-            else:
-                if not key in puntatore:
-                    return None
-            
-            
-            if idx == len(piec)-1:
-                return puntatore[key]
-            else:
-                if len(puntatore) != 0:
-                    puntatore = puntatore[key]
-
-def get_safe(dictionary, domain, default=None):
+def get_2(dictionary, domain, default=None):
     """
     Safe access to nested dict/list structures using dot notation.
     Supports wildcard '*' to map over lists.
@@ -511,15 +393,39 @@ def get_safe(dictionary, domain, default=None):
 
     return _get(domain, dictionary)
 
+def get(dictionary, domain, default=None):
+    """Gets data from a dictionary using a dotted accessor-string, returning default only if path not found."""
+    current_data = dictionary
+    for chunk in domain.split('.'):
+        if isinstance(current_data, list):
+            try:
+                index = int(chunk)
+                current_data = current_data[index]
+            except (IndexError, ValueError, TypeError):
+                # Se l'indice non è valido o current_data non è una lista
+                return default
+        elif isinstance(current_data, dict):
+            if chunk in current_data:
+                current_data = current_data[chunk]
+            else:
+                # Se la chiave non è presente nel dizionario
+                return default
+        else:
+            # Se current_data non è né un dizionario né una lista nel mezzo del percorso
+            return default
+    
+    # Restituisce il valore trovato. Se il valore trovato è None, lo restituisce così com'è.
+    return current_data 
 
-def put(domain,value,data=dict()):
+
+def put(dictionary, domain, value):
         #print(domain)
         if type(domain) == type(list()):
             subdomain = domain[0].split('.')
         else:
             subdomain = domain.split('.')
         
-        work = data.copy()
+        work = dictionary.copy()
         puntatore = work
         
         for idx,key in enumerate(subdomain):
@@ -661,15 +567,6 @@ def translation(data_dict, fields,mapper, values, input='MODEL', output='MODEL')
 
     return translated
 
-def translationold2(data, values, mapper, input='MODEL', output='MODEL'):
-    try:
-        lista = []
-        for deta in data:
-            lista.append(translation(deta, values, mapper, input, output))
-        return lista
-    except Exception as e:
-        print(f"Errore translation: {type(e).__name__}: {e}")
-    return []
 
 def filter(self):
         pass
