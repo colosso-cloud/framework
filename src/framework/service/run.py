@@ -79,13 +79,14 @@ def test():
                         module = await language.resource(language, path=module_path,adapter=module_name.replace('.test.py',''))
                         # Aggiungi i test dal modulo
                         test_suite.addTest(unittest.defaultTestLoader.loadTestsFromModule(module))
-                    except ImportError as e:
+                    except Exception as e:
                         print(f"Errore nell'importazione del modulo: {module_path}, {e}")
         return test_suite
     
     suite = asyncio.run(discover_tests())
     runner = unittest.TextTestRunner()
     runner.run(suite)
+        
 
 #@flow.asynchronous(managers=('tester',))
 def application(tester=None,**constants):

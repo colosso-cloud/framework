@@ -25,9 +25,7 @@ class Test(test.test):
 
         await self.check_cases(language.resource, success)
         await self.check_cases(language.resource, failure)
-
-        
-
+    
     async def test_schema(self):
         cases = [
             {'args':(language),'kwargs':{'path':"framework/service/run.py"},'type':types.ModuleType},
@@ -45,13 +43,78 @@ class Test(test.test):
         #self.assertTrue(False)
 
     async def test_put(self):
-        a = {}
+        # Definisci il tuo schema Cerberus
+        my_schema = {
+            'user': {
+                'type': 'dict',
+                'schema': {
+                    'name': {'type': 'string', 'required': True},
+                    'age': {'type': 'integer', 'min': 0},
+                    'address': {
+                        'type': 'dict',
+                        'schema': {
+                            'street': {'type': 'string'},
+                            'city': {'type': 'string'},
+                            'zip': {'type': 'string', 'regex': r'^\d{5}$'} # Raw string per regex
+                        }
+                    },
+                    'items': {
+                        'type': 'list',
+                        'schema': { # Schema per ogni elemento della lista
+                            'type': 'dict',
+                            'schema': {
+                                'id': {'type': 'integer'},
+                                'name': {'type': 'string'}
+                            }
+                        }
+                    }
+                }
+            },
+            'config': {
+                'type': 'dict',
+                'schema': {
+                    'version': {'type': 'float'},
+                    'active': {'type': 'boolean'}
+                }
+            }
+        }
 
-        cases = [
-            {'args':(a,'name','mario'),'equal':{'name': 'mario'}},
+        # --- CASI DI SUCCESSO ---
+        # Gli args devono essere un tuple che contiene TUTTI gli argomenti per `put`
+        success_cases = [
+            #1 Inserimento iniziale, crea 'user' come dict
+            {'args': ({}, 'user.name', 'Alice', my_schema), 'equal': {'user': {'name': 'Alice'}}},
+            #2 Crea 'address' come dict
+            {'args': ({'user': {'name': 'Alice'}}, 'user.address.street', 'Via Roma', my_schema), 'equal': {'user': {'name': 'Alice', 'address': {'street': 'Via Roma'}}}},
+            #3 Crea 'items' come lista e il primo elemento come dict
+            {'args': ({'user': {'name': 'Alice'}}, 'user.items.0.id', 123, my_schema), 'equal': {'user': {'name': 'Alice', 'items': [{'id': 123}]}}},
+            #4 Aggiunge nome al primo elemento della lista
+            {'args': ({'user': {'items': [{'id': 123}]}}, 'user.items.0.name', 'Prodotto A', my_schema), 'equal': {'user': {'items': [{'id': 123, 'name': 'Prodotto A'}]}}},
+            #5 Aggiorna un valore esistente
+            {'args': ({'user': {'name': 'Bob'}}, 'user.name', 'Charlie', my_schema), 'equal': {'user': {'name': 'Charlie'}}},
         ]
 
-        await self.check_cases(language.put, cases)
+        # --- CASI DI FALLIMENTO ---
+        failure_cases = [
+            #1 Campo non definito nello schema
+            {'args': ({}, 'user.invalid_field', 'Value', my_schema), 'error': IndexError},
+            #2 Tipo di nodo intermedio sbagliato (tentativo di usare indice su dict quando lo schema attende stringa)
+            {'args': ({}, 'user.0.name', 'Alice', my_schema), 'error': IndexError},
+            #3 Tipo non corrispondente allo schema (stringa per int)
+            {'args': ({'user': {}}, 'user.age', '30', my_schema), 'error': ValueError},
+            #4 Regex non corrispondente
+            {'args': ({'user': {'address':{}}}, 'user.address.zip', 'ABCDE', my_schema), 'error': ValueError},
+            #5 Tentativo di accedere con chiave stringa a una lista (se lo schema attende una lista, ma viene data una stringa)
+            {'args': ({'user': {'items':[]}}, 'user.items.my_item.id', 1, my_schema), 'error': IndexError},
+            #6 Indice di lista negativo
+            #{'args': ({'user': {'items':[]}}, 'user.items.-1.id', 1, my_schema), 'error': IndexError},
+            #7 Dominio vuoto
+            {'args': ({}, '', 'value', my_schema), 'error': ValueError},
+        ]
+
+        await self.check_cases(language.put, success_cases) # Passa la funzione put (non language.put)
+        await self.check_cases(language.put, failure_cases) # Passa la funzione put
+
 
     async def test_extract_params(self):
         success = [
@@ -86,36 +149,30 @@ class Test(test.test):
         await self.check_cases(language.extract_params, success)
         await self.check_cases(language.extract_params, failure)
 
-    async def test_get_success_cases(self):
+    async def test_get(self):
         """Verifica che language.get recuperi correttamente i valori da percorsi validi."""
-        success_cases = [
-            # (data, accessor_string, default, expected_output)
-            ({'name': 'test_name'}, 'name', None, 'test_name'),
-            ({'url': {'path': '/api'}}, 'url.path', None, '/api'),
-            ({'a': {'b': 1}}, 'a.b', None, 1), # Esiste, default non usato
-            ({'list_data': [10, 20]}, 'list_data.0', None, 10),
-            ({'list_data': [{'item': 'val'}]}, 'list_data.0.item', None, 'val'),
-            ({'a': None}, 'a', None, None), # Verifica None esplicito come valore
+        success = [
+            {'args':({'name': 'test_name'}, 'name'),'equal':'test_name'},
+            {'args':({'url': {'path': '/api'}}, 'url.path', ),'equal':'/api'},
+            {'args':({'url': {'path': '/api', 'query': {'id': 123}}}, 'url.query.id'),'equal':123},
+            {'args':({'data': [1, 2, 3]}, 'data.1'),'equal':2},
+            {'args':({'data': [{'item': 'value'}]}, 'data.0.item'),'equal':'value'},
+            {'args':({'nested': {'key': 'value'}}, 'nested.key'),'equal':'value'},
+            {'args':({'list': [1, 2, 3]}, 'list.2'),'equal':3},
+            {'args':({'mixed': {'a': 1, 'b': [10, 20]}}, 'mixed.b.1'),'equal':20},
+            {'args':({'complex': {'a': {'b': 1}}}, 'complex.a.b'),'equal':1},
+            {'args':({'empty_dict': {}}, 'empty_dict.non_existent', 'default_value'),'equal':'default_value'}, # Chiave inesistente con default
+            {'args':({}, 'none_value', 'fallback'),'equal':'fallback'}, # Accesso a None con default
+            {'args':({'list_data': [10, 20]}, 'list_data.0'),'equal':10}, # Accesso a lista con indice
+            {'args':({'list_data': [{'item': 'val'}]}, 'list_data.0.item'),'equal':'val'}, # Accesso a lista di dizionari
+            {'args':({}, 'a'),'equal':None}, # Verifica None esplicito come valore
+            {'args':(['ciao'], '0'),'equal':'ciao'}, # Accesso a lista con indice
+
         ]
 
-        for i, (data, accessor_string, default, expected_output) in enumerate(success_cases):
-            with self.subTest(msg=f"Success Case {i+1}: get({data}, '{accessor_string}', {default})"):
-                result = language.get(data, accessor_string, default)
-                self.assertEqual(result, expected_output)
-
-    async def test_get_failure_cases(self):
-        """Verifica che language.get gestisca correttamente i percorsi non validi o inesistenti."""
-        failure_cases = [
-            # (data, accessor_string, default, expected_output_on_failure)
-            ({}, 'a.b', 'def', 'def'), # Percorso inesistente, restituisce default
-            ({'a': {'b': 1}}, 'a.c', 123, 123), # Chiave inesistente in dict, restituisce default
-            ({'a': None}, 'a.b', 'fallback', 'fallback'), # Accesso su None, restituisce default
-            ({'list': [1,2,3]}, 'list.5', 'not found', 'not found'), # Indice fuori range, restituisce default
-            ({'list': [1,2,3]}, 'list.abc', 'invalid index', 'invalid index'), # Indice non numerico, restituisce default
-            ({'numeric_val': 123}, 'numeric_val.sub', 'no_sub', 'no_sub'), # Accesso su tipo non iterabile, restituisce default
+        failure = [
+            {'args':(123,'id'), 'error': TypeError}, # Accesso a un intero, dovrebbe fallire
         ]
 
-        for i, (data, accessor_string, default, expected_output_on_failure) in enumerate(failure_cases):
-            with self.subTest(msg=f"Failure Case {i+1}: get({data}, '{accessor_string}', {default})"):
-                result = language.get(data, accessor_string, default)
-                self.assertEqual(result, expected_output_on_failure)
+        await self.check_cases(language.get, success)
+        await self.check_cases(language.get, failure)

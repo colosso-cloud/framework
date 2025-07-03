@@ -11,6 +11,7 @@ import fnmatch
 from datetime import datetime, timezone
 import uuid
 import json
+import copy
 
 from cerberus import Validator, TypeDefinition
 
@@ -247,7 +248,7 @@ async def resource(lang, **constants):
 
     except Exception as e:
         print(f"❌ Errore durante il caricamento della risorsa '{adapter}': {e}")
-        #raise FileNotFoundError(f"⚠️ Contenuto della risorsa  non valido o vuoto.")
+        raise FileNotFoundError(f"⚠️ Contenuto della risorsa  non valido o vuoto.")
 
 async def load_provider(lang,**constants):
         adapter = constants.get('adapter', '')
@@ -395,6 +396,8 @@ def get_2(dictionary, domain, default=None):
 
 def get(dictionary, domain, default=None):
     """Gets data from a dictionary using a dotted accessor-string, returning default only if path not found."""
+    if not isinstance(dictionary, (dict, list)):
+        raise TypeError("Il primo argomento deve essere un dizionario o una lista.")
     current_data = dictionary
     for chunk in domain.split('.'):
         if isinstance(current_data, list):
@@ -418,7 +421,7 @@ def get(dictionary, domain, default=None):
     return current_data 
 
 
-def put(dictionary, domain, value):
+def put2(dictionary, domain, value):
         #print(domain)
         if type(domain) == type(list()):
             subdomain = domain[0].split('.')
@@ -431,7 +434,7 @@ def put(dictionary, domain, value):
         for idx,key in enumerate(subdomain):
             #print(key,idx)
             if idx == len(subdomain)-1:
-                #print(key,value)
+                #print(key,value)   
                 puntatore[key] = value
             else:
                 if not key in puntatore:
@@ -454,6 +457,96 @@ def put(dictionary, domain, value):
                     puntatore = puntatore[key]
         
         return work
+
+def put3(dictionary: dict, domain: str, value: any) -> dict:
+    """
+    Imposta un valore in un dizionario annidato usando una stringa di accesso puntata (es. 'a.b.0.c').
+    Crea dizionari o liste intermedie se non esistono.
+    Solleva TypeError, KeyError o IndexError se il percorso è invalido o il tipo è incompatibile.
+
+    Args:
+        dictionary (dict): Il dizionario iniziale su cui operare. Verrà creata una copia.
+        domain (str): La stringa del percorso puntato (es. "user.address.street").
+                      Gli indici di lista devono essere numerici (es. "items.0.name").
+        value (any): Il valore da impostare.
+
+    Returns:
+        dict: Una nuova copia del dizionario con il valore impostato.
+
+    Raises:
+        TypeError: Se un segmento del dominio tenta di accedere a una chiave di dizionario
+                   su un oggetto non-dizionario, o un indice di lista su un non-lista,
+                   o se l'indice di lista non è un numero intero valido.
+        IndexError: Se un indice di lista è negativo o supera la dimensione della lista
+                    (e non è l'ultimo elemento della lista per un'assegnazione diretta).
+        ValueError: Se il dominio è vuoto o malformato.
+    """
+    if not isinstance(dictionary, dict):
+        raise TypeError("Il dizionario iniziale deve essere di tipo dict.")
+    if not isinstance(domain, str) or not domain:
+        raise ValueError("Il dominio deve essere una stringa non vuota.")
+
+    work_dict = dictionary.copy()  # Lavora su una copia per non modificare l'originale
+    current_node = work_dict
+    path_chunks = domain.split('.')
+
+    for i, chunk in enumerate(path_chunks):
+        is_last_chunk = (i == len(path_chunks) - 1)
+
+        # Gestione di chiavi/indici
+        is_numeric_chunk = chunk.isnumeric()
+        key_or_index = int(chunk) if is_numeric_chunk else chunk
+
+        # Caso: Siamo a un dizionario
+        if isinstance(current_node, dict):
+            if is_numeric_chunk:
+                # Errore: Tentativo di usare un indice numerico su un dizionario
+                raise TypeError(f"Il segmento '{chunk}' è un indice numerico ma il nodo '{'.'.join(path_chunks[:i])}' è un dizionario. Usa chiavi stringa per i dizionari.")
+            
+            if is_last_chunk:
+                current_node[key_or_index] = value # Assegna il valore finale
+            else:
+                if key_or_index not in current_node:
+                    # Crea il prossimo nodo. Se il prossimo chunk è numerico, crea una lista, altrimenti un dizionario.
+                    if path_chunks[i+1].isnumeric():
+                        current_node[key_or_index] = []
+                    else:
+                        current_node[key_or_index] = {}
+                # Sposta il puntatore al prossimo nodo
+                current_node = current_node[key_or_index]
+
+        # Caso: Siamo a una lista
+        elif isinstance(current_node, list):
+            if not is_numeric_chunk:
+                # Errore: Tentativo di usare una chiave stringa su una lista
+                raise TypeError(f"Il segmento '{chunk}' è una chiave stringa ma il nodo '{'.'.join(path_chunks[:i])}' è una lista. Usa indici numerici per le liste.")
+            
+            # Assicurati che l'indice sia valido o che la lista possa essere estesa
+            if key_or_index < 0:
+                raise IndexError(f"L'indice '{key_or_index}' è negativo al passo {i} del dominio '{domain}'.")
+
+            # Estendi la lista con `None` (o {} / [] se preferisci) fino all'indice necessario
+            while len(current_node) <= key_or_index:
+                current_node.append(None) # Estende la lista riempendo con None
+
+            if is_last_chunk:
+                current_node[key_or_index] = value # Assegna il valore finale
+            else:
+                # Se il nodo all'indice non esiste o non è il tipo atteso per continuare il percorso
+                if current_node[key_or_index] is None or not (isinstance(current_node[key_or_index], dict) or isinstance(current_node[key_or_index], list)):
+                    # Prevedi il tipo del prossimo nodo per creare la struttura corretta
+                    if path_chunks[i+1].isnumeric():
+                        current_node[key_or_index] = []
+                    else:
+                        current_node[key_or_index] = {}
+                # Sposta il puntatore al prossimo nodo
+                current_node = current_node[key_or_index]
+
+        # Caso: Il tipo di nodo corrente non è né dict né list (errore nel percorso)
+        else:
+            raise TypeError(f"Il tipo di dato '{type(current_node).__name__}' non è indicizzabile tramite '{chunk}' al passo {i} del dominio '{domain}'.")
+    
+    return work_dict
 
 async def builder(schema, value=None, spread={}, mode='full', lang=None):
     """Genera un dizionario basato sullo schema specificato, rispettando l'ordine delle operazioni."""
@@ -591,3 +684,79 @@ def replace(self):
 
 def slice(self):
         pass
+
+def _get_next_schema(schema, key):
+    if isinstance(schema, dict):
+        if 'schema' in schema:
+            if schema.get('type') == 'list': return schema['schema']
+            if isinstance(schema['schema'], dict): return schema['schema'].get(key)
+        return schema.get(key)
+    return None
+
+def put(data: dict, path: str, value: any, schema: dict) -> dict:
+    if not isinstance(data, dict): raise TypeError("Il dizionario iniziale deve essere di tipo dict.")
+    if not isinstance(path, str) or not path: raise ValueError("Il dominio deve essere una stringa non vuota.")
+    if not isinstance(schema, dict) or not schema: raise ValueError("Lo schema deve essere un dizionario valido.")
+
+    result = copy.deepcopy(data)
+    node, sch = result, schema
+    chunks = path.split('.')
+
+    for i, chunk in enumerate(chunks):
+        is_last = i == len(chunks) - 1
+        is_index = chunk.lstrip('-').isdigit()
+        key = int(chunk) if is_index else chunk
+        next_sch = _get_next_schema(sch, chunk)
+
+        if isinstance(node, dict):
+            if is_index:
+                raise IndexError(f"Indice numerico '{chunk}' usato in un dizionario a livello {i}.")
+            if is_last:
+                if next_sch is None:
+                    raise IndexError(f"Campo '{chunk}' non definito nello schema.")
+                if not Validator({chunk: next_sch}, allow_unknown=False).validate({chunk: value}):
+                    raise ValueError(f"Valore non valido per '{chunk}': {value}")
+                node[key] = value
+            else:
+                node.setdefault(key, {} if next_sch and next_sch.get('type') == 'dict'
+                                     else [] if next_sch and next_sch.get('type') == 'list'
+                                     else None)
+                if node[key] is None:
+                    raise IndexError(f"Nodo intermedio '{chunk}' non valido nello schema.")
+                node, sch = node[key], next_sch
+
+        elif isinstance(node, list):
+            if not is_index:
+                raise IndexError(f"Chiave '{chunk}' non numerica usata in una lista a livello {i}.")
+            if not isinstance(next_sch, dict) or 'type' not in next_sch:
+                raise IndexError(f"Schema non valido per lista a livello {i}.")
+
+            if key == -1:  # Append mode
+                t = next_sch['type']
+                new_elem = {} if t == 'dict' else [] if t == 'list' else None
+                node.append(new_elem)
+                key = len(node) - 1
+
+            if key < 0:
+                raise IndexError(f"Indice negativo '{chunk}' non valido in lista.")
+
+            while len(node) <= key:
+                t = next_sch['type']
+                node.append({} if t == 'dict' else [] if t == 'list' else None)
+
+            if is_last:
+                if not Validator({chunk: next_sch}, allow_unknown=False).validate({chunk: value}):
+                    raise ValueError(f"Valore non valido per indice '{chunk}': {value}")
+                node[key] = value
+            else:
+                if node[key] is None or not isinstance(node[key], (dict, list)):
+                    t = next_sch['type']
+                    if t == 'dict': node[key] = {}
+                    elif t == 'list': node[key] = []
+                    else: raise IndexError(f"Tipo non contenitore '{t}' per nodo '{chunk}' in lista.")
+                node, sch = node[key], next_sch
+
+        else:
+            raise IndexError(f"Nodo non indicizzabile al passo '{chunk}' (tipo: {type(node).__name__})")
+
+    return result

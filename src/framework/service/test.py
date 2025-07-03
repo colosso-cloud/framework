@@ -30,10 +30,11 @@ class test(IsolatedAsyncioTestCase):
             kwargs = case.get('kwargs', {})
             with self.subTest(msg=f"Success Case {i+1}: get({args}, {kwargs})"):
                 if case.get('error'):
-                    if is_action_async:
-                        result = await action(*args, **kwargs)
-                    else:
-                        result = action(*args, **kwargs)
+                    with self.assertRaises(case['error']):
+                        if is_action_async:
+                            result = await action(*args, **kwargs)
+                        else:
+                            result = action(*args, **kwargs)
                 else:
                     if is_action_async:
                         result = await action(*args, **kwargs)
