@@ -8,8 +8,66 @@ resources = {
     'model': 'framework/schema/model.json',
 }
 
+
+# --- Funzioni di Trasformazione di Esempio per i Test ---
+def format_price_eur(price):
+    if price is None:
+        return None
+    return f"{price:.2f} EUR"
+
+def convert_timestamp_to_date_str(ts_string):
+    if ts_string is None:
+        return None
+    dt_obj = datetime.fromisoformat(ts_string.replace('Z', '+00:00'))
+    return dt_obj.strftime("%Y-%m-%d")
+
+def status_to_boolean(status_code):
+    if status_code == 1:
+        return True
+    elif status_code == 0:
+        return False
+    return None # O False, a seconda della logica desiderata
+
 class Test(test.test):
+
+    schema = {
+        'user': {
+            'type': 'dict',
+            'schema': {
+                #'id': {'type': 'string', 'required': True},
+                'name': {'type': 'string', 'required': True},
+                'age': {'type': 'integer', 'min': 0},
+                'address': {
+                    'type': 'dict',
+                    'schema': {
+                        'street': {'type': 'string'},
+                        'city': {'type': 'string'},
+                        'zip': {'type': 'string', 'regex': r'^\d{5}$'} # Raw string per regex
+                    }
+                },
+                'items': {
+                    'type': 'list',
+                    'schema': { # Schema per ogni elemento della lista
+                        'type': 'dict',
+                        'schema': {
+                            'id': {'type': 'integer'},
+                            'name': {'type': 'string'}
+                        }
+                    }
+                }
+            }
+        },
+        'config': {
+            'type': 'dict',
+            'schema': {
+                'version': {'type': 'float'},
+                'active': {'type': 'boolean'}
+            }
+        }
+    }
+
     def setUp(self):
+        
         print("Setting up the test environment...")
 
     async def test_resource(self):
@@ -26,90 +84,55 @@ class Test(test.test):
         await self.check_cases(language.resource, success)
         await self.check_cases(language.resource, failure)
     
-    async def test_schema(self):
-        cases = [
-            {'args':(language),'kwargs':{'path':"framework/service/run.py"},'type':types.ModuleType},
-            {'args':(language),'kwargs':{'path':"framework/schema/model.json"},'equal':model},
+    async def test_model(self):
+        success = [
+            #1 Recupera il modello
+            {'args':(self.schema,{'user': {'name':'marco','items': [{'id': 123, 'name': 'Prodotto A'}]}}),'equal':{'user': {'name':'marco','items': [{'id': 123, 'name': 'Prodotto A'}]}}},
         ]
 
+        failure = [
+            #1 Campo mancante
+            {'args':(self.schema,{'user': {'ok':'m','name':'marco','items': [{'id': 123, 'name': 'Prodotto A'}]}}),'error': ValueError},
+        ]
 
-        a = {'name': 'test', 'version': '1.0.0', 'description': 'Test schema','url':{'path':'/', 'query': {'test': 'test'},}}
-        cc = language.get(a,'name')
-        path = language.get(a, 'url.path')
-        self.assertEqual(cc, 'test')
-        self.assertEqual(path, '/')
-        nn = language.get(a, 'url.stringa',123)
-        self.assertEqual(nn, 123)
-        #self.assertTrue(False)
+        await self.check_cases(language.model, success)
+        await self.check_cases(language.model, failure)
 
     async def test_put(self):
         # Definisci il tuo schema Cerberus
-        my_schema = {
-            'user': {
-                'type': 'dict',
-                'schema': {
-                    'name': {'type': 'string', 'required': True},
-                    'age': {'type': 'integer', 'min': 0},
-                    'address': {
-                        'type': 'dict',
-                        'schema': {
-                            'street': {'type': 'string'},
-                            'city': {'type': 'string'},
-                            'zip': {'type': 'string', 'regex': r'^\d{5}$'} # Raw string per regex
-                        }
-                    },
-                    'items': {
-                        'type': 'list',
-                        'schema': { # Schema per ogni elemento della lista
-                            'type': 'dict',
-                            'schema': {
-                                'id': {'type': 'integer'},
-                                'name': {'type': 'string'}
-                            }
-                        }
-                    }
-                }
-            },
-            'config': {
-                'type': 'dict',
-                'schema': {
-                    'version': {'type': 'float'},
-                    'active': {'type': 'boolean'}
-                }
-            }
-        }
+        
 
         # --- CASI DI SUCCESSO ---
         # Gli args devono essere un tuple che contiene TUTTI gli argomenti per `put`
         success_cases = [
             #1 Inserimento iniziale, crea 'user' come dict
-            {'args': ({}, 'user.name', 'Alice', my_schema), 'equal': {'user': {'name': 'Alice'}}},
+            {'args': ({}, 'user.name', 'Alice', self.schema), 'equal': {'user': {'name': 'Alice'}}},
             #2 Crea 'address' come dict
-            {'args': ({'user': {'name': 'Alice'}}, 'user.address.street', 'Via Roma', my_schema), 'equal': {'user': {'name': 'Alice', 'address': {'street': 'Via Roma'}}}},
+            {'args': ({'user': {'name': 'Alice'}}, 'user.address.street', 'Via Roma', self.schema), 'equal': {'user': {'name': 'Alice', 'address': {'street': 'Via Roma'}}}},
             #3 Crea 'items' come lista e il primo elemento come dict
-            {'args': ({'user': {'name': 'Alice'}}, 'user.items.0.id', 123, my_schema), 'equal': {'user': {'name': 'Alice', 'items': [{'id': 123}]}}},
+            {'args': ({'user': {'name': 'Alice'}}, 'user.items.0.id', 123, self.schema), 'equal': {'user': {'name': 'Alice', 'items': [{'id': 123}]}}},
             #4 Aggiunge nome al primo elemento della lista
-            {'args': ({'user': {'items': [{'id': 123}]}}, 'user.items.0.name', 'Prodotto A', my_schema), 'equal': {'user': {'items': [{'id': 123, 'name': 'Prodotto A'}]}}},
+            {'args': ({'user': {'items': [{'id': 123}]}}, 'user.items.0.name', 'Prodotto A', self.schema), 'equal': {'user': {'items': [{'id': 123, 'name': 'Prodotto A'}]}}},
             #5 Aggiorna un valore esistente
-            {'args': ({'user': {'name': 'Bob'}}, 'user.name', 'Charlie', my_schema), 'equal': {'user': {'name': 'Charlie'}}},
+            {'args': ({'user': {'name': 'Bob'}}, 'user.name', 'Charlie', self.schema), 'equal': {'user': {'name': 'Charlie'}}},
         ]
 
         # --- CASI DI FALLIMENTO ---
         failure_cases = [
             #1 Campo non definito nello schema
-            {'args': ({}, 'user.invalid_field', 'Value', my_schema), 'error': IndexError},
+            {'args': ({}, 'user.invalid_field', 'Value', self.schema), 'error': IndexError},
             #2 Tipo di nodo intermedio sbagliato (tentativo di usare indice su dict quando lo schema attende stringa)
-            {'args': ({}, 'user.0.name', 'Alice', my_schema), 'error': IndexError},
+            {'args': ({}, 'user.0.name', 'Alice', self.schema), 'error': IndexError},
             #3 Tipo non corrispondente allo schema (stringa per int)
-            {'args': ({'user': {}}, 'user.age', '30', my_schema), 'error': ValueError},
+            {'args': ({'user': {}}, 'user.age', '30', self.schema), 'error': ValueError},
             #4 Regex non corrispondente
-            {'args': ({'user': {'address':{}}}, 'user.address.zip', 'ABCDE', my_schema), 'error': ValueError},
+            {'args': ({'user': {'address':{}}}, 'user.address.zip', 'ABCDE', self.schema), 'error': ValueError},
             #5 Tentativo di accedere con chiave stringa a una lista (se lo schema attende una lista, ma viene data una stringa)
-            {'args': ({'user': {'items':[]}}, 'user.items.my_item.id', 1, my_schema), 'error': IndexError},
+            {'args': ({'user': {'items':[]}}, 'user.items.my_item.id', 1, self.schema), 'error': IndexError},
             #6 Indice di lista negativo
             #{'args': ({'user': {'items':[]}}, 'user.items.-1.id', 1, my_schema), 'error': IndexError},
             #7 Dominio vuoto
-            {'args': ({}, '', 'value', my_schema), 'error': ValueError},
+            {'args': ({}, '', 'value', self.schema), 'error': ValueError},
         ]
 
         await self.check_cases(language.put, success_cases) # Passa la funzione put (non language.put)
@@ -176,3 +199,31 @@ class Test(test.test):
 
         await self.check_cases(language.get, success)
         await self.check_cases(language.get, failure)
+
+    async def test_translation(self):
+        """Verifica la mappatura base dei nomi dei campi senza trasformazioni."""
+        api = {'version': {'type': 'float'}, 'active': {'type': 'boolean'}}
+
+        mapper = {
+            'config.version': {'API': 'version'},
+            'config.active': {'API': 'active'},
+        }
+        
+        values = {} # Nessuna trasformazione dei valori
+
+        success_cases = [
+            {'args': ({'version':1.1,'active':True}, mapper, values, api, self.schema), 'equal': {'config': {'version': 1.1,'active': True}}},
+            {'args': ({'config': {'version': 1.1,'active': True}}, mapper, values, self.schema, api), 'equal': {'version':1.1,'active':True}},
+            #{'args': ({'version':1.1,'active':True}, self.schema, mapper, values, 'MODEL', 'API'), 'equal': {'config': {'version': 1.1,'active': True}}}
+        ]
+
+        failure = [
+            {'args': ("{'version':1.1,'active':True,'sss':'a'}", mapper, values, api, self.schema), 'error': TypeError},
+            {'args': ({'version':1.1,'active':True}, [], values, api, self.schema), 'error': TypeError},
+            {'args': ({'version':1.1,'active':True,'sss':'a'}, mapper, (1,2,3), api, self.schema), 'error': TypeError},
+            #{'args': ({'config': {'version': 1.1,'active': True}}, mapper, values, self.schema, api), 'error': ValueError},
+            #{'args': ({'version':1.1,'active':True}, self.schema, mapper, values, 'MODEL', 'API'), 'equal': {'config': {'version': 1.1,'active': True}}}
+        ]
+
+        await self.check_cases(language.translation, success_cases)
+        await self.check_cases(language.translation, failure)

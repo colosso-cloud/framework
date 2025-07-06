@@ -13,72 +13,126 @@ import uuid
 import json
 import copy
 
-from cerberus import Validator, TypeDefinition
+from cerberus import Validator, TypeDefinition, errors
 
-class CustomBuilderValidator(Validator):
-    _definition_schema = {
-        'default_generate_identifier': {'type': 'string', 'allowed': ['generate_identifier']},
-        'default_time_now_utc': {'type': 'string', 'allowed': ['time_now_utc']},
-    }
-
-    def _normalize_default_generate_identifier(self, definition):
+class MyCustomValidator(Validator):
+    '''def __init__(self, *args, **kwargs):
+        #super().__init__(*args, **kwargs)
+        # Puoi anche inizializzare qui altre risorse o configurazioni
+        # self.my_custom_setting = kwargs.get('my_setting')
+        pass'''
+    
+    def _normalize_coerce_identifier(self, value):
         return generate_identifier()
-
-    def _normalize_default_time_now_utc(self, definition):
-        return time_now_utc()
-
-    # Se vuoi, puoi definire un custom coercer per forzare il tipo a lista
-    # Questo è un esempio, la regola 'type: list' + 'default: []' è già robusta
-    def _normalize_coerce_to_list_if_none(self, field, value):
-        if value is None:
-            return []
-        if not isinstance(value, list):
-            return [value]
-        return value
     
-async def schema(schema_definition, value=None, lang=None):
-    """
-    Genera e/o valida un dizionario basato sullo schema Cerberus specificato.
-    Popola i valori di default dinamici e normalizza il documento.
-    """
-    value = value or {} # Assicura che value sia un dizionario
+    def _normalize_setter_identifier(self, mapping, field, value):
+            return generate_identifier()
+    
+    def _check_with_is_odd(self, field, value):
+        if not value & 1:
+            self._error(field, "Must be an odd number")
 
-    # Gestione del caricamento dinamico dello schema come stringa
-    if isinstance(schema_definition, str):
+    def _validate_is_odd(self, constraint, field, value):
+        """ Test the oddity of a value.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'boolean'}
+        """
+        if constraint is True and not bool(value & 1):
+            self._error(field, "Must be an odd number")
+
+    # Metodo di normalizzazione per gestire le funzioni personalizzate
+    # I metodi di normalizzazione iniziano con '_normalize_coerce_'
+    # Questa è una delle vie per "trasformare" i dati prima della validazione
+    # e permette a Cerberus di riconoscere la chiave 'function' nel tuo schema.
+    def _validate_function(self, constraint, field, value):
+        """
+        Gestisce l'applicazione delle funzioni custom specificate nello schema.
+        Questa funzione viene invocata se la regola 'function' è presente per un campo.
+        """
+        #print(constraint, field, value)
+        # 'value' qui è il nome della funzione da eseguire, ad esempio 'generate_identifier'
+        if value == 'generate_identifier':
+            return generate_identifier()
+        elif value == 'time_now_utc':
+            return time_now_utc()
+        else:
+            # Se la funzione non è riconosciuta, potresti voler generare un errore
+            # o semplicemente restituire il valore originale o None.
+            # Qui restituiamo None, Cerberus poi validerà 'None' in base al tipo.
+            self._error(f"Funzione '{value}' sconosciuta o non supportata.")
+            return None
+
+async def model(schema, value=None, mode='full', lang=None):
+    """
+    Convalida, popola, trasforma e struttura i dati utilizzando uno schema Cerberus.
+
+    Args:
+        schema (dict): Lo schema Cerberus da applicare ai dati.
+        value (dict, optional): I dati da elaborare. Defaults a {}.
+        mode (str, optional): Modalità di elaborazione (es. 'full'). Non completamente utilizzato qui,
+                              ma mantenuto per coerenza se hai logiche esterne che lo usano.
+        lang (str, optional): Lingua per il caricamento dinamico degli schemi (se implementato).
+
+    Returns:
+        dict: I dati elaborati e validati.
+
+    Raises:
+        ValueError: Se la validazione fallisce.
+    """
+    value = value or {}
+
+    # Se lo schema è una stringa, prova a caricarlo dinamicamente (come prima)
+    # Questa parte deve essere adattata per caricare uno schema Cerberus
+    if isinstance(schema, str):
         try:
-            # Questa parte dovrebbe caricare lo schema effettivo.
-            # Per questo esempio, usiamo una mappatura diretta.
-            if schema_definition == 'transaction':
-                loaded_schema = globals().get('transaction_schema_definition') # Ottieni dallo scope globale
-                if not loaded_schema:
-                    raise AttributeError(f"Schema '{schema_definition}' non definito.")
-                schema_definition = loaded_schema
-            else:
-                # Qui potresti implementare la logica per load_module da un path effettivo
-                # Per semplicità, in questo esempio specifico, gestiamo solo 'transaction'
-                raise NotImplementedError(f"Caricamento di schema da '{schema_definition}' non supportato per questo esempio minimale.")
-
-            # Ricorsione con lo schema caricato
-            return await builder(schema_definition, value, lang)
+            # Qui si aspetta che il modulo caricato contenga lo schema Cerberus
+            module = await load_module(lang, path=f'application.model.{schema}')
+            # Supponiamo che lo schema sia un attributo 'SCHEMA' nel modulo
+            cerberus_schema = getattr(module, 'SCHEMA', None)
+            if not cerberus_schema:
+                raise AttributeError(f"⚠️ Lo schema Cerberus 'SCHEMA' non trovato nel modulo '{schema}'.")
+            schema = cerberus_schema # Aggiorna lo schema con quello caricato
         except Exception as e:
-            print(f"Errore durante il caricamento dello schema '{schema_definition}': {e}")
-            raise # Rilancia l'eccezione dopo averla loggata
-    
-    if not isinstance(schema_definition, dict):
-        raise TypeError("Lo schema deve essere un dizionario o una stringa che punta a uno schema definito.")
+            print(f"Errore durante il caricamento dello schema '{schema}': {e}")
+            raise # Rilancia l'eccezione o gestiscila diversamente
 
-    # Inizializza il validatore con il nostro CustomBuilderValidator
-    # Questo permette a Cerberus di gestire i default dinamici
-    validator = CustomBuilderValidator(schema_definition)
+    if not isinstance(schema, dict):
+        raise TypeError("Lo schema deve essere un dizionario valido per Cerberus.")
 
-    # Valida e normalizza il documento.
-    # Il metodo 'validate' applica i default e le coercizioni prima di validare.
-    if not validator.validate(value):
-        print(f"❌ Errori di validazione Cerberus: {validator.errors}")
-        raise ValueError("Errore di validazione Cerberus: i dati non sono conformi allo schema.")
-    
-    # Restituisce il documento pulito e normalizzato da Cerberus
-    return validator.normalized(value)
+    # 1. Popolamento e Trasformazione Iniziale (Default, Funzioni)
+    # Cerberus gestisce i 'default', ma le 'functions' richiedono un pre-processing
+    processed_value = value.copy() # Lavora su una copia per non modificare l'originale
+
+    for field_name, field_rules in schema.items():
+        print(f"Processing field: {field_name} with rules: {field_rules}")
+        if isinstance(field_rules, dict) and 'function' in field_rules:
+            func_name = field_rules['function']
+            if func_name == 'generate_identifier':
+                # Applica solo se il campo non è già presente
+                if field_name not in processed_value:
+                    processed_value[field_name] = generate_identifier()
+            elif func_name == 'time_now_utc':
+                # Applica solo se il campo non è già presente
+                if field_name not in processed_value:
+                    processed_value[field_name] = time_now_utc()
+            # Aggiungi altre funzioni qui
+
+    # Cerberus Validation (Convalida, Tipi, Required, Regex, Default)
+    # Crea un validatore Cerberus con lo schema fornito
+    v = MyCustomValidator(schema,allow_unknown=False)
+
+    # Permetti a Cerberus di gestire i valori di default durante la validazione
+    # Cerberus gestirà 'type', 'required', 'default' e 'regex' direttamente
+    if not v.validate(processed_value):
+        # La validazione fallisce, Cerberus fornisce i messaggi di errore
+        #errors_str = "; ".join([f"{k}: {', '.join(v)}" for k, v in v.errors.items()])
+        raise ValueError(f"⚠️ Errore di validazione: {v.errors}")
+
+    final_output = v.document
+
+    return final_output
+
 
 
 def extract_params(s):
@@ -354,46 +408,6 @@ def get_confi(**constants):
         config = tomli.loads(content)
         return config
 
-def get_2(dictionary, domain, default=None):
-    """
-    Safe access to nested dict/list structures using dot notation.
-    Supports wildcard '*' to map over lists.
-    """
-    def _get(domain, d):
-        output = None
-        lista = []
-
-        parts = domain.split('.')
-        current = d
-
-        for idx, key in enumerate(parts):
-            if key.isnumeric():
-                key = int(key)
-
-            if key == '*':
-                arr = _get('.'.join(parts[:idx]), d)
-                if not isinstance(arr, list):
-                    return default
-                for i in range(len(arr)):
-                    new_parts = parts.copy()
-                    new_parts[idx] = str(i)
-                    lista.append(_get('.'.join(new_parts), d))
-                return lista
-
-            try:
-                if isinstance(current, list) and isinstance(key, int):
-                    current = current[key]
-                elif isinstance(current, dict):
-                    current = current.get(key)
-                else:
-                    return default
-            except (KeyError, IndexError, TypeError):
-                return default
-
-        return current if current is not None else default
-
-    return _get(domain, dictionary)
-
 def get(dictionary, domain, default=None):
     """Gets data from a dictionary using a dotted accessor-string, returning default only if path not found."""
     if not isinstance(dictionary, (dict, list)):
@@ -419,134 +433,6 @@ def get(dictionary, domain, default=None):
     
     # Restituisce il valore trovato. Se il valore trovato è None, lo restituisce così com'è.
     return current_data 
-
-
-def put2(dictionary, domain, value):
-        #print(domain)
-        if type(domain) == type(list()):
-            subdomain = domain[0].split('.')
-        else:
-            subdomain = domain.split('.')
-        
-        work = dictionary.copy()
-        puntatore = work
-        
-        for idx,key in enumerate(subdomain):
-            #print(key,idx)
-            if idx == len(subdomain)-1:
-                #print(key,value)   
-                puntatore[key] = value
-            else:
-                if not key in puntatore:
-                    if subdomain[idx+1].isnumeric():
-                        puntatore[key] = []
-                        puntatore = puntatore[key]
-                    else:
-                        if type(puntatore) == type([]):
-                            #print(puntatore)
-                            if 0 <= int(key) < len(puntatore):
-                               puntatore = puntatore[int(key)]
-                            else:
-                                puntatore.insert(int(key), {})
-                                puntatore = puntatore[int(key)]
-                        else:
-                            puntatore[key] = {}
-                            puntatore = puntatore[key]
-
-                else:
-                    puntatore = puntatore[key]
-        
-        return work
-
-def put3(dictionary: dict, domain: str, value: any) -> dict:
-    """
-    Imposta un valore in un dizionario annidato usando una stringa di accesso puntata (es. 'a.b.0.c').
-    Crea dizionari o liste intermedie se non esistono.
-    Solleva TypeError, KeyError o IndexError se il percorso è invalido o il tipo è incompatibile.
-
-    Args:
-        dictionary (dict): Il dizionario iniziale su cui operare. Verrà creata una copia.
-        domain (str): La stringa del percorso puntato (es. "user.address.street").
-                      Gli indici di lista devono essere numerici (es. "items.0.name").
-        value (any): Il valore da impostare.
-
-    Returns:
-        dict: Una nuova copia del dizionario con il valore impostato.
-
-    Raises:
-        TypeError: Se un segmento del dominio tenta di accedere a una chiave di dizionario
-                   su un oggetto non-dizionario, o un indice di lista su un non-lista,
-                   o se l'indice di lista non è un numero intero valido.
-        IndexError: Se un indice di lista è negativo o supera la dimensione della lista
-                    (e non è l'ultimo elemento della lista per un'assegnazione diretta).
-        ValueError: Se il dominio è vuoto o malformato.
-    """
-    if not isinstance(dictionary, dict):
-        raise TypeError("Il dizionario iniziale deve essere di tipo dict.")
-    if not isinstance(domain, str) or not domain:
-        raise ValueError("Il dominio deve essere una stringa non vuota.")
-
-    work_dict = dictionary.copy()  # Lavora su una copia per non modificare l'originale
-    current_node = work_dict
-    path_chunks = domain.split('.')
-
-    for i, chunk in enumerate(path_chunks):
-        is_last_chunk = (i == len(path_chunks) - 1)
-
-        # Gestione di chiavi/indici
-        is_numeric_chunk = chunk.isnumeric()
-        key_or_index = int(chunk) if is_numeric_chunk else chunk
-
-        # Caso: Siamo a un dizionario
-        if isinstance(current_node, dict):
-            if is_numeric_chunk:
-                # Errore: Tentativo di usare un indice numerico su un dizionario
-                raise TypeError(f"Il segmento '{chunk}' è un indice numerico ma il nodo '{'.'.join(path_chunks[:i])}' è un dizionario. Usa chiavi stringa per i dizionari.")
-            
-            if is_last_chunk:
-                current_node[key_or_index] = value # Assegna il valore finale
-            else:
-                if key_or_index not in current_node:
-                    # Crea il prossimo nodo. Se il prossimo chunk è numerico, crea una lista, altrimenti un dizionario.
-                    if path_chunks[i+1].isnumeric():
-                        current_node[key_or_index] = []
-                    else:
-                        current_node[key_or_index] = {}
-                # Sposta il puntatore al prossimo nodo
-                current_node = current_node[key_or_index]
-
-        # Caso: Siamo a una lista
-        elif isinstance(current_node, list):
-            if not is_numeric_chunk:
-                # Errore: Tentativo di usare una chiave stringa su una lista
-                raise TypeError(f"Il segmento '{chunk}' è una chiave stringa ma il nodo '{'.'.join(path_chunks[:i])}' è una lista. Usa indici numerici per le liste.")
-            
-            # Assicurati che l'indice sia valido o che la lista possa essere estesa
-            if key_or_index < 0:
-                raise IndexError(f"L'indice '{key_or_index}' è negativo al passo {i} del dominio '{domain}'.")
-
-            # Estendi la lista con `None` (o {} / [] se preferisci) fino all'indice necessario
-            while len(current_node) <= key_or_index:
-                current_node.append(None) # Estende la lista riempendo con None
-
-            if is_last_chunk:
-                current_node[key_or_index] = value # Assegna il valore finale
-            else:
-                # Se il nodo all'indice non esiste o non è il tipo atteso per continuare il percorso
-                if current_node[key_or_index] is None or not (isinstance(current_node[key_or_index], dict) or isinstance(current_node[key_or_index], list)):
-                    # Prevedi il tipo del prossimo nodo per creare la struttura corretta
-                    if path_chunks[i+1].isnumeric():
-                        current_node[key_or_index] = []
-                    else:
-                        current_node[key_or_index] = {}
-                # Sposta il puntatore al prossimo nodo
-                current_node = current_node[key_or_index]
-
-        # Caso: Il tipo di nodo corrente non è né dict né list (errore nel percorso)
-        else:
-            raise TypeError(f"Il tipo di dato '{type(current_node).__name__}' non è indicizzabile tramite '{chunk}' al passo {i} del dominio '{domain}'.")
-    
-    return work_dict
 
 async def builder(schema, value=None, spread={}, mode='full', lang=None):
     """Genera un dizionario basato sullo schema specificato, rispettando l'ordine delle operazioni."""
@@ -635,28 +521,48 @@ async def builder(schema, value=None, spread={}, mode='full', lang=None):
     return output[name] if len(output) == 1 else output
 
 
-def translation(data_dict, fields,mapper, values, input='MODEL', output='MODEL'):
-    
-    """ Trasforma un set di costanti in un output mappato. """
-    translated = {}
-    for key in fields:
-        if key in mapper:
-            mapping = mapper[key]
-            key_input = mapping.get(input, key)
-            key_output = mapping.get(output, key)
-        else:
-            key_input = key
-            key_output = key
-        #print("translation44",key_input,key_output)
-        value = get(key_input, data_dict)
+def translation(data_dict, mapper, values, input={}, output={}):
 
-        if key in values and output in values[key]:
-            if value is not None:
-                    value = values[key][output](value)           
-            else:
-                pass
-        #print("translation2",key_input,key_output,value,mapping)
-        translated |= put(key_output, value, translated)
+    """ Trasforma un set di costanti in un output mappato. """
+
+    translated = {}
+
+    if not isinstance(data_dict, dict):
+        raise TypeError("Il primo argomento deve essere un dizionario.")
+
+    if not isinstance(mapper, dict):
+        raise TypeError("Il secondo argomento deve essere un dizionario.")
+
+    if not isinstance(values, dict):
+        raise TypeError("Il terzo argomento deve essere un dizionario.")
+
+    for k, v in mapper.items():
+
+        n1 = get(data_dict, k)
+        n2 = get(data_dict, v.get('API'))
+
+        if n1:
+            output_key = v.get('API', None)
+            value = n1
+
+        if n2:
+            output_key = k
+            value = n2
+
+        print(f"translation: {k} = {v}",n1,n2,output_key)
+        translated |= put(translated, output_key, value, output)
+
+
+    fieldsData = data_dict.keys()
+    fieldsOutput = output.keys()
+
+
+    for field in fieldsData:
+        if field in fieldsOutput:
+            value = get(data_dict, field)
+            translated |= put(translated, field, value, output)
+
+    print("TRADOTTO",translated)
 
     return translated
 
@@ -714,7 +620,7 @@ def put(data: dict, path: str, value: any, schema: dict) -> dict:
             if is_last:
                 if next_sch is None:
                     raise IndexError(f"Campo '{chunk}' non definito nello schema.")
-                if not Validator({chunk: next_sch}, allow_unknown=False).validate({chunk: value}):
+                if not MyCustomValidator({chunk: next_sch}, allow_unknown=False).validate({chunk: value}):
                     raise ValueError(f"Valore non valido per '{chunk}': {value}")
                 node[key] = value
             else:
@@ -745,7 +651,7 @@ def put(data: dict, path: str, value: any, schema: dict) -> dict:
                 node.append({} if t == 'dict' else [] if t == 'list' else None)
 
             if is_last:
-                if not Validator({chunk: next_sch}, allow_unknown=False).validate({chunk: value}):
+                if not MyCustomValidator({chunk: next_sch}, allow_unknown=False).validate({chunk: value}):
                     raise ValueError(f"Valore non valido per indice '{chunk}': {value}")
                 node[key] = value
             else:
