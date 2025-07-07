@@ -202,11 +202,13 @@ class Test(test.test):
 
     async def test_translation(self):
         """Verifica la mappatura base dei nomi dei campi senza trasformazioni."""
-        api = {'version': {'type': 'float'}, 'active': {'type': 'boolean'}}
+        api = {'version': {'type': 'float'}, 'active': {'type': 'boolean'},'users': {'type': 'dict', 'schema': {'name': {'type': 'string'}, 'age': {'type': 'integer'}}}}
 
         mapper = {
-            'config.version': {'API': 'version'},
-            'config.active': {'API': 'active'},
+            'config.version': {'API': 'version','GITHUB': 'v'},
+            'config.active': {'API': 'active','GITHUB': 'active'},
+            'user.name': {'API': 'users.name','GITHUB': 'name'},
+            'user.age': {'API': 'users.age','GITHUB': 'age'}
         }
         
         values = {} # Nessuna trasformazione dei valori
@@ -214,13 +216,26 @@ class Test(test.test):
         success_cases = [
             {'args': ({'version':1.1,'active':True}, mapper, values, api, self.schema), 'equal': {'config': {'version': 1.1,'active': True}}},
             {'args': ({'config': {'version': 1.1,'active': True}}, mapper, values, self.schema, api), 'equal': {'version':1.1,'active':True}},
+            {'args': ({'users': {'name': 'marco','age': 18}}, mapper, values, api, self.schema), 'equal': {'user': {'name': 'marco','age': 18}}},
+            {'args': ({'user': {'name': 'marco','age': 18}}, mapper, values, self.schema, api), 'equal': {'users': {'name': 'marco','age': 18}}},
             #{'args': ({'version':1.1,'active':True}, self.schema, mapper, values, 'MODEL', 'API'), 'equal': {'config': {'version': 1.1,'active': True}}}
         ]
 
         failure = [
+            #1 Errori di tipo nei parametri
             {'args': ("{'version':1.1,'active':True,'sss':'a'}", mapper, values, api, self.schema), 'error': TypeError},
+            # 2 Mapper non è un dizionario
             {'args': ({'version':1.1,'active':True}, [], values, api, self.schema), 'error': TypeError},
+            # 3 Valori non sono un dizionario
             {'args': ({'version':1.1,'active':True,'sss':'a'}, mapper, (1,2,3), api, self.schema), 'error': TypeError},
+            # 4 Input non è un dizionario
+            {'args': ({'version':1.1,'active':True}, mapper, values, 'not_a_dict', self.schema), 'error': TypeError},
+            # 5 Output non è un dizionario
+            {'args': ({'version':1.1,'active':True}, mapper, values, self.schema, 'not_a_dict'), 'error': TypeError},
+            # 6 Mapper non è un dizionario
+            {'args': ({'version':1.1,'active':True}, mapper, values, self.schema), 'error': TypeError},
+            # 7 Valori non sono un dizionario
+            {'args': (), 'error': TypeError},
             #{'args': ({'config': {'version': 1.1,'active': True}}, mapper, values, self.schema, api), 'error': ValueError},
             #{'args': ({'version':1.1,'active':True}, self.schema, mapper, values, 'MODEL', 'API'), 'equal': {'config': {'version': 1.1,'active': True}}}
         ]

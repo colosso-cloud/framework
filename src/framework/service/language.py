@@ -133,8 +133,6 @@ async def model(schema, value=None, mode='full', lang=None):
 
     return final_output
 
-
-
 def extract_params(s):
     """
     Estrae i parametri da una stringa, assumendo che i parametri siano
@@ -434,94 +432,119 @@ def get(dictionary, domain, default=None):
     # Restituisce il valore trovato. Se il valore trovato è None, lo restituisce così com'è.
     return current_data 
 
-async def builder(schema, value=None, spread={}, mode='full', lang=None):
-    """Genera un dizionario basato sullo schema specificato, rispettando l'ordine delle operazioni."""
+def find_matching_keys2(mapper, schema):
+    key = None
+    fields = schema.keys()
+    number_occurent = {}
+    for k, v in mapper.items():
+        for kk in v:
+            chiave = v.get(kk, None)
+            print(f"find_matching_keys: {k} {kk} {v}")
+            if chiave in fields:
+                print(f"###########################find_matching_keys: {k} {kk} {v} -> {chiave}")
+                number_occurent.setdefault(kk,0)
+                number_occurent[kk] += 1
+
+    #trovare la chiave con il valore più alto
+    max_value = max(number_occurent.values(), default=0)
+    r = [k for k, v in number_occurent.items() if v == max_value]
     
-    value = value or {}  # Assicura che value sia un dizionario
-    
-    if isinstance(schema, tuple):
-        return {
-            row.get('name', '@'): await builder(row, value, spread)
-            for row in schema if mode != 'filtered' or (value and row.get('name', '@') in value)
-        }
+    print(f"find_matching_keys: {key}",r)
+    return key
 
-    if isinstance(schema, str):
-        try:
-            module = await load_module(lang, path=f'application.model.{schema}')
-            model = getattr(module, schema, None)
-            if not model:
-                raise AttributeError(f"⚠️ '{schema}' non trovato.")
-            return await builder(model, value, spread, mode, lang)
-        except Exception as e:
-            print(f"Errore durante il caricamento dello schema '{schema}': {e}")
-            
+def _check_path_in_schema(path: str, schema) -> bool:
+    """
+    Verifica se un percorso (dot-notation) esiste e punta a un campo definito
+    all'interno di uno schema.
+    """
+    if not isinstance(path, str) or not path:
+        return False
+    if not isinstance(schema, dict) or not schema:
+        return False
 
-    name = schema.get('name', spread.get('name', ''))
-    output = {}
+    current_schema_node = schema
+    path_chunks = path.split('.')
 
-    # Ordine di esecuzione delle operazioni
-    operation_order = ["required", "force_type","default","function", "type", "regex"]
-    expected_types = {
-        "string": str,
-        "integer": int,
-        "boolean": bool,
-        "dict": dict,
-        "list": list
-    }
-
-    for operation in operation_order:
-        if operation not in schema:
-            continue
+    for i, chunk in enumerate(path_chunks):
+        is_last_chunk = (i == len(path_chunks) - 1)
         
-        match operation:
-            case "force_type":
-                var_type = type(value.get(name)).__name__
-                expected_type = expected_types.get(schema.get("type")).__name__
-                #print(var_type, expected_type)
-                #print(f"⚠️ Forzando il tipo per '{name}'",str(type(value.get(name))), schema["force_type"])
-                match expected_type:
-                    case 'list':
-                        #value[name] = [value[name]]
-                        if var_type == schema["force_type"]:
-                            #value[name] = [list(item.items()) if isinstance(item, dict) else item for item in value[name]]
-                            value[name] = [value[name]]
-                        if var_type == 'NoneType':
-                            value[name] = []
-                    case 'int':
-                        if var_type == schema["force_type"]:
-                            value[name] = int(value[name])
-                
-            case "required":
-                if schema["required"] and name not in value:
-                    raise ValueError(f"⚠️ Campo obbligatorio mancante: {name}")
+        if current_schema_node is None or not isinstance(current_schema_node, dict):
+            return False # Il nodo intermedio non è un dizionario o è nullo
+        
+        next_schema_part = _get_next_schema(current_schema_node, chunk)
 
-            case "default":
-                if name not in value:
-                    value[name] = schema["default"]
-
-            case "function":
-                match schema["function"]:
-                    case 'generate_identifier':
-                        value[name] = generate_identifier()
-                    case 'time_now_utc':
-                        value[name] = time_now_utc()
-
-            case "type":
-                
-                expected_type = expected_types.get(schema.get("type"))
-                if expected_type and not isinstance(value.get(name), expected_type):
-                    raise TypeError(f"❌ Tipo non valido per '{name}': atteso {expected_type.__name__}, ricevuto {type(value.get(name)).__name__}")
-
-            case "regex":
-                if name in value and not re.match(schema["regex"], str(value[name])):
-                    raise ValueError(f"⚠️ Regex mismatch per '{name}': {value[name]}")
-
-    output[name] = value.get(name)
+        if next_schema_part is None:
+            return False # Il chunk non è stato trovato nello schema corrente
+        
+        if not is_last_chunk:
+            current_schema_node = next_schema_part
     
-    return output[name] if len(output) == 1 else output
+    return True # Il percorso completo è stato trovato nello schema
 
+def find_matching_keys(mapper, schema) :
+    """
+    Trova la chiave del formato (es. 'API', 'MODEL') nel mapper che ha il maggior numero
+    di percorsi di output corrispondenti nello schema fornito.
 
-def translation(data_dict, mapper, values, input={}, output={}):
+    Args:
+        mapper: Il dizionario mapper completo.
+                Esempio: {
+                    'product_id': {'MODEL': 'product_id', 'API': 'idProdotto'},
+                    'description': {'MODEL': 'desc', 'API': 'descrizioneArticolo'}
+                }
+        schema: Lo schema completo del dizionario di output.
+
+    Returns:
+        La chiave del formato (es. 'API') che ha il maggior numero di corrispondenze
+        nello schema, o None se non viene trovata alcuna corrispondenza significativa.
+    """
+    if not isinstance(mapper, dict) or not mapper:
+        print("find_matching_keys: Mapper non valido o vuoto.")
+        return None
+    if not isinstance(schema, dict) or not schema:
+        print("find_matching_keys: Schema non valido o vuoto.")
+        return None
+
+    number_occurrences = {} # Dizionario per contare le occorrenze per ogni chiave di formato (es. 'API')
+
+    # Itera su ogni campo nel mapper (es. 'product_id', 'description')
+    for original_field_name, format_mappings in mapper.items():
+        if not isinstance(format_mappings, dict):
+            continue # Salta se le mappature non sono un dizionario
+
+        # Itera sulle mappature per ogni formato (es. 'MODEL': 'product_id', 'API': 'idProdotto')
+        for format_key, output_path_in_mapper in format_mappings.items():
+            # Verifica se il percorso di output specificato nel mapper esiste nello schema di output
+            if _check_path_in_schema(output_path_in_mapper, schema):
+                # Se esiste, incrementa il contatore per quella chiave di formato
+                number_occurrences.setdefault(format_key, 0)
+                number_occurrences[format_key] += 1
+                # print(f"MATCH: '{original_field_name}' maps '{format_key}' to '{output_path_in_mapper}', found in schema.")
+            # else:
+                # print(f"NO MATCH: '{original_field_name}' maps '{format_key}' to '{output_path_in_mapper}', NOT found in schema.")
+
+    #print(f"find_matching_keys: Conteggio occorrenze per formato: {number_occurrences}")
+
+    if not number_occurrences:
+        return None # Nessuna corrispondenza trovata
+
+    # Trova la chiave (o le chiavi) con il valore più alto
+    max_value = 0
+    if number_occurrences: # Assicurati che non sia vuoto prima di chiamare max()
+        max_value = max(number_occurrences.values())
+    
+    # Raccogli tutte le chiavi che hanno il valore massimo
+    winning_keys = [k for k, v in number_occurrences.items() if v == max_value]
+
+    # Politica di risoluzione: Se ci sono più chiavi con lo stesso conteggio massimo,
+    # puoi scegliere la prima in ordine alfabetico, o la prima che incontri.
+    # Per semplicità, restituirò la prima se ce ne sono più.
+    if winning_keys:
+        return winning_keys[0] 
+    
+    return None # Dovrebbe essere catturato da 'if not number_occurrences'
+
+def translation(data_dict, mapper, values, input, output):
 
     """ Trasforma un set di costanti in un output mappato. """
 
@@ -531,27 +554,34 @@ def translation(data_dict, mapper, values, input={}, output={}):
         raise TypeError("Il primo argomento deve essere un dizionario.")
 
     if not isinstance(mapper, dict):
-        raise TypeError("Il secondo argomento deve essere un dizionario.")
+        raise TypeError("'mapper' deve essere un dizionario.")
 
     if not isinstance(values, dict):
-        raise TypeError("Il terzo argomento deve essere un dizionario.")
+        raise TypeError("'values' deve essere un dizionario.")
+    
+    if not isinstance(input, dict):
+        raise TypeError("'input' deve essere un dizionario.")
+    
+    if not isinstance(output, dict):
+        raise TypeError("'output' deve essere un dizionario.")
 
+    key = find_matching_keys(mapper,output) or find_matching_keys(mapper,input)
+    #print(f"find_matching_keys: {key}######################")
     for k, v in mapper.items():
-
+        
         n1 = get(data_dict, k)
-        n2 = get(data_dict, v.get('API'))
-
+        n2 = get(data_dict, v.get(key, None))
+        
         if n1:
-            output_key = v.get('API', None)
+            output_key = v.get(key, None)
             value = n1
-
+            translated |= put(translated, output_key, value, output)
         if n2:
             output_key = k
             value = n2
+            translated |= put(translated, output_key, value, output)
 
-        print(f"translation: {k} = {v}",n1,n2,output_key)
-        translated |= put(translated, output_key, value, output)
-
+        #print(f"translation: k:{k},key:{key} = {v},{data_dict}",n1,n2) 
 
     fieldsData = data_dict.keys()
     fieldsOutput = output.keys()
@@ -561,8 +591,6 @@ def translation(data_dict, mapper, values, input={}, output={}):
         if field in fieldsOutput:
             value = get(data_dict, field)
             translated |= put(translated, field, value, output)
-
-    print("TRADOTTO",translated)
 
     return translated
 
