@@ -311,7 +311,7 @@ async def load_provider(lang,**constants):
             di[service] = lambda di: list([])
 
         try:
-            module = await load_module(lang,**constants)
+            module = await resource(lang,**constants)
             # Ottiene il provider e lo registra
             provider = getattr(module, 'adapter')
             di[service].append(provider(config=payload))
@@ -320,16 +320,17 @@ async def load_provider(lang,**constants):
             print(f"❌ Error: loading 'infrastructure.{service}.{adapter}': {repr(e)}")
 
 async def load_manager(lang,**constants):
-        area, service, adapter = constants["path"].split(".")
-
+        service = constants.get('name', '')
+        path = constants["path"]
+        
         if service not in di:
             di[service] = lambda di: list([])
 
         try:
-            module = await load_module(lang,**constants)
+            module = await resource(lang,**constants)
 
             # Ottiene il provider e lo registra
-            provider = getattr(module, adapter)
+            provider = getattr(module, service)
             
             providers = constants["provider"]
             if providers is list:
@@ -339,10 +340,10 @@ async def load_manager(lang,**constants):
                     di[providers] = lambda di: list([])
                 providers = di[providers]
 
-            di[constants["name"]] = lambda _di: provider(providers=providers)
+            di[service] = lambda _di: provider(providers=providers) 
         except Exception as e:
             print(constants)
-            print(f"❌ Error: loading 'infrastructure.{service}.{adapter}': {repr(e)}")
+            print(f"❌ Error: loading '{path}': {repr(e)}")
     
 
 def validate_toml(content):

@@ -1,7 +1,19 @@
 from unittest import IsolatedAsyncioTestCase
 import inspect
 
+import asyncio
+
+resources = {
+    #'flow': 'framework/service/flow.py',
+    'loader': 'framework/service/loader.py'
+}
+
 class test(IsolatedAsyncioTestCase):
+
+    def setUp(self):
+        #event_loop = asyncio.get_event_loop()
+        #event_loop.create_task(loader.bootstrap())
+        pass
     
     '''@classmethod
     def setUpClass(cls):

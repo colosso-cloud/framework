@@ -3,7 +3,9 @@ from typing import List, Dict, Any, Callable
 import re
 
 
-modules = {'flow': 'framework/service/flow.py'}
+resources = {
+    'flow': 'framework/service/flow.py',
+}
 
 class executor:
     def __init__(self, **constants):

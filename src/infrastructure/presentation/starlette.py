@@ -4,7 +4,7 @@ from html import escape
 import json
 from datetime import datetime
 
-modules = {'flow': 'framework.service.flow','presentation': 'framework.port.presentation'}
+resources = {'flow': 'framework/service/flow.py','presentation': 'framework/port/presentation.py'}
 
 html_layout = """
 <!DOCTYPE html>
@@ -124,105 +124,9 @@ except Exception as e:
 
 class adapter(presentation.port):
 
-    def widget_video(self, tag, inner, props):
-        return self.code('video',{},inner)
-
-    def widget_videomedia(self, tag, inner, props):
-        pass
-    
-    def widget_column(self ,tag, inner, props):
-        return self.code('div',{'class':'d-flex flex-row'},inner)
-    
-    def widget_row(self, tag, inner, props):
-        return self.code('div',{'class':'d-flex flex-row'},inner)
-    
-    def widget_container(self, tag, inner, props):
-        return self.code('div',{'class':'container-fluid'},inner)
-    
-    def widget_button(self, tag, inner, props):
-        return self.code('button',{'class':'btn btn-primary','type':'button'},inner)
-    
-    def widget_list(self, tag, inner, props):
-        return self.code('ul',{'class':'list-group'},inner)
-    
-    def widget_tree(self, tag, inner, props):
-        return self.code('ul',{'class':'list-group'},inner)
-    
-    def widget_image(self, tag, inner, props):
-        return self.code('image',{},inner)
-    
-    def widget_form(self, tag, inner, props):
-        path = props.get('action','/')
-        method = self.routes.get(path,{}).get('method')
-        return self.code('form',{'method':method},inner)
-    
-    def widget_editor(self, tag, inner, props):
-        path = props.get('action','/')
-        method = self.routes.get(path,{}).get('method')
-        return self.code('form',{'method':method},inner)
-    
-    def widget_table(self, tag, inner, props):
-        return self.code('table',{},inner)
-    
-    def widget_modal(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_drawer(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_window(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_map(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_chart(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_tab(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_scroll(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_toast(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_alert(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_card(self, tag, inner, props):
-        return self.code('div', {'class': 'card'}, inner)
-    
-    def widget_breadcrumb(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_pagination(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_carousel(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_navigation(self, tag, inner, props):
-        return self.code('div', {'class': 'modal'}, inner)
-    
-    def widget_text(self, tag, inner, props):
-        return self.code('p', {'class': 'text'}, inner)
-    
-    def widget_input(self, tag, inner, props):
-        ttype = props.get('type','text')
-        match ttype:
-            case 'text':
-                return self.code('input', {'type': 'text'}, inner)
-            case 'password':
-                return self.code('input', {'type': 'text'}, inner)
-            case _:
-                return self.code('input', {'type': 'text'}, inner)
-        return widget
-
     @flow.synchronous(managers=('defender',))
     def __init__(self,defender,**constants):
-        self.config = constants['config']
+        self.config = constants.get('config', {})
         self.initialize()
         self.views = dict({})
         self.ssh = {}
@@ -238,7 +142,7 @@ class adapter(presentation.port):
         ]
 
         middleware = [
-            Middleware(SessionMiddleware, session_cookie="session_state",secret_key=self.config['project']['key']),
+            Middleware(SessionMiddleware, session_cookie="session_state",secret_key=self.config.get('project',{}).get('key', 'default_key')),
             Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*']),
             Middleware(NoCacheMiddleware),
             #Middleware(CSRFMiddleware, secret=self.config['project']['key']),
@@ -247,22 +151,146 @@ class adapter(presentation.port):
 
         loop = asyncio.get_event_loop()
         async def main():
-            file = await self.host({'url':'application/policy/presentation/'+self.config.get('route','')})
-            self.mount_route(file)
-            self.mount_routes_from_list(routes)
-            self.app = Starlette(debug=True,routes=routes,middleware=middleware)
+            try:
+                # Costruisce l'URL per il fetch, gestendo il caso di percorso vuoto
+                route_path = self.config.get('route', '')
+                resource_url = f"application/policy/presentation/{route_path}"
 
-            
+                file = await self.fetch_resource({'url': resource_url})
+                self.parse_route(file)
+                self.mount_route(routes) # 'routes' deve essere accessibile qui
+
+            except Exception as e:
+                # Logga qualsiasi errore durante il caricamento delle rotte
+                print(f"Errore durante il caricamento delle rotte: {e}")
+                # Considera di sollevare l'eccezione o terminare se l'app non può partire senza rotte
+
+            # Inizializza l'applicazione Starlette con rotte e middleware
+            self.app = Starlette(debug=True, routes=routes, middleware=middleware)
+
+            # Parametri di configurazione base per Uvicorn
+            uvicorn_config_params = {
+                "app": self.app,
+                "host": self.config.get('host', '127.0.0.1'),
+                "port": int(self.config.get('port', 8000)),
+                "use_colors": True,
+                "reload": True, # `reload=True` solo per sviluppo
+                "loop": loop
+            }
+
+            # Aggiunge i parametri SSL se presenti
             if 'ssl_keyfile' in self.config and 'ssl_certfile' in self.config:
-                print('SSL')
-                config = Config(app=self.app,host=self.config['host'], port=int(self.config['port']),ssl_keyfile=self.config['ssl_keyfile'],ssl_certfile=self.config['ssl_certfile'],use_colors=True,reload=True)
+                print("SSL abilitato.")
+                uvicorn_config_params['ssl_keyfile'] = self.config['ssl_keyfile']
+                uvicorn_config_params['ssl_certfile'] = self.config['ssl_certfile']
             else:
-                config = Config(app=self.app, loop=loop,host=self.config['host'], port=int(self.config['port']),use_colors=True,reload=True)
-            server = Server(config)
+                print("SSL disabilitato.")
 
-            loop.create_task(server.serve())
+            try:
+                # Crea e avvia il server Uvicorn come task asyncio
+                config = Config(**uvicorn_config_params)
+                server = Server(config)
+                loop.create_task(server.serve())
+                print(f"Server avviato su {uvicorn_config_params['host']}:{uvicorn_config_params['port']}")
+            except Exception as e:
+                # Logga errori critici all'avvio del server
+                print(f"Errore critico durante l'avvio del server Uvicorn: {e}")
         loop.create_task(main())
     
+    async def mount_widget(self, tag, inner, props):
+        """Mounts a widget based on the tag and properties provided."""
+        widget = None
+        match tag:
+            case 'video':
+                return self.code('video',{},inner)
+            case 'videomedia':
+                return self.code('videomedia',{},inner)
+            case 'column':
+                return self.code('div',{'class':'d-flex flex-row'},inner)
+            case 'row':
+                return self.code('div',{'class':'d-flex flex-row'},inner)
+            case 'container':
+                return self.code('div',{'class':'container-fluid'},inner)
+            case 'button':
+                return self.code('button',{'class':'btn btn-primary','type':'button'},inner)
+            case 'list':
+                return self.code('ul',{'class':'list-group'},inner)
+            case 'tree':
+                return self.code('ul',{'class':'list-group'},inner)
+            case 'image':
+                return self.code('image',{},inner)
+            case 'form':
+                path = props.get('action','/')
+                method = self.routes.get(path,{}).get('method')
+                return self.code('form',{'method':method},inner)
+            case 'editor':
+                path = props.get('action','/') 
+                method = self.routes.get(path,{}).get('method')
+                return self.code('form',{'method':method},inner)
+            case 'table':
+                return self.code('table',{},inner)
+            case 'modal':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'drawer':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'window':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'map': 
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'chart':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'tab':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'scroll': 
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'toast':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'alert':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'card':
+                return self.code('div', {'class': 'card'}, inner)
+            case 'breadcrumb':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'pagination':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'carousel':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'navigation':
+                return self.code('div', {'class': 'modal'}, inner)
+            case 'text':
+                return self.code('p', {'class': 'text'}, inner)
+            case 'input':
+                ttype = props.get('type', 'text')
+                match ttype:
+                    case 'text':
+                        return self.code('input', {'type': 'text'}, inner)
+                    case 'password':
+                        return self.code('input', {'type': 'password'}, inner)
+                    case 'email':
+                        return self.code('input', {'type': 'email'}, inner)
+                    case 'number':
+                        return self.code('input', {'type': 'number'}, inner)
+                    case 'checkbox':
+                        return self.code('input', {'type': 'checkbox'}, inner)
+                    case 'radio':
+                        return self.code('input', {'type': 'radio'}, inner)
+                    case 'file':
+                        return self.code('input', {'type': 'file'}, inner)
+                    case 'date':
+                        return self.code('input', {'type': 'date'}, inner)
+                    case 'datetime-local':
+                        return self.code('input', {'type': 'datetime-local'}, inner)
+                    case 'time':
+                        return self.code('input', {'type': 'time'}, inner)
+                    case 'url':
+                        return self.code('input', {'type': 'url'}, inner)
+                    case 'tel':
+                        return self.code('input', {'type': 'tel'}, inner)
+            case _:
+                # Gestione di widget sconosciuti o non implementati
+                print(f"Widget '{tag}' non implementato.")
+                return None
+
     async def mount_css(self,constants):
         pass
         
@@ -420,15 +448,15 @@ class adapter(presentation.port):
                 #await messenger.post(name=request.url.path[1:],value={'model':data['model'],'value':data})
                 return RedirectResponse('/', status_code=303)
 
-    async def apply_view(self,url):
+    async def mount_view(self,url):
         url = self.routes.get(url,{}).get('view')
         return await self.builder(url=url)
     
     async def starlette_view(self,request):
-        html_body = await self.apply_view(request.url.path)
+        html_body = await self.mount_view(request.url.path)
         layout = 'application/view/layout/base.html'
-        file = await self.host({'url':layout})
-        css = await self.host({'url':layout.replace('.html','.css').replace('.xml','.css')})
+        file = await self.fetch_resource({'url':layout})
+        css = await self.fetch_resource({'url':layout.replace('.html','.css').replace('.xml','.css')})
         #template = self.env.from_string(file.replace('{% block style %}','{% block style %}<style>'+css+'</style>'))
         template = self.env.from_string(file)
         content = template.render()
@@ -519,10 +547,7 @@ class adapter(presentation.port):
             await self.apply_style(widget, styles)'''
         pass
 
-    async def apply_route(self, *services, **constants):
-        pass
-
-    def mount_routes_from_list(self, routes):
+    def mount_route(self, routes):
         for path, data in self.routes.items():
             typee = data.get('type')
             method = data.get('method')

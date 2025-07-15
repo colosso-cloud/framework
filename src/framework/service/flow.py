@@ -3,13 +3,15 @@ from kink import inject,di
 import sys
 import inspect
 import traceback
+import functools
 
 def asynchronous(**constants):
     inject = [di[manager] for manager in constants.get('managers', [])]
     output = constants.get('outputs', [])
     input = constants.get('inputs', [])
-
+    
     def decorator(function):
+        @functools.wraps(function)
         async def wrapper(*args, **kwargs):
             args_inject = list(args) + inject
             try:

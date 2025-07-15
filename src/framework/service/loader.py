@@ -4,6 +4,7 @@ import asyncio
 from kink import di 
 
 async def bootstrap() -> None:
+    print("Bootstrapping the loader...###########################################################")
     env = dict(os.environ)
     session = dict()
     # Controlla se siamo in Pyodide (browser)
@@ -47,17 +48,17 @@ async def bootstrap() -> None:
     print(config, "config")
 
     
-    await language.load_manager(language,provider="message", name="messenger", path="framework.manager.messenger")
-    await language.load_manager(language,provider="actuator", name="executor", path="framework.manager.executor")
+    await language.load_manager(language,provider="message", name="messenger", path="framework/manager/messenger.py")
+    await language.load_manager(language,provider="actuator", name="executor", path="framework/manager/executor.py")
 
     executor = di["executor"]
 
     # Carica i gestori principali
     tasks = [
-        asyncio.create_task(language.load_manager(language,provider="presentation", name="presenter", path="framework.manager.presenter")),
-        asyncio.create_task(language.load_manager(language,provider="authentication", name="defender", path="framework.manager.defender")),
-        asyncio.create_task(language.load_manager(language,provider="persistence", name="storekeeper", path="framework.manager.storekeeper")),
-        asyncio.create_task(language.load_manager(language,provider="authentication", name="tester", path="framework.manager.tester")),
+        asyncio.create_task(language.load_manager(language,provider="presentation", name="presenter", path="framework/manager/presenter.py")),
+        asyncio.create_task(language.load_manager(language,provider="authentication", name="defender", path="framework/manager/defender.py")),
+        asyncio.create_task(language.load_manager(language,provider="persistence", name="storekeeper", path="framework/manager/storekeeper.py")),
+        asyncio.create_task(language.load_manager(language,provider="authentication", name="tester", path="framework/manager/tester.py")),
     ]
     
     
@@ -66,7 +67,7 @@ async def bootstrap() -> None:
     await executor.all_completed(tasks=tasks)
 
 
-
+    '''
     # Carica i provider dai moduli di configurazione
     tasks = []
     for module in ["presentation", "persistence", "message", "authentication","actuator"]:
@@ -93,7 +94,7 @@ async def bootstrap() -> None:
         if hasattr(item, "loader"):
             item.loader(loop=event_loop)
         else:
-            await messenger.post(domain='debug',message=f"L'elemento {item} non ha un metodo 'loader'.")
+            await messenger.post(domain='debug',message=f"L'elemento {item} non ha un metodo 'loader'.")'''
     
     
     

@@ -82,7 +82,7 @@ def test():
                     except Exception as e:
                         print(f"Errore nell'importazione del modulo: {module_path}, {e}")
         return test_suite
-    
+    asyncio.run(loader.bootstrap())
     suite = asyncio.run(discover_tests())
     runner = unittest.TextTestRunner()
     runner.run(suite)

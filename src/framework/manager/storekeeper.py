@@ -1,7 +1,9 @@
 import asyncio
 import importlib
 
-modules = {'flow': 'framework.service.flow'}
+resources = {
+    'flow': 'framework/service/flow.py',
+}
 
 class storekeeper():
 

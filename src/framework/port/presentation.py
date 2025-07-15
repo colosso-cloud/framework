@@ -6,7 +6,7 @@ import uuid
 import untangle
 import markupsafe
 
-modules = {'flow': 'framework.service.flow'}
+resources = {'flow': 'framework/service/flow.py'}
 
 class port(ABC):
 
@@ -21,10 +21,10 @@ class port(ABC):
         #http_loader = MyLoader()
         #choice_loader = ChoiceLoader([fs_loader, http_loader])
         
-        for widget in self.widgets:
+        '''for widget in self.widgets:
             print('widget_'+widget.lower())
             if not getattr(self,'widget_'+widget.lower()):
-                raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")
+                raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")'''
         
         self.env = Environment(loader=fs_loader,autoescape=select_autoescape(["html", "xml"]),undefined=DebugUndefined)
 
@@ -41,18 +41,22 @@ class port(ABC):
         pass
 
     @abstractmethod
-    async def apply_view(self, *services, **constants):
+    async def mount_view(self, *services, **constants):
         pass
 
     @abstractmethod
-    async def apply_route(self, *services, **constants):
+    async def mount_route(self, *services, **constants):
         pass
 
     @abstractmethod
-    async def apply_css(self, *services, **constants):
+    async def mount_css(self, *services, **constants):
         pass
 
-    async def host(self,constants={},**c):
+    @abstractmethod
+    async def mount_widget(self, tag, inner, attributes):
+        pass
+
+    async def fetch_resource(self,constants={},**c):
         #import os
         #print(os.getcwd())
         with open('src/'+constants['url'], 'r', encoding='utf-8') as file:
@@ -64,7 +68,7 @@ class port(ABC):
         if 'text' in constants:
             text = constants['text']
         else:
-            text = await self.host(constants)
+            text = await self.fetch_resource(constants)
 
         template = self.env.from_string(text)
         if 'data' not in constants:
@@ -79,8 +83,8 @@ class port(ABC):
         #print('CONTENT',content)
         xml = ET.fromstring(content)
         #print(xml)
-        view = await self.mount_view(xml,constants)
-        await self.mount_css(view)
+        view = await self.render_view(xml,constants)
+        await self.render_css(view)
         return view
     
     async def rebuild(self, id, tag, **data):
@@ -108,14 +112,9 @@ class port(ABC):
           except Exception as e:
               print(f"Errore durante la ricostruzione del componente '{id}': {e}")
     
-    async def build_widget(self, tag, inner, attributes):
-        method_name = f"widget_{tag.lower().replace('-', '_')}"
-        factory = getattr(self, method_name, None)
+    async def render_widget(self, tag, inner, attributes):
 
-        if not factory:
-            raise NotImplementedError(f"Tag '{tag}' non gestito in compose_view data-driven")
-
-        widget = factory(tag, inner, attributes)
+        widget = self.mount_widget(tag, inner, attributes)
 
         # Mount properties
         for key in attributes:
@@ -128,10 +127,10 @@ class port(ABC):
 
         return widget
 
-    async def mount_css(self, *services, **constants):
+    async def render_css(self, *services, **constants):
         await self.apply_css(*services)
 
-    def mount_route(self, file):
+    def parse_route(self, file):
         
         for setting in untangle.parse(file).get_elements()[0].get_elements():
             path = setting.get_attribute('path')
@@ -146,7 +145,7 @@ class port(ABC):
             self.routes[path] = {'view':view,'type':typee,'method':method}
 
     @flow.asynchronous(managers=('storekeeper','messenger'))
-    async def mount_view(self,root,data,storekeeper,messenger):
+    async def render_view(self,root,data,storekeeper,messenger):
         inner = []
 
         tag = root.tag
