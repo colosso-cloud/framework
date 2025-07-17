@@ -33,7 +33,7 @@ class port(ABC):
         pass
 
     @abstractmethod
-    async def set_attribute(self, widget, attributes, field, value):
+    async def set_attribute(self, widget, field, value):
         pass
 
     @abstractmethod
