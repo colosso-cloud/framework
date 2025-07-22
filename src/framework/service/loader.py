@@ -67,7 +67,7 @@ async def bootstrap() -> None:
     await executor.all_completed(tasks=tasks)
 
 
-    '''
+    
     # Carica i provider dai moduli di configurazione
     tasks = []
     for module in ["presentation", "persistence", "message", "authentication","actuator"]:
@@ -77,7 +77,7 @@ async def bootstrap() -> None:
                 payload = {**setting, "profile": driver, "project": config["project"]}
                 
                 tasks.append(asyncio.create_task(
-                    language.load_provider(language,path=f"infrastructure.{module}.{adapter}",area="infrastructure", service=module, adapter=adapter, payload=payload)
+                    language.load_provider(language,path=f"infrastructure/{module}/{adapter}.py",area="infrastructure", service=module, adapter=adapter, payload=payload)
                 ))
     
     # Attende il caricamento dei provider in parallelo
@@ -88,13 +88,14 @@ async def bootstrap() -> None:
     
     
     event_loop = asyncio.get_event_loop()
-    await messenger.post(domain='debug',message="Caricamento degli elementi della presentazione.")
+    #await messenger.post(domain='debug',message="Caricamento degli elementi della presentazione.")
     for item in presentation:
-        await messenger.post(domain='debug',message=f"Caricamento dell'elemento: {item}")
+        #await messenger.post(domain='debug',message=f"Caricamento dell'elemento: {item}")
         if hasattr(item, "loader"):
             item.loader(loop=event_loop)
         else:
-            await messenger.post(domain='debug',message=f"L'elemento {item} non ha un metodo 'loader'.")'''
+            #await messenger.post(domain='debug',message=f"L'elemento {item} non ha un metodo 'loader'.")
+            pass
     
     
     

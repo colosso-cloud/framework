@@ -104,7 +104,17 @@ async def model(schema, value=None, mode='full', lang=None):
     # Cerberus gestisce i 'default', ma le 'functions' richiedono un pre-processing
     processed_value = value.copy() # Lavora su una copia per non modificare l'originale
 
-    for field_name, field_rules in schema.items():
+    for key in list(schema):
+        item = schema[key]
+        for sub_key, sub_value in item.items():
+            if sub_key.startswith('_'):
+                schema.pop(key)
+
+
+    for field_name, field_rules in schema.copy().items():
+        if field_name.startswith('_'):
+            schema.pop(field_name, None)
+            continue
         print(f"Processing field: {field_name} with rules: {field_rules}")
         if isinstance(field_rules, dict) and 'function' in field_rules:
             func_name = field_rules['function']
@@ -127,6 +137,7 @@ async def model(schema, value=None, mode='full', lang=None):
     if not v.validate(processed_value):
         # La validazione fallisce, Cerberus fornisce i messaggi di errore
         #errors_str = "; ".join([f"{k}: {', '.join(v)}" for k, v in v.errors.items()])
+        print(f"⚠️ Errore di validazione: {v.errors}")
         raise ValueError(f"⚠️ Errore di validazione: {v.errors}")
 
     final_output = v.document

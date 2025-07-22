@@ -463,13 +463,14 @@ class adapter(presentation.port):
     
     async def starlette_view(self,request):
         html_body = await self.mount_view(request.url.path)
+        print(html_body, "html_body",request.url.path)
         layout = 'application/view/layout/base.html'
         file = await self.fetch_resource({'url':layout})
         css = await self.fetch_resource({'url':layout.replace('.html','.css').replace('.xml','.css')})
         #template = self.env.from_string(file.replace('{% block style %}','{% block style %}<style>'+css+'</style>'))
         template = self.env.from_string(file)
         content = template.render()
-        content = content.replace('<!-- Body -->',html_body)
+        content = content.replace('<!-- Body -->',str(html_body))
         return HTMLResponse(content)
     
     def code(self,tag,attr,inner=[]):
@@ -479,7 +480,7 @@ class adapter(presentation.port):
             att += f' {key}="{attr[key]}"'
         if type(inner) == type([]):
             for item in inner:
-                html += item
+                html += str(item)
             if len(inner) > 0:
                 return f'<{tag}{att}>{html}</{tag}>'
             else:

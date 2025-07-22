@@ -21,7 +21,7 @@ url = "ws://localhost:8000/messenger"
 adapter = "websocket"
 url = "wss://app.colosso.cloud/messenger"
 
-[message.chatbot]
+[amessage.chatbot]
 adapter = "api"
 domain = "assistant,chat"
 url = "https://openrouter.ai/api/v1/chat/completions"
@@ -29,7 +29,7 @@ authorization = "Bearer"
 accept = "application/json"
 token = "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"
 
-[message.producer]
+[amessage.producer]
 adapter = "api"
 domain = "backlog.producer,test"
 url = "https://openrouter.ai/api/v1/chat/completions"
@@ -37,7 +37,7 @@ authorization = "Bearer"
 accept = "application/json"
 token = "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"
 
-[message.programmer]
+[amessage.programmer]
 adapter = "api"
 domain = "assistant,bom"
 url = "https://openrouter.ai/api/v1/chat/completions"
@@ -67,12 +67,12 @@ adapter = "flutter"
 route = "route.xml"
 
 # Configurazione dell'autenticazione
-[authentication.supabase]
+[aauthentication.supabase]
 adapter = "supabase"
 url = "https://ljeowpqmovaavxghpsne.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZW93cHFtb3ZhYXZ4Z2hwc25lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNDI3NDEsImV4cCI6MjA1NjkxODc0MX0.IAIJo8-x2WIa9tk7HQwLxgmAX1JTX0aK3kLTb7FQTG8"
 
-[authentication.github]
+[aauthentication.github]
 adapter = "oauth"
 url = "https://github.com/login/oauth/access_token?client_id={{ GITHUB_OAUTH_ID }}&client_secret={{ GITHUB_OAUTH_SECRET }}"
 link = "https://github.com/login/oauth/authorize?client_id=Ov23lidpWleO0KCHQVm0&scope=repo,user&state=xyz987"
@@ -80,7 +80,7 @@ id = "{{ GITHUB_OAUTH_ID }}"
 secret = "{{ GITHUB_OAUTH_SECRET }}"
 
 # Configurazione della persistenza
-[persistence.bot]
+[apersistence.bot]
 adapter = "jwt"
 url = "https://api.github.com"
 app_id = "{{ GITHUB_COLOSSO_ID }}"
@@ -96,13 +96,13 @@ database = "Projects-free-db"
 username = "default"
 password = ""
 
-[persistence.supabase]
+[apersistence.supabase]
 adapter = "supabase"
 url = "https://ljeowpqmovaavxghpsne.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZW93cHFtb3ZhYXZ4Z2hwc25lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNDI3NDEsImV4cCI6MjA1NjkxODc0MX0.IAIJo8-x2WIa9tk7HQwLxgmAX1JTX0aK3kLTb7FQTG8"
 token = "{{ session_token_supabase or 'none' }}"
 
-[persistence.github]
+[apersistence.github]
 adapter = "api"
 url = "https://api.github.com"
 authorization = "Bearer "

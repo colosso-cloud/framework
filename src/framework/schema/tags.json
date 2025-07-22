@@ -4,7 +4,7 @@
         "type": "dict",
         "schema": {
             "types": {
-                "type": "list",
+                "type": "string",
                 "allowed": ["image", "video", "audio"]
             }
         }
@@ -13,16 +13,27 @@
         "type": "dict",
         "schema": {
             "types": {
-                "type": "list",
+                "type": "string",
                 "allowed": ["image", "video", "audio", "embed"]
             }
-        }
+        },
+        "_type": {"image": "image", "video": "video", "audio": "audio", "embed": "embed"}
     },
     "Navigation": {"type": "dict", "schema": {}},
-    "View": {"type": "dict", "schema": {}},
+    "View": {
+        "type": "dict", 
+        "schema": {
+            "route": {"type": "string"}
+        },
+        "_return": {"function": "mount_view", "args": ["route"]}
+    },
     "Messenger": {"type": "dict", "schema": {}},
     "Defender": {"type": "dict", "schema": {}},
-    "Column": {"type": "dict", "schema": {}},
+    "Column": {
+        "type": "dict", 
+        "schema": {},
+        "_return": {"function": "render_widget", "args": ["Column"]}
+    },
     "Row": {"type": "dict", "schema": {}},
     "Storekeeper": {"type": "dict", "schema": {}},
     "Input": {
@@ -46,7 +57,17 @@
         }
     },
     "Window": {"type": "dict", "schema": {}},
-    "Text": {"type": "dict", "schema": {}},
+    "Text": {
+        "type": "dict", 
+        "schema": {
+            "types": {
+                "type": "string",
+                "allowed": ["code", "text"],
+                "default": "text"
+            }
+        },
+        "_type": {"code": "code", "text": "text"}
+    },
     "Group": {"type": "dict", "schema": {}},
     "Layout": {"type": "dict", "schema": {}}
 }

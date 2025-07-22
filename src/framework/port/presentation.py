@@ -6,7 +6,10 @@ import uuid
 import untangle
 import markupsafe
 
-resources = {'flow': 'framework/service/flow.py'}
+resources = {
+    'flow': 'framework/service/flow.py',
+    'tags': 'framework/schema/tags.json',
+}
 
 class port(ABC):
 
@@ -114,16 +117,16 @@ class port(ABC):
     
     async def render_widget(self, tag, inner, attributes):
 
-        widget = self.mount_widget(tag, inner, attributes)
+        widget = await self.mount_widget(tag, inner, attributes)
 
         # Mount properties
         for key in attributes:
-            widget = await self.set_attribute(widget, attributes, key.replace('-', '_'), attributes[key])
+            widget = await self.set_attribute(widget, key, attributes[key])
 
         # Ensure widget has an id
         wid = await self.get_attribute(widget, 'id')
         if not wid:
-            await self.set_attribute(widget, attributes, 'id', str(uuid.uuid4()))
+            await self.set_attribute(widget, 'id', str(uuid.uuid4()))
 
         return widget
 
@@ -149,17 +152,44 @@ class port(ABC):
         inner = []
 
         tag = root.tag
-        att = root.attrib
+        attributes = root.attrib
         text = root.text
         elements = list(root)
 
         #and tag in self.tags
         if len(elements) > 0:
             for element in elements:
-                mounted = await self.mount_view(element, data)
+                mounted = await self.render_view(element, data)
                 inner.append(mounted)
         
-        #if tag in self.tags:
+        
+        
+        if tag in tags:
+            schema = tags[tag]
+            print('Schema:',schema,{tag:attributes})
+            tttt = await language.model(schema,attributes)
+            print('Schema:',tttt)
+            print('Rendering tag:',tag,attributes)
+            
+            
+            
+            if '_return' in schema:
+                function = schema['_return']['function']
+                args = [attributes[arg] for arg in schema['_return'].get('args',[]) if arg in attributes]
+                match function:
+                    case 'mount_view':
+                        print('Mounting view:',args)
+                        return await self.mount_view(*args)
+                    case 'render_widget':
+                        return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes)
+                
+            if '_type' in schema:
+                schema_type = schema['_type'].get(attributes.get('type', ''))
+                if schema_type:
+                    return await self.mount_widget(schema_type, inner, attributes)
+                print('Mounting widget:',schema_type,tag,attributes.get('type',''))
+
+        '''#if tag in self.tags:
         #    return await self.tags[tag]()
         match tag:
             case 'Defender':
@@ -245,13 +275,17 @@ class port(ABC):
                 kind = att['type'] if 'type' in att else 'image'
                 src = att['src'] if 'src' in att else None
                 if src:
-                    resource = await self.compose_view('VideoMedia',src)
-                    inner.append(resource)
+                    #resource = await self.compose_view('VideoMedia',src)
+                    #inner.append(resource)
+                    pass
 
                 if kind == 'video':
-                    media = await self.compose_view('Video',inner)
-                    await self.mount_property('Video',media,att)
+                    media = await self.render_widget('Video',inner, att)
+                    #await self.mount_property('Video',media,att)
                     return media
+                media = await self.render_widget('Video',inner, att)
+                #await self.mount_property('Video',media,att)
+                return media
             case 'View':
                 
                 if 'storekeeper' in data and 'storekeeper' in att:
@@ -267,7 +301,7 @@ class port(ABC):
                     #await self.apply_route(url=att['route'])
                     #output = await self.compose_view('Container',inner,**att)
                     #await self.mount_property('Container',output,att)
-                    return await self.apply_view(att['route'])
+                    return await self.mount_view(att['route'])
                 elif 'url' in att:
                     dataview = None
                     if 'data' in att:
@@ -302,17 +336,17 @@ class port(ABC):
                         #form = self.code('form',{'action':action,'method':'POST'},inner)
                         #self.att(form,att)
                         
-                        return await self.build_widget('Form', inner, att)
+                        return await self.render_widget('Form', inner, att)
                     case 'submit':
-                        return await self.build_widget('Button', inner, att)
+                        return await self.render_widget('Button', inner, att)
                     case 'button':
-                        return await self.build_widget('Button', inner, att)
+                        return await self.render_widget('Button', inner, att)
                     case 'nav':
                         output = await self.compose_view('Button',inner,**att)
                         await self.mount_property('Button',output,att)
                         return output
                     case _:
-                        return await self.build_widget('Button', inner, att)
+                        return await self.render_widget('Button', inner, att)
             case 'Window':
                 tipo = att['type'] if 'type' in att else 'None'
                 id = att['id'] if 'id' in att else 'None'
@@ -330,7 +364,7 @@ class port(ABC):
                         await self.mount_property('Modal',output,att)
                         return output
                     case _:
-                        return await self.build_widget('Window', inner, att)
+                        return await self.render_widget('Window', inner, att)
             case 'Card':
                 output = await self.compose_view('Container',inner,**att)
                 await self.mount_property('Container',output,att)
@@ -356,7 +390,7 @@ class port(ABC):
                         await self.mount_property('NavigationBar',output,att)
                         return output
                     case 'tab':
-                        return await self.build_widget('Button', inner, att)
+                        return await self.render_widget('Button', inner, att)
             case 'Group':
                 tipo = att['type'] if 'type' in att else 'None'
                 output = await self.compose_view('Container',inner,**att)
@@ -368,13 +402,13 @@ class port(ABC):
                 
                 match tipo:
                     case 'text':
-                        return await self.build_widget('Input', inner, att)
+                        return await self.render_widget('Input', inner, att)
                     case _:
-                        return await self.build_widget('Input', inner, att)
+                        return await self.render_widget('Input', inner, att)
             case 'Text':
                 #text-muted text-truncate
                 tipo = att['type'] if 'type' in att else 'text'
-                
+                #return await self.render_widget('Input', inner, att)
                 match tipo:
                     case 'editable':
                         if text:
@@ -390,7 +424,8 @@ class port(ABC):
                         self.att(pre,att)
                         return pre
                     case 'text':
-                        return await self.build_widget('Text', inner, att)
+                        
+                        return await self.render_widget('Text', text, att)
                     case 'data':
                         if text:
                             text = escape(text)
@@ -409,11 +444,12 @@ class port(ABC):
             case 'Data':
                 return await self.compose_view('VideoMedia',text)
             case 'Row':
-                return await self.build_widget('Row', inner, att)
+                
+                return await self.render_widget('Row', inner, att)
             case 'Container':
-                return await self.build_widget('Container', inner, att)
+                return await self.render_widget('Container', inner, att)
             case 'Column':
-                return await self.build_widget('Column', inner, att)
+                return await self.render_widget('Column', inner, att)
             case _:
                 def elements_to_xml_string(elements):
                     # Crea un elemento root temporaneo
@@ -469,7 +505,7 @@ class port(ABC):
 
                 self.att(view, att|{'component':tag})
                 return view
-    
+    '''
     
     @staticmethod
     @flow.asynchronous(managers=('messenger','presenter','executor'))
