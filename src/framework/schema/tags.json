@@ -10,7 +10,7 @@
         }
     },
     "Media": {
-        "type": "dict",
+        "type": "dict", 
         "schema": {
             "types": {
                 "type": "string",

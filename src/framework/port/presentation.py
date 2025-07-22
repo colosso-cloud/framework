@@ -166,10 +166,10 @@ class port(ABC):
         
         if tag in tags:
             schema = tags[tag]
-            print('Schema:',schema,{tag:attributes})
-            tttt = await language.model(schema,attributes)
-            print('Schema:',tttt)
-            print('Rendering tag:',tag,attributes)
+            #print('Schema:',schema,{tag:attributes})
+            tttt = await language.model({tag:schema.copy()},{tag:attributes})
+            #print('Schema:',tttt)
+            print('Rendering tag:',tag,attributes,schema)
             
             
             
