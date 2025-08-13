@@ -1,5 +1,10 @@
 {% extends "mono.xml" %}
 {% block content %}
 <Text>Login</Text>
-<Media type="video" src="https://www.youtube.com/embed/FkgC37ERJCY?si=RdT-GibC8pnJ5L1C" />
+<Media type="embed" src="https://www.youtube.com/embed/FkgC37ERJCY?si=RdT-GibC8pnJ5L1C" />
+<Media type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" />
+<Text type="code">print("Hello, World!")</Text>
+<Action type="button" action="/auth/login" ><Media type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" /></Action>
+<Input type="text" name="username" placeholder="Username" />
+<Input type="password" name="password" placeholder="Password" />
 {% endblock %}

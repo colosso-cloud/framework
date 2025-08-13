@@ -176,6 +176,9 @@ class port(ABC):
             if '_return' in schema:
                 function = schema['_return']['function']
                 args = [attributes[arg] for arg in schema['_return'].get('args',[]) if arg in attributes]
+                input_type = schema.get('_input','inner')
+                if input_type == 'text':
+                    inner = text
                 match function:
                     case 'mount_view':
                         print('Mounting view:',args)
@@ -185,8 +188,15 @@ class port(ABC):
                 
             if '_type' in schema:
                 schema_type = schema['_type'].get(attributes.get('type', ''))
+                input_type = schema.get('_input','inner')
+                print("---->",input_type,text)
                 if schema_type:
-                    return await self.mount_widget(schema_type, inner, attributes)
+                    if input_type == 'inner':
+                        return await self.render_widget(schema_type, inner, attributes)
+                    elif input_type == 'text':
+                        return await self.render_widget(schema_type, text, attributes)
+                    else:
+                        print('Unknown input type:',input_type)
                 print('Mounting widget:',schema_type,tag,attributes.get('type',''))
 
         '''#if tag in self.tags:

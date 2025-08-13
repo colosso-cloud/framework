@@ -200,8 +200,11 @@ class adapter(presentation.port):
     
     async def mount_widget(self, tag, inner, props):
         """Mounts a widget based on the tag and properties provided."""
+        print("Rendering text widget with props:", props, "and inner content:", inner)
         widget = None
         match tag.lower():
+            case 'embed':
+                return self.code('iframe',props,inner)
             case 'video':
                 return self.code('video',props,inner)
             case 'videomedia':
@@ -267,6 +270,7 @@ class adapter(presentation.port):
             case 'navigation':
                 return self.code('div', {'class': 'modal'}, inner)
             case 'text':
+                
                 return self.code('p', {'class': 'text'}|props, inner)
             case 'input':
                 ttype = props.get('type', 'text')
@@ -298,7 +302,7 @@ class adapter(presentation.port):
             case _:
                 # Gestione di widget sconosciuti o non implementati
                 print(f"Widget '{tag}' non implementato.")
-                return None
+                return self.code('p', {'class': 'text'}|props, "Widget non implementato: " + tag)
 
     async def mount_css(self,constants):
         pass

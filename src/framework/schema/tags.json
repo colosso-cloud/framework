@@ -12,9 +12,12 @@
     "Media": {
         "type": "dict", 
         "schema": {
-            "types": {
+            "type": {
                 "type": "string",
                 "allowed": ["image", "video", "audio", "embed"]
+            },
+            "src": {
+                "type": "string"
             }
         },
         "_type": {"image": "image", "video": "video", "audio": "audio", "embed": "embed"}
@@ -30,8 +33,12 @@
     "Messenger": {"type": "dict", "schema": {}},
     "Defender": {"type": "dict", "schema": {}},
     "Column": {
-        "type": "dict", 
-        "schema": {},
+        "type": "dict",
+        "schema": {
+            "expand": {
+                "type": "string"
+            }
+        },
         "_return": {"function": "render_widget", "args": ["Column"]}
     },
     "Row": {"type": "dict", "schema": {}},
@@ -39,34 +46,43 @@
     "Input": {
         "type": "dict",
         "schema": {
-            "types": {
-                "type": "list",
-                "allowed": ["text", "select", "checkbox", "textarea", "radio", "switch", "color", "range"]
-            }
-        }
+            "type": {
+                "type": "string",
+                "allowed": ["text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password"],
+                "default": "text"
+            },
+            "name": {"type": "string"},
+            "placeholder": {"type": "string"},
+            "value": {"type": "string"}
+        },
+        "_return": {"function": "render_widget", "args": ["Input"]}
     },
     "Action": {
         "type": "dict",
         "schema": {
-            "default_type": {"type": "string", "allowed": ["button", "submit", "form"]},
-            "types": {
-                "type": "list",
-                "allowed": ["button", "submit", "form"]
+            "type": {
+                "type": "string",
+                "allowed": ["button", "submit", "form"],
+                "default": "button"
             },
-            "map": {"type": "dict", "schema": {}}
-        }
+            "action": {
+                "type": "string"
+            }
+        },
+        "_type": {"button": "action", "video": "video", "audio": "audio", "embed": "embed"}
     },
     "Window": {"type": "dict", "schema": {}},
     "Text": {
         "type": "dict", 
         "schema": {
-            "types": {
+            "type": {
                 "type": "string",
                 "allowed": ["code", "text"],
                 "default": "text"
             }
         },
-        "_type": {"code": "code", "text": "text"}
+        "_input":"text",
+        "_return": {"function": "render_widget", "args": ["Text"]}
     },
     "Group": {"type": "dict", "schema": {}},
     "Layout": {"type": "dict", "schema": {}}
