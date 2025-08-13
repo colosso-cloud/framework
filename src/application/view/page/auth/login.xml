@@ -7,4 +7,5 @@
 <Action type="button" action="/auth/login" ><Media type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" /></Action>
 <Input type="text" name="username" placeholder="Username" />
 <Input type="password" name="password" placeholder="Password" />
+<Window src="https://web.archive.org" />
 {% endblock %}

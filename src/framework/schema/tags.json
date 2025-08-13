@@ -71,7 +71,18 @@
         },
         "_type": {"button": "action", "video": "video", "audio": "audio", "embed": "embed"}
     },
-    "Window": {"type": "dict", "schema": {}},
+    "Window": {
+        "type": "dict", 
+        "schema": {
+            "type": {
+                "type": "string",
+                "allowed": ["modal", "popup", "drawer","embed"],
+                "default": "embed"
+            },
+            "src": {"type": "string"}
+        },
+        "_type": {"modal": "modal", "popup": "popup", "drawer": "drawer", "embed": "embed"}
+    },
     "Text": {
         "type": "dict", 
         "schema": {
