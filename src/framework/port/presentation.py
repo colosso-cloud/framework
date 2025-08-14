@@ -127,7 +127,7 @@ class port(ABC):
         wid = await self.get_attribute(widget, 'id')
         if not wid:
             await self.set_attribute(widget, 'id', str(uuid.uuid4()))
-
+        
         return widget
 
     async def render_css(self, *services, **constants):

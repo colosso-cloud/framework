@@ -1,11 +1,18 @@
 {% extends "mono.xml" %}
 {% block content %}
-<Text>Login</Text>
-<Media type="embed" src="https://www.youtube.com/embed/FkgC37ERJCY?si=RdT-GibC8pnJ5L1C" />
-<Media type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" />
+<Media width="500px" height="500px" type="embed" src="https://www.youtube.com/embed/FkgC37ERJCY?si=RdT-GibC8pnJ5L1C" />
+<Media width="500px" height="500px" type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" controls="" autoplay="" />
 <Text type="code">print("Hello, World!")</Text>
-<Action type="button" action="/auth/login" ><Media type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" /></Action>
-<Input type="text" name="username" placeholder="Username" />
-<Input type="password" name="password" placeholder="Password" />
-<Window src="https://web.archive.org" />
+<Action width="100px" type="button" ><Media width="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" /></Action>
+<Action type="form" action="/auth/login" >
+    <Input type="text" name="username" placeholder="Username" />
+    <Input type="password" name="password" placeholder="Password" />
+    <Action type="submit" ><Text>Login</Text></Action>
+</Action>
+
+<Input type="select" name="gender" placeholder="gender" >
+    <Text>Maschio</Text>
+    <Text>Femmina</Text>
+</Input>
+<Window width="1980px" height="1080px" src="https://web.archive.org" />
 {% endblock %}

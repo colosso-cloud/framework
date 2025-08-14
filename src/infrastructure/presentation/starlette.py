@@ -125,6 +125,129 @@ except Exception as e:
 
 class adapter(presentation.port):
 
+    WIDGETS = {
+        'embed': {
+            'tag': 'iframe',
+        },
+        'video': {
+            'tag': 'video',
+        },
+        'videomedia': {
+            'tag': 'videomedia',
+        },
+        'column': {
+            'tag': 'div',
+            'attributes': {'class': 'd-flex flex-column'}
+        },
+        'row': {
+            'tag': 'div',
+            'attributes': {'class': 'd-flex flex-row'}
+        },
+        'container': {
+            'tag': 'div',
+            'attributes':{'class': 'container-fluid'}
+        },
+        'list': {
+            'tag': 'ul',
+            'attributes': {'class': 'list-group'}
+        },
+        'tree': {
+            'tag': 'ul',
+            'attributes': {'class': 'list-group'}
+        },
+        'image': {
+            'tag': 'img',
+        },
+        'table': {
+            'tag': 'table',
+        },
+        'card': {
+            'tag': 'div',
+            'attributes': {'class': 'card'}
+        },
+        'text': {
+            'tag': 'p',
+            'attributes': {'class': 'text'}
+        },
+        'input': {
+            'tag': 'input',
+            'case': lambda attributes: {
+                'select':  ('select', {'class': 'form-select'}),
+            }.get(attributes.get('type', 'text'), ('input', {'type': attributes.get('type', 'text')})),
+            'wrapper':lambda adapter,attributes,inner: {
+                'select': lambda adapter,attributes,inner: adapter.code('option', {}, inner),
+            }.get(attributes.get('type', 'text'))
+        },
+        'action': {
+            'tag': None,  # Determinato dinamicamente
+            'case': lambda attributes: {
+                'submit':  ('button', {'class': 'btn', 'type': 'submit'}),
+                'reset':   ('button', {'class': 'btn', 'type': 'reset'}),
+                'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('href', '/')}),
+                'button':  ('button', {'class': 'btn', 'type': 'button'}),
+                'form':    ('form', {'class': 'form-control', 'method': 'POST'})
+            }.get(attributes.get('type', 'button'))
+        },
+        'form': {
+            'tag': 'form',
+        },
+        'editor': {
+            'tag': 'form',
+        },
+        # Modal-like
+        'modal': {
+            'tag': 'div',
+            'attributes': {'class': 'modal'}
+        },
+        'drawer': {
+            'tag': 'div',        
+        },
+        'window': {
+            'tag': 'div',
+            'attributes': {'class': 'window'}
+        },
+        'map': {
+            'tag': 'div',
+            'attributes': {'class': 'map'}
+        },
+        'chart': {
+            'tag': 'div',
+            'attributes': {'class': 'chart'}
+        },
+        'tab': {
+            'tag': 'div',
+            'attributes': {'class': 'tab'}
+        },
+        'scroll': {
+            'tag': 'div',
+            'attributes': {'class': 'scroll'}
+        },
+        'toast': {
+            'tag': 'div',
+            'attributes': {'class': 'toast'}
+        },
+        'alert': {
+            'tag': 'div',
+            'attributes': {'class': 'alert'}
+        },
+        'breadcrumb': {
+            'tag': 'div',
+            'attributes': {'class': 'breadcrumb'}
+        },
+        'pagination': {
+            'tag': 'div',
+            'attributes': {'class': 'pagination'}
+        },
+        'carousel': {
+            'tag': 'div',
+            'attributes': {'class': 'carousel'}
+        },
+        'navigation': {
+            'tag': 'div',
+            'attributes': {'class': 'navigation'}
+        },
+    }
+
     @flow.synchronous(managers=('defender',))
     def __init__(self,defender,**constants):
         self.config = constants.get('config', {})
@@ -198,112 +321,34 @@ class adapter(presentation.port):
                 print(f"Errore critico durante l'avvio del server Uvicorn: {e}")
         loop.create_task(main())
     
-    async def mount_widget(self, tag, inner, props):
-        """Mounts a widget based on the tag and properties provided."""
-        print("Rendering text widget with props:", props, "and inner content:", inner)
-        widget = None
-        match tag.lower():
-            case 'embed':
-                return self.code('iframe',props,inner)
-            case 'video':
-                return self.code('video',props,inner)
-            case 'videomedia':
-                return self.code('videomedia',{},inner)
-            case 'column':
-                return self.code('div',{'class':'d-flex flex-row'},inner)
-            case 'row':
-                return self.code('div',{'class':'d-flex flex-row'},inner)
-            case 'container':
-                return self.code('div',{'class':'container-fluid'}|props,inner)
-            case 'action':
-                match props.get('type', 'button'):
-                    case 'submit':
-                        return self.code('button',{'class':'btn','type':'submit'},inner)
-                    case 'reset':
-                        return self.code('button',{'class':'btn','type':'reset'},inner)
-                    case 'link':
-                        return self.code('a',{'class':'btn btn-link','href':props.get('href','/')},inner)
-                    case 'button':
-                        return self.code('button',{'class':'btn','type':'button'},inner)
-            case 'list':
-                return self.code('ul',{'class':'list-group'},inner)
-            case 'tree':
-                return self.code('ul',{'class':'list-group'},inner)
-            case 'image':
-                return self.code('img',props,inner)
-            case 'form':
-                path = props.get('action','/')
-                method = self.routes.get(path,{}).get('method')
-                return self.code('form',{'method':method},inner)
-            case 'editor':
-                path = props.get('action','/') 
-                method = self.routes.get(path,{}).get('method')
-                return self.code('form',{'method':method},inner)
-            case 'table':
-                return self.code('table',{},inner)
-            case 'modal':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'drawer':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'window':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'map': 
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'chart':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'tab':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'scroll': 
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'toast':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'alert':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'card':
-                return self.code('div', {'class': 'card'}, inner)
-            case 'breadcrumb':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'pagination':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'carousel':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'navigation':
-                return self.code('div', {'class': 'modal'}, inner)
-            case 'text':
-                
-                return self.code('p', {'class': 'text'}|props, inner)
-            case 'input':
-                ttype = props.get('type', 'text')
-                match ttype:
-                    case 'text':
-                        return self.code('input', {'type': 'text'}, inner)
-                    case 'password':
-                        return self.code('input', {'type': 'password'}, inner)
-                    case 'email':
-                        return self.code('input', {'type': 'email'}, inner)
-                    case 'number':
-                        return self.code('input', {'type': 'number'}, inner)
-                    case 'checkbox':
-                        return self.code('input', {'type': 'checkbox'}, inner)
-                    case 'radio':
-                        return self.code('input', {'type': 'radio'}, inner)
-                    case 'file':
-                        return self.code('input', {'type': 'file'}, inner)
-                    case 'date':
-                        return self.code('input', {'type': 'date'}, inner)
-                    case 'datetime-local':
-                        return self.code('input', {'type': 'datetime-local'}, inner)
-                    case 'time':
-                        return self.code('input', {'type': 'time'}, inner)
-                    case 'url':
-                        return self.code('input', {'type': 'url'}, inner)
-                    case 'tel':
-                        return self.code('input', {'type': 'tel'}, inner)
-            case _:
-                # Gestione di widget sconosciuti o non implementati
-                print(f"Widget '{tag}' non implementato.")
-                return self.code('p', {'class': 'text'}|props, "Widget non implementato: " + tag)
+    async def mount_widget(self, tag, inner, attributes):
+        """Mounts a widget using data-driven config."""
+        attributes = attributes or {}
+        tag_lower = tag.lower()
 
+        config = self.WIDGETS.get(tag_lower)
+        if not config:
+            return self.code('p', {'class':'text'}, f"Widget non implementato: {tag}")
+
+        # Gestione standard
+        elem = config.get('tag')
+        att = config.get('attributes',{})
+        if 'case' in config:
+            # Se 'case' è presente, usa la funzione per determinare il tag e gli attributi
+            elem, att = config['case'](attributes)
+        if 'wrapper' in config:
+            # Se 'wrapper' è presente, usa la funzione per creare il wrapper
+            # adapter.code('div', {'class': 'input-group'}, inner)
+            runable = config['wrapper'](self, attributes,inner)
+            wapped = []
+            if callable(runable):
+                for el in inner:
+                    wapped.append(runable(self, attributes,el))
+                inner = wapped
+            else:
+                inner = runable
+        return self.code(elem, att, inner)
+    
     async def mount_css(self,constants):
         pass
         
@@ -467,7 +512,7 @@ class adapter(presentation.port):
     
     async def starlette_view(self,request):
         html_body = await self.mount_view(request.url.path)
-        print(html_body, "html_body",request.url.path)
+        print(html_body, "html_body**********************",request.url.path)
         layout = 'application/view/layout/base.html'
         file = await self.fetch_resource({'url':layout})
         css = await self.fetch_resource({'url':layout.replace('.html','.css').replace('.xml','.css')})
@@ -476,20 +521,24 @@ class adapter(presentation.port):
         content = template.render()
         content = content.replace('<!-- Body -->',str(html_body))
         return HTMLResponse(content)
-    
-    def code(self,tag,attr,inner=[]):
+        
+    def code(self, tag, attr, inner=[]):
         att = ''
         html = ''
-        for key in attr:
-            att += f' {key}="{attr[key]}"'
-        if type(inner) == type([]):
+        for key, value in attr.items():
+            # Gestione attributi booleani: True o "true" → solo nome attributo
+            if value.lower() == "true":
+                att += f' {key}'
+            else:
+                att += f' {key}="{value}"'
+        if isinstance(inner, list):
             for item in inner:
                 html += str(item)
             if len(inner) > 0:
                 return f'<{tag}{att}>{html}</{tag}>'
             else:
                 return f'<{tag}{att}/>'
-        elif  type(inner) == type(''):
+        elif isinstance(inner, str):
             return f'<{tag}{att}>{inner}</{tag}>'
         else:
             return f'<{tag}{att}/>'
@@ -535,10 +584,12 @@ class adapter(presentation.port):
                     # (they should not be added/modified).
                     continue 
 
+
                 if value is None:
                     # If value is None, remove the attribute
                     if key in root.attrs: # Check if attribute exists before trying to delete
                         del root[key]
+                
                 else:
                     # Set or update the attribute. BeautifulSoup handles adding if not exists.
                     # It automatically converts non-string values to strings.
@@ -575,9 +626,9 @@ class adapter(presentation.port):
                         # Log error or skip malformed inner HTML fragments
                         continue
 
-        return str(soup)
-    
-    
+        html = str(soup)
+        return html
+
     async def set_attribute(self, widget, field, value):
         """
         Sets or updates a single attribute on the root element of an HTML string.

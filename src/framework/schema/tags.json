@@ -12,6 +12,10 @@
     "Media": {
         "type": "dict", 
         "schema": {
+            "controls": {"type": "string"},
+            "autoplay": {"type": "string" },
+            "width":{"type": "string"},
+            "height":{"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["image", "video", "audio", "embed"]
@@ -46,6 +50,12 @@
     "Input": {
         "type": "dict",
         "schema": {
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "required": {"type": "string"},
+            "disabled": {"type": "string"},
+            "readonly": {"type": "string"},
+            "autofocus": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password"],
@@ -60,6 +70,8 @@
     "Action": {
         "type": "dict",
         "schema": {
+            "width": {"type": "string"},
+            "height": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["button", "submit", "form"],
@@ -69,11 +81,13 @@
                 "type": "string"
             }
         },
-        "_type": {"button": "action", "video": "video", "audio": "audio", "embed": "embed"}
+        "_type": {"button": "action","submit": "action", "form": "action"}
     },
     "Window": {
         "type": "dict", 
         "schema": {
+            "width": {"type": "string"},
+            "height": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["modal", "popup", "drawer","embed"],
@@ -86,6 +100,8 @@
     "Text": {
         "type": "dict", 
         "schema": {
+            "width": {"type": "string"},
+            "height": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["code", "text"],
