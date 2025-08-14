@@ -23,6 +23,32 @@ class port(ABC):
 
         #http_loader = MyLoader()
         #choice_loader = ChoiceLoader([fs_loader, http_loader])
+
+        ui_kit = [
+            'breadcrumb',
+            'table',
+            'badge',
+            'input',
+            'action',
+            'text',
+            'media',
+            'window',
+            'card',
+            'navigation',
+            'pagination',
+            'group',
+            'row',
+            'column',
+            'container',
+            'defender',
+            'messenger',
+            'message',
+            'storekeeper',
+            'presenter',
+            'view',
+            'divider',
+            'resource',
+        ]
         
         '''for widget in self.widgets:
             print('widget_'+widget.lower())

@@ -1,5 +1,20 @@
 {
-    "Data": {"type": "dict", "schema": {}},
+    "Card": {
+        "type": "dict",
+        "schema": {
+            "title": {"type": "string"},
+            "subtitle": {"type": "string"},
+            "image": {"type": "string"},
+            "content": {"type": "string"}
+        },
+        "_return": {"function": "render_widget", "args": ["card"]}
+    },
+    "Data": {
+        "type": "dict", 
+        "schema": {
+            
+        }
+    },
     "Resource": {
         "type": "dict",
         "schema": {
@@ -18,7 +33,7 @@
             "height":{"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["image", "video", "audio", "embed"]
+                "allowed": ["image", "video", "audio", "embed", "carousel"]
             },
             "src": {
                 "type": "string"
@@ -26,7 +41,17 @@
         },
         "_type": {"image": "image", "video": "video", "audio": "audio", "embed": "embed"}
     },
-    "Navigation": {"type": "dict", "schema": {}},
+    "Navigation": {
+        "type": "dict",
+        "schema": {
+            "orientation": {
+                "type": "string",
+                "allowed": ["horizontal", "vertical"],
+                "default": "horizontal"
+            }
+        },
+        "_return": {"function": "render_widget", "args": ["Navigation"]}
+    },
     "View": {
         "type": "dict", 
         "schema": {
@@ -35,6 +60,24 @@
         "_return": {"function": "mount_view", "args": ["route"]}
     },
     "Messenger": {"type": "dict", "schema": {}},
+    "Message": {
+        "type": "dict",
+        "schema": {
+            "title": {"type": "string"},
+            "subtitle": {"type": "string"},
+            "type": {
+                "type": "string",
+                "allowed": ["info", "success", "warning", "error"],
+                "default": "info"
+            },
+            "mode": {
+                "type": "string",
+                "allowed": ["toast", "alert", "inline","banner"],
+                "default": "toast"
+            }
+        },
+        "_return": {"function": "render_widget", "args": ["message"]}
+    },
     "Defender": {"type": "dict", "schema": {}},
     "Column": {
         "type": "dict",
@@ -58,7 +101,7 @@
             "autofocus": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password"],
+                "allowed": ["combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox"],
                 "default": "text"
             },
             "name": {"type": "string"},
@@ -74,7 +117,7 @@
             "height": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["button", "submit", "form"],
+                "allowed": ["button", "submit", "form","dropdown"],
                 "default": "button"
             },
             "action": {
@@ -90,7 +133,7 @@
             "height": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["modal", "popup", "drawer","embed"],
+                "allowed": ["modal", "alert", "offcanvas","embed","dialog"],
                 "default": "embed"
             },
             "src": {"type": "string"}
@@ -111,6 +154,17 @@
         "_input":"text",
         "_return": {"function": "render_widget", "args": ["Text"]}
     },
-    "Group": {"type": "dict", "schema": {}},
-    "Layout": {"type": "dict", "schema": {}}
+    "Group": {
+        "type": "dict", 
+        "schema": {
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "type": {
+                "type": "string",
+                "allowed": ["input", "list", "card", "tab"],
+                "default": "input"
+            }
+        },
+        "_return": {"function": "render_widget", "args": ["Group"]}
+    }
 }

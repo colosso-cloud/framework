@@ -163,7 +163,10 @@ class adapter(presentation.port):
         },
         'card': {
             'tag': 'div',
-            'attributes': {'class': 'card'}
+            'attributes': {'class': 'card'},
+            'wrapper_once':lambda adapter,attributes,inner: {
+                'card': lambda adapter,attributes,inner: adapter.code('div', {'class':'card-body'}, inner),
+            }.get('card')
         },
         'text': {
             'tag': 'p',
@@ -173,7 +176,7 @@ class adapter(presentation.port):
             'tag': 'input',
             'case': lambda attributes: {
                 'select':  ('select', {'class': 'form-select'}),
-            }.get(attributes.get('type', 'text'), ('input', {'type': attributes.get('type', 'text')})),
+            }.get(attributes.get('type', 'text'), ('input', {'class': 'form-control', 'type': attributes.get('type','text')})),
             'wrapper':lambda adapter,attributes,inner: {
                 'select': lambda adapter,attributes,inner: adapter.code('option', {}, inner),
             }.get(attributes.get('type', 'text'))
@@ -188,19 +191,25 @@ class adapter(presentation.port):
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'})
             }.get(attributes.get('type', 'button'))
         },
-        'form': {
-            'tag': 'form',
+        'message': {
+            'case': lambda attributes: {
+                'alert':  ('div', {'class': f"alert alert-{attributes.get('type')}", 'role': 'alert'}),
+            }.get(attributes.get('mode', 'alert'))
+        },
+        'group': {
+            'case': lambda attributes: {
+                'input':  ('div', {'class': 'input-group'}),
+                'list': ('ul', {'class': 'list-group'}),
+                'card': ('ul', {'class': 'card-group'}),
+                'tab': ('div', {'class': 'tab-content'}),
+            }.get(attributes.get('type')),
+            'wrapper_each':lambda adapter,attributes,inner: {
+                'list': lambda adapter,attributes,inner: adapter.code('li', {'class':'list-group-item'}, inner),
+                'tab' : lambda adapter,attributes,inner: adapter.code('div', {'class':'tab-pane'}, inner),
+            }.get(attributes.get('type'))
         },
         'editor': {
             'tag': 'form',
-        },
-        # Modal-like
-        'modal': {
-            'tag': 'div',
-            'attributes': {'class': 'modal'}
-        },
-        'drawer': {
-            'tag': 'div',        
         },
         'window': {
             'tag': 'div',
@@ -336,6 +345,22 @@ class adapter(presentation.port):
         if 'case' in config:
             # Se 'case' è presente, usa la funzione per determinare il tag e gli attributi
             elem, att = config['case'](attributes)
+        
+         # Gestione wrapper_all: applica una sola volta a tutta la lista inner
+        if 'wrapper_once' in config:
+            runable = config['wrapper_once'](self, attributes, inner)
+            if callable(runable):
+                inner = [runable(self, attributes, inner)]
+
+        # Gestione wrapper_once: applica una volta a ciascun elemento di inner
+        if 'wrapper_each' in config:
+            runable = config['wrapper_each'](self, attributes, inner)
+            if callable(runable):
+                wrapped = []
+                for el in inner:
+                    wrapped.append(runable(self, attributes, el))
+                inner = wrapped
+        
         if 'wrapper' in config:
             # Se 'wrapper' è presente, usa la funzione per creare il wrapper
             # adapter.code('div', {'class': 'input-group'}, inner)
@@ -345,8 +370,7 @@ class adapter(presentation.port):
                 for el in inner:
                     wapped.append(runable(self, attributes,el))
                 inner = wapped
-            else:
-                inner = runable
+
         return self.code(elem, att, inner)
     
     async def mount_css(self,constants):

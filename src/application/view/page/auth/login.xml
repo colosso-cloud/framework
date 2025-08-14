@@ -15,4 +15,30 @@
     <Text>Femmina</Text>
 </Input>
 <Window width="1980px" height="1080px" src="https://web.archive.org" />
+<Message type="success" mode="alert" title="Alert" >
+    <Text>This is an alert message.</Text>
+</Message>
+<Group>
+    <Input type="text" name="name" placeholder="name" />
+    <Input type="text" name="surname" placeholder="surname" />
+</Group>
+<Group type="list">
+    <Text>Item 1</Text>
+    <Text>Item 2</Text>
+    <Text>Item 3</Text>
+</Group>
+<Group type="card">
+    <Card>
+        <Media width="100px" height="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+        <Text>Card 1</Text>
+    </Card>
+    <Card>
+        <Media width="100px" height="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+        <Text>Card 2</Text>
+    </Card>
+    <Card>
+        <Media width="100px" height="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+        <Text>Card 3</Text>
+    </Card>
+</Group>
 {% endblock %}
