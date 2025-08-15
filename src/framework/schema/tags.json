@@ -12,13 +12,17 @@
     "Data": {
         "type": "dict", 
         "schema": {
-            
-        }
+            "type": {
+                "type": "string",
+                "allowed": ["text", "video", "audio"]
+            }
+        },
+        "_return": {"function": "render_widget", "args": ["data"]}
     },
     "Resource": {
         "type": "dict",
         "schema": {
-            "types": {
+            "type": {
                 "type": "string",
                 "allowed": ["image", "video", "audio"]
             }
@@ -33,13 +37,13 @@
             "height":{"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["image", "video", "audio", "embed", "carousel"]
+                "allowed": ["image", "video", "audio", "embed", "carousel", "map"]
             },
             "src": {
                 "type": "string"
             }
         },
-        "_type": {"image": "image", "video": "video", "audio": "audio", "embed": "embed"}
+        "_type": {"image": "image", "video": "video", "audio": "audio", "embed": "embed", "carousel": "carousel", "map": "map"}
     },
     "Navigation": {
         "type": "dict",
@@ -48,9 +52,19 @@
                 "type": "string",
                 "allowed": ["horizontal", "vertical"],
                 "default": "horizontal"
+            },
+            "type": {
+                "type": "string",
+                "allowed": ["bar", "breadcrumb", "pagination", "carousel"],
+                "default": "bar"
             }
         },
-        "_return": {"function": "render_widget", "args": ["Navigation"]}
+        "_type": {
+            "bar": "bar",
+            "breadcrumb": "breadcrumb",
+            "pagination": "pagination",
+            "carousel": "carousel"
+        }
     },
     "View": {
         "type": "dict", 
@@ -117,28 +131,32 @@
             "height": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["button", "submit", "form","dropdown"],
+                "allowed": ["button", "submit", "form","dropdown", "link"],
                 "default": "button"
             },
             "action": {
                 "type": "string"
+            },
+            "route": {
+                "type": "string"
             }
         },
-        "_type": {"button": "action","submit": "action", "form": "action"}
+        "_type": {"button": "action","submit": "action", "form": "action", "dropdown": "action", "link": "action"}
     },
     "Window": {
         "type": "dict", 
         "schema": {
+            "id": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["modal", "alert", "offcanvas","embed","dialog"],
+                "allowed": ["still","embed","dialog"],
                 "default": "embed"
             },
             "src": {"type": "string"}
         },
-        "_type": {"modal": "modal", "popup": "popup", "drawer": "drawer", "embed": "embed"}
+        "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed"}
     },
     "Text": {
         "type": "dict", 

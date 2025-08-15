@@ -129,6 +129,14 @@ class adapter(presentation.port):
         'embed': {
             'tag': 'iframe',
         },
+        'data': {
+            'tag': 'data',
+            'attributes': {'type': 'text/plain'},
+            'case': lambda attributes: {
+                'text': ('span', {'class': 'placeholder'}),
+                'table': ('table', {'class': 'table'}),
+            }.get(attributes.get('type', 'text'))
+        },
         'video': {
             'tag': 'video',
         },
@@ -186,10 +194,20 @@ class adapter(presentation.port):
             'case': lambda attributes: {
                 'submit':  ('button', {'class': 'btn', 'type': 'submit'}),
                 'reset':   ('button', {'class': 'btn', 'type': 'reset'}),
-                'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('href', '/')}),
+                'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('route', '/'),'data-bs-toggle': 'offcanvas' }),
                 'button':  ('button', {'class': 'btn', 'type': 'button'}),
-                'form':    ('form', {'class': 'form-control', 'method': 'POST'})
-            }.get(attributes.get('type', 'button'))
+                'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
+                'dropdown': ('div', {'class': 'dropdown'}),
+            }.get(attributes.get('type')),
+            'wrapper_each': lambda adapter, attributes, inner: {
+                'dropdown': lambda adapter, attributes, inner: adapter.code('li', {}, inner),
+            }.get(attributes.get('type')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'dropdown': lambda adapter, attributes, inner: adapter.code('div', {'class': 'dropdown'}, [adapter.code('button', {'class':'btn btn-secondary dropdown-toggle','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('ul', {'class': 'dropdown-menu'}, inner[1:])]),
+            }.get(attributes.get('type')),
+            'inner_overwrite': lambda adapter, attributes, inner: {
+                'dropdown': ({'class':'dropdown-item'},''),
+            }.get(attributes.get('type')),
         },
         'message': {
             'case': lambda attributes: {
@@ -215,10 +233,6 @@ class adapter(presentation.port):
             'tag': 'div',
             'attributes': {'class': 'window'}
         },
-        'map': {
-            'tag': 'div',
-            'attributes': {'class': 'map'}
-        },
         'chart': {
             'tag': 'div',
             'attributes': {'class': 'chart'}
@@ -231,6 +245,28 @@ class adapter(presentation.port):
             'tag': 'div',
             'attributes': {'class': 'scroll'}
         },
+        'offcanvas': {
+            'tag': 'div',
+            'attributes': {'class': 'offcanvas h-100', 'tabindex': '-1'},
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'still': lambda adapter, attributes, inner: adapter.code('div',{},[
+                    adapter.code('div', {'class': 'offcanvas-header'}, inner),
+                    adapter.code('div', {'class': 'offcanvas-body'}, inner),
+                    
+                ])
+            }.get(attributes.get('type')),
+        },
+        'modal': {
+            'tag': 'div',
+            'attributes': {'class': 'modal', 'tabindex': '-1', 'role': 'dialog'},
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'dialog': lambda adapter, attributes, inner: adapter.code('div', {'class': 'modal-dialog'}, [adapter.code('div', {'class': 'modal-content'}, [
+                    adapter.code('div', {'class': 'modal-header'}, inner), 
+                    adapter.code('div', {'class': 'modal-body'}, inner),
+                    adapter.code('div', {'class': 'modal-footer'}, inner)
+                ])])
+            }.get(attributes.get('type')),
+        },
         'toast': {
             'tag': 'div',
             'attributes': {'class': 'toast'}
@@ -240,20 +276,45 @@ class adapter(presentation.port):
             'attributes': {'class': 'alert'}
         },
         'breadcrumb': {
-            'tag': 'div',
-            'attributes': {'class': 'breadcrumb'}
+            'tag': 'nav',
+            'attributes': {},
+            'wrapper_each': lambda adapter, attributes, inner: {
+                'breadcrumb': lambda adapter, attributes, inner: adapter.code('li', {'class': 'breadcrumb-item'}, inner),
+            }.get(attributes.get('type')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'breadcrumb': lambda adapter, attributes, inner: adapter.code('ol', {'class': 'breadcrumb'}, inner),
+            }.get(attributes.get('type')),
         },
         'pagination': {
-            'tag': 'div',
-            'attributes': {'class': 'pagination'}
+            'tag': 'nav',
+            'attributes': {'class': 'pagination'},
+            'wrapper_each': lambda adapter, attributes, inner: {
+                'pagination': lambda adapter, attributes, inner: adapter.code('li', {'class': 'page-item'}, inner),
+            }.get(attributes.get('type')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'pagination': lambda adapter, attributes, inner: adapter.code('ul', {'class': 'pagination'}, inner),
+            }.get(attributes.get('type')),
+            'inner_overwrite': lambda adapter, attributes, inner: {
+                'pagination': ({'class':'page-link'},''),
+            }.get(attributes.get('type')),
         },
         'carousel': {
             'tag': 'div',
-            'attributes': {'class': 'carousel'}
+            'attributes': {'data-bs-ride':'carousel','class':'carousel slide'},
+            'wrapper_each':lambda adapter,attributes,inner: {
+                'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-item active'}, inner),
+            }.get(attributes.get('type')),
+            'wrapper_once':lambda adapter,attributes,inner: {
+                'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-inner'}, inner),
+            }.get(attributes.get('type')),
         },
-        'navigation': {
+        'bar': {
             'tag': 'div',
-            'attributes': {'class': 'navigation'}
+            'attributes': {'class': 'navigation'},
+            'case': lambda attributes: {
+                'horizontal':  ('div', {'class': 'navbar'}),
+                'vertical': ('div', {'class': 'sidebar'}),
+            }.get(attributes.get('orientation')),
         },
     }
 
@@ -338,6 +399,17 @@ class adapter(presentation.port):
         config = self.WIDGETS.get(tag_lower)
         if not config:
             return self.code('p', {'class':'text'}, f"Widget non implementato: {tag}")
+        
+        if 'inner_overwrite' in config:
+            # Se 'inner_overwrite' è presente, usa la funzione per modificare inner
+            valor = config['inner_overwrite'](self, attributes, inner)
+            if valor:
+                overwrite_att, overwrite_up = valor
+                
+                overwrite_inner = []
+                for i in inner:
+                    overwrite_inner.append(self.code_update(i, overwrite_att))
+                inner = overwrite_inner
 
         # Gestione standard
         elem = config.get('tag')
@@ -346,12 +418,6 @@ class adapter(presentation.port):
             # Se 'case' è presente, usa la funzione per determinare il tag e gli attributi
             elem, att = config['case'](attributes)
         
-         # Gestione wrapper_all: applica una sola volta a tutta la lista inner
-        if 'wrapper_once' in config:
-            runable = config['wrapper_once'](self, attributes, inner)
-            if callable(runable):
-                inner = [runable(self, attributes, inner)]
-
         # Gestione wrapper_once: applica una volta a ciascun elemento di inner
         if 'wrapper_each' in config:
             runable = config['wrapper_each'](self, attributes, inner)
@@ -360,6 +426,12 @@ class adapter(presentation.port):
                 for el in inner:
                     wrapped.append(runable(self, attributes, el))
                 inner = wrapped
+
+        # Gestione wrapper_all: applica una sola volta a tutta la lista inner
+        if 'wrapper_once' in config:
+            runable = config['wrapper_once'](self, attributes, inner)
+            if callable(runable):
+                inner = [runable(self, attributes, inner)]
         
         if 'wrapper' in config:
             # Se 'wrapper' è presente, usa la funzione per creare il wrapper
