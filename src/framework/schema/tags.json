@@ -14,7 +14,8 @@
         "schema": {
             "type": {
                 "type": "string",
-                "allowed": ["text", "video", "audio"]
+                "allowed": ["text", "table", "table.row", "table.cell", "table.header", "table.body"],
+                "default": "text"
             }
         },
         "_return": {"function": "render_widget", "args": ["data"]}
@@ -102,7 +103,27 @@
         },
         "_return": {"function": "render_widget", "args": ["Column"]}
     },
-    "Row": {"type": "dict", "schema": {}},
+    "Row": {
+        "type": "dict", 
+        "schema": {},
+        "_return": {"function": "render_widget", "args": ["Row"]}
+    },
+    "Container": {
+        "type": "dict",
+        "schema": {
+            "type": {
+                "type": "string",
+                "allowed": ["fluid", "fixed"],
+                "default": "fluid"
+            },
+            "class": {"type": "string"},
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "padding": {"type": "string"},
+            "margin": {"type": "string"}
+        },
+        "_return": {"function": "render_widget", "args": ["Container"]}
+    },
     "Storekeeper": {"type": "dict", "schema": {}},
     "Input": {
         "type": "dict",
@@ -115,7 +136,7 @@
             "autofocus": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox"],
+                "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox"],
                 "default": "text"
             },
             "name": {"type": "string"},
@@ -127,8 +148,10 @@
     "Action": {
         "type": "dict",
         "schema": {
+            "id": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
+            "class": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["button", "submit", "form","dropdown", "link"],

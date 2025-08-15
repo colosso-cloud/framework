@@ -131,11 +131,26 @@ class adapter(presentation.port):
         },
         'data': {
             'tag': 'data',
-            'attributes': {'type': 'text/plain'},
+            'attributes': {},
             'case': lambda attributes: {
                 'text': ('span', {'class': 'placeholder'}),
-                'table': ('table', {'class': 'table'}),
-            }.get(attributes.get('type', 'text'))
+                'table': ('table', {'class': 'table table-striped'}),
+                'table.row': ('tr', {}),
+                'table.cell': ('td', {}),
+                'table.header': ('thead', {}),
+                'table.body': ('tbody', {'class': 'table-body'}),
+            }.get(attributes.get('type')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                #'table': lambda adapter, attributes, inner: adapter.code('sadsadsads', {}, inner),
+                'table.header': lambda adapter, attributes, inner: adapter.code('tr', {}, inner),
+                #'table.row': lambda adapter, attributes, inner: adapter.code('tr', {'class': 'table-row'}, inner),
+            }.get(attributes.get('type', 'text')),
+            'wrapper_each': lambda adapter, attributes, inner: {
+                'table.row': lambda adapter, attributes, inner: adapter.code('td', {}, inner),
+                #'table.cell': lambda adapter, attributes, inner: adapter.code('td', {'class': 'table-cell'}, inner),
+                #'table.header': lambda adapter, attributes, inner: adapter.code('th', {'class': 'table-header'}, inner),
+                #'table.body': lambda adapter, attributes, inner: adapter.code('tbody', {'class': 'table-body'}, inner),
+            }.get(attributes.get('type', 'text')),
         },
         'video': {
             'tag': 'video',
@@ -239,7 +254,16 @@ class adapter(presentation.port):
         },
         'tab': {
             'tag': 'div',
-            'attributes': {'class': 'tab'}
+            'attributes': {'class': 'tab-content'},
+            'wrapper_each': lambda adapter, attributes, inner: {
+                'tab': lambda adapter, attributes, inner: adapter.code('div', {'class': 'tab-pane fade', 'role': 'tabpanel'}, inner),
+            }.get(attributes.get('type')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'tab': lambda adapter, attributes, inner: adapter.code('div', {'class': 'tab-content'}, inner),
+            }.get(attributes.get('type')),
+            'inner_overwrite': lambda adapter, attributes, inner: {
+                'tab': ({'class':'nav-link active', 'data-bs-toggle':'tab', 'role':'tab'},''),
+            }.get(attributes.get('type')),
         },
         'scroll': {
             'tag': 'div',
@@ -390,60 +414,6 @@ class adapter(presentation.port):
                 # Logga errori critici all'avvio del server
                 print(f"Errore critico durante l'avvio del server Uvicorn: {e}")
         loop.create_task(main())
-    
-    async def mount_widget(self, tag, inner, attributes):
-        """Mounts a widget using data-driven config."""
-        attributes = attributes or {}
-        tag_lower = tag.lower()
-
-        config = self.WIDGETS.get(tag_lower)
-        if not config:
-            return self.code('p', {'class':'text'}, f"Widget non implementato: {tag}")
-        
-        if 'inner_overwrite' in config:
-            # Se 'inner_overwrite' è presente, usa la funzione per modificare inner
-            valor = config['inner_overwrite'](self, attributes, inner)
-            if valor:
-                overwrite_att, overwrite_up = valor
-                
-                overwrite_inner = []
-                for i in inner:
-                    overwrite_inner.append(self.code_update(i, overwrite_att))
-                inner = overwrite_inner
-
-        # Gestione standard
-        elem = config.get('tag')
-        att = config.get('attributes',{})
-        if 'case' in config:
-            # Se 'case' è presente, usa la funzione per determinare il tag e gli attributi
-            elem, att = config['case'](attributes)
-        
-        # Gestione wrapper_once: applica una volta a ciascun elemento di inner
-        if 'wrapper_each' in config:
-            runable = config['wrapper_each'](self, attributes, inner)
-            if callable(runable):
-                wrapped = []
-                for el in inner:
-                    wrapped.append(runable(self, attributes, el))
-                inner = wrapped
-
-        # Gestione wrapper_all: applica una sola volta a tutta la lista inner
-        if 'wrapper_once' in config:
-            runable = config['wrapper_once'](self, attributes, inner)
-            if callable(runable):
-                inner = [runable(self, attributes, inner)]
-        
-        if 'wrapper' in config:
-            # Se 'wrapper' è presente, usa la funzione per creare il wrapper
-            # adapter.code('div', {'class': 'input-group'}, inner)
-            runable = config['wrapper'](self, attributes,inner)
-            wapped = []
-            if callable(runable):
-                for el in inner:
-                    wapped.append(runable(self, attributes,el))
-                inner = wapped
-
-        return self.code(elem, att, inner)
     
     async def mount_css(self,constants):
         pass

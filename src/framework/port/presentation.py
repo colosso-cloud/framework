@@ -81,9 +81,9 @@ class port(ABC):
     async def mount_css(self, *services, **constants):
         pass
 
-    @abstractmethod
+    '''@abstractmethod
     async def mount_widget(self, tag, inner, attributes):
-        pass
+        pass'''
 
     async def fetch_resource(self,constants={},**c):
         #import os
@@ -544,6 +544,60 @@ class port(ABC):
                 return view
     '''
     
+    async def mount_widget(self, tag, inner, attributes):
+        """Mounts a widget using data-driven config."""
+        attributes = attributes or {}
+        tag_lower = tag.lower()
+
+        config = self.WIDGETS.get(tag_lower)
+        if not config:
+            return self.code('p', {'class':'text'}, f"Widget non implementato: {tag}")
+        
+        if 'inner_overwrite' in config:
+            # Se 'inner_overwrite' è presente, usa la funzione per modificare inner
+            valor = config['inner_overwrite'](self, attributes, inner)
+            if valor:
+                overwrite_att, overwrite_up = valor
+                
+                overwrite_inner = []
+                for i in inner:
+                    overwrite_inner.append(self.code_update(i, overwrite_att))
+                inner = overwrite_inner
+
+        # Gestione standard
+        elem = config.get('tag')
+        att = config.get('attributes',{})
+        if 'case' in config:
+            # Se 'case' è presente, usa la funzione per determinare il tag e gli attributi
+            elem, att = config['case'](attributes)
+        
+        # Gestione wrapper_once: applica una volta a ciascun elemento di inner
+        if 'wrapper_each' in config:
+            runable = config['wrapper_each'](self, attributes, inner)
+            if callable(runable):
+                wrapped = []
+                for el in inner:
+                    wrapped.append(runable(self, attributes, el))
+                inner = wrapped
+
+        # Gestione wrapper_all: applica una sola volta a tutta la lista inner
+        if 'wrapper_once' in config:
+            runable = config['wrapper_once'](self, attributes, inner)
+            if callable(runable):
+                inner = [runable(self, attributes, inner)]
+        
+        if 'wrapper' in config:
+            # Se 'wrapper' è presente, usa la funzione per creare il wrapper
+            # adapter.code('div', {'class': 'input-group'}, inner)
+            runable = config['wrapper'](self, attributes,inner)
+            wapped = []
+            if callable(runable):
+                for el in inner:
+                    wapped.append(runable(self, attributes,el))
+                inner = wapped
+
+        return self.code(elem, att, inner)
+
     @staticmethod
     @flow.asynchronous(managers=('messenger','presenter','executor'))
     async def action_form(messenger,presenter,executor,**constants):
