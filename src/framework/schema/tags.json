@@ -2,10 +2,24 @@
     "Card": {
         "type": "dict",
         "schema": {
+            "id": {"type": "string"},
             "title": {"type": "string"},
             "subtitle": {"type": "string"},
             "image": {"type": "string"},
-            "content": {"type": "string"}
+            "content": {"type": "string"},
+            "class": {"type": "string"},
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "padding": {"type": "string"},
+            "margin": {"type": "string"},
+            "alignment-content": {
+                "type": "string",
+                "allowed": ["horizontal", "center", "end", "between", "around"]
+            },
+            "expand": {
+                "type": "string",
+                "allowed": ["horizontal", "vertical", "full"]
+            }
         },
         "_return": {"function": "render_widget", "args": ["card"]}
     },
@@ -32,23 +46,25 @@
     "Media": {
         "type": "dict", 
         "schema": {
+            "class": {"type": "string"},
             "controls": {"type": "string"},
             "autoplay": {"type": "string" },
             "width":{"type": "string"},
             "height":{"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["image", "video", "audio", "embed", "carousel", "map"]
+                "allowed": ["image", "video", "audio", "embed", "carousel", "map","icon"]
             },
             "src": {
                 "type": "string"
             }
         },
-        "_type": {"image": "image", "video": "video", "audio": "audio", "embed": "embed", "carousel": "carousel", "map": "map"}
+        "_type": {"icon":"icon","image": "image", "video": "video", "audio": "video", "embed": "embed", "carousel": "carousel", "map": "map"}
     },
     "Navigation": {
         "type": "dict",
         "schema": {
+            "id": {"type": "string"},
             "orientation": {
                 "type": "string",
                 "allowed": ["horizontal", "vertical"],
@@ -56,7 +72,7 @@
             },
             "type": {
                 "type": "string",
-                "allowed": ["bar", "breadcrumb", "pagination", "carousel"],
+                "allowed": ["bar", "breadcrumb", "pagination", "accordion", "tab","accordion-item"],
                 "default": "bar"
             }
         },
@@ -64,7 +80,9 @@
             "bar": "bar",
             "breadcrumb": "breadcrumb",
             "pagination": "pagination",
-            "carousel": "carousel"
+            "accordion": "accordion",
+            "accordion-item": "accordion",
+            "tab": "tab"
         }
     },
     "View": {
@@ -74,7 +92,14 @@
         },
         "_return": {"function": "mount_view", "args": ["route"]}
     },
-    "Messenger": {"type": "dict", "schema": {}},
+    "Messenger": {
+        "type": "dict", 
+        "schema": {
+            "view": {"type": "string"},
+            "domain": {"type": "string"}
+        },
+        "_return": {"function": "render_widget", "args": ["Messenger"]}
+    },
     "Message": {
         "type": "dict",
         "schema": {
@@ -88,7 +113,7 @@
             "mode": {
                 "type": "string",
                 "allowed": ["toast", "alert", "inline","banner"],
-                "default": "toast"
+                "default": "alert"
             }
         },
         "_return": {"function": "render_widget", "args": ["message"]}
@@ -105,7 +130,14 @@
     },
     "Row": {
         "type": "dict", 
-        "schema": {},
+        "schema": {
+            "expand": {"type": "string"},
+            "class": {"type": "string"},
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "padding": {"type": "string"},
+            "margin": {"type": "string"}
+        },
         "_return": {"function": "render_widget", "args": ["Row"]}
     },
     "Container": {
@@ -120,11 +152,32 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "padding": {"type": "string"},
-            "margin": {"type": "string"}
+            "margin": {"type": "string"},
+            "alignment-content": {
+                "type": "string",
+                "allowed": ["horizontal", "center", "end", "between", "around"]
+            }
         },
         "_return": {"function": "render_widget", "args": ["Container"]}
     },
-    "Storekeeper": {"type": "dict", "schema": {}},
+    "Storekeeper": {
+        "type": "dict", 
+        "schema": {
+            "method": {
+                "type": "string",
+                "allowed": ["get", "post", "put", "delete"],
+                "default": "get"
+            },
+            "repository": {
+                "type": "string"
+            },
+            "filter": { "type":"string" },
+            "sort": { "type":"string" },
+            "limit": { "type":"string" },
+            "offset": { "type":"string" }
+        },
+        "_return": {"function": "render_widget", "args": ["Storekeeper"]}
+    },
     "Input": {
         "type": "dict",
         "schema": {
@@ -184,6 +237,7 @@
     "Text": {
         "type": "dict", 
         "schema": {
+            "class": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
             "type": {

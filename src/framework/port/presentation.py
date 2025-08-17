@@ -31,10 +31,10 @@ class port(ABC):
             'input',
             'action',
             'text',
-            'media',
+            #'media',
             'window',
             'card',
-            'navigation',
+            #'navigation',
             'pagination',
             'group',
             'row',
@@ -47,13 +47,14 @@ class port(ABC):
             'presenter',
             'view',
             'divider',
-            'resource',
+            'icon',
+            'accordion',
+            #'resource',
         ]
         
-        '''for widget in self.widgets:
-            print('widget_'+widget.lower())
-            if not getattr(self,'widget_'+widget.lower()):
-                raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")'''
+        for widget in ui_kit:
+            if widget not in self.WIDGETS:
+                raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")
         
         self.env = Environment(loader=fs_loader,autoescape=select_autoescape(["html", "xml"]),undefined=DebugUndefined)
 
@@ -146,13 +147,13 @@ class port(ABC):
         widget = await self.mount_widget(tag, inner, attributes)
 
         # Mount properties
-        for key in attributes:
-            widget = await self.set_attribute(widget, key, attributes[key])
+        #for key in attributes:
+        #    widget = await self.set_attribute(widget, key, attributes[key])
 
         # Ensure widget has an id
-        wid = await self.get_attribute(widget, 'id')
+        wid = self.get_attribute(widget, 'id')
         if not wid:
-            await self.set_attribute(widget, 'id', str(uuid.uuid4()))
+            self.set_attribute(widget, 'id', str(uuid.uuid4()))
         
         return widget
 
@@ -543,60 +544,87 @@ class port(ABC):
                 self.att(view, att|{'component':tag})
                 return view
     '''
-    
-    async def mount_widget(self, tag, inner, attributes):
+
+    async def mount_widget(self, tag, children, user_attrs):
         """Mounts a widget using data-driven config."""
-        attributes = attributes or {}
-        tag_lower = tag.lower()
+        user_attrs = user_attrs or {}
+        widget_name = tag.lower()
 
-        config = self.WIDGETS.get(tag_lower)
-        if not config:
-            return self.code('p', {'class':'text'}, f"Widget non implementato: {tag}")
+        widget_config = self.WIDGETS.get(widget_name)
         
-        if 'inner_overwrite' in config:
-            # Se 'inner_overwrite' è presente, usa la funzione per modificare inner
-            valor = config['inner_overwrite'](self, attributes, inner)
-            if valor:
-                overwrite_att, overwrite_up = valor
+        if not widget_config:
+            return self.code('p', {'class': 'text'}, f"Widget non implementato: {tag}")
+
+        # Merge attributi: unisci config + user, con gestione speciale della classe
+        default_attrs = widget_config.get('attributes', {})
+        #merged_attrs = {**default_attrs, **user_attrs}
+        print("USERS",user_attrs)
+
+        element_tag = widget_config.get('tag')
+        
+  
+        element_attrs = default_attrs | user_attrs
+        if "class" in default_attrs and "class" in user_attrs:
+            element_attrs["class"] = f"{default_attrs['class']} {user_attrs['class']}"
+        
+        for hook_name, arg_type in [
+            ('case', 0),
+            ('wrapper_each', 1),
+            ('inner_overwrite', 1),
+            ('inner_last', 1),
+            ('inner_first', 1),
+            ('wrapper_once', 1),
+            
+            
+        ]:
+            if hook_name not in widget_config:
+                continue
+
+            hook = widget_config[hook_name]
+            hook_result = hook(element_attrs) if arg_type == 0 else hook(self, element_attrs, children)
+
+            match hook_name:
+                case 'case':
+                    element_tag, temp = hook_result
+                    #temp |= element_attrs | user_attrs
+
+                    if "class" in element_attrs:
+                        temp["class"] += f" {element_attrs['class']}"
+                    element_attrs = element_attrs|temp
+                    
+                case 'wrapper_each':
+                    if callable(hook_result):
+                        children = [hook_result(self, element_attrs, child) for child in children]
+                case 'wrapper_once':
+                    if callable(hook_result):
+                        children = [hook_result(self, element_attrs, children)]
+                case 'inner_overwrite':
+                    print("*********************HOOKKKKKK***************************",hook_result)
+                    if hook_result:
+                        overwrite_attrs, _ = hook_result
+                        children = [self.code_update(child, overwrite_attrs) for child in children]
+                case 'inner_last':
+                    if hook_result:
+                        overwrite_attrs, ggg = hook_result
+                        children[-1] = self.code_update(children[-1], overwrite_attrs,ggg)
+                        print("********************************************",children[-1],overwrite_attrs,ggg)
+                case 'inner_first':
+                    if hook_result:
+                        overwrite_attrs, ggg = hook_result
+                        children[0] = self.code_update(children[0], overwrite_attrs,ggg)
+                        print("********************************************",children[0],overwrite_attrs,ggg)
+
+        for key in widget_config.get('!attributes', {}):
+            value = widget_config.get('!attributes', {}).get(key, [])
+           
+            if key in element_attrs and element_attrs.get('type') in value:
                 
-                overwrite_inner = []
-                for i in inner:
-                    overwrite_inner.append(self.code_update(i, overwrite_att))
-                inner = overwrite_inner
+                # Se l'attributo è presente in !attributes, lo rimuoviamo da user_attrs
+                # per evitare conflitti con gli attributi predefiniti del widget
+                #del user_attrs[key]
+                element_attrs.pop(key)
+        return self.code(element_tag, element_attrs, children)
 
-        # Gestione standard
-        elem = config.get('tag')
-        att = config.get('attributes',{})
-        if 'case' in config:
-            # Se 'case' è presente, usa la funzione per determinare il tag e gli attributi
-            elem, att = config['case'](attributes)
-        
-        # Gestione wrapper_once: applica una volta a ciascun elemento di inner
-        if 'wrapper_each' in config:
-            runable = config['wrapper_each'](self, attributes, inner)
-            if callable(runable):
-                wrapped = []
-                for el in inner:
-                    wrapped.append(runable(self, attributes, el))
-                inner = wrapped
-
-        # Gestione wrapper_all: applica una sola volta a tutta la lista inner
-        if 'wrapper_once' in config:
-            runable = config['wrapper_once'](self, attributes, inner)
-            if callable(runable):
-                inner = [runable(self, attributes, inner)]
-        
-        if 'wrapper' in config:
-            # Se 'wrapper' è presente, usa la funzione per creare il wrapper
-            # adapter.code('div', {'class': 'input-group'}, inner)
-            runable = config['wrapper'](self, attributes,inner)
-            wapped = []
-            if callable(runable):
-                for el in inner:
-                    wapped.append(runable(self, attributes,el))
-                inner = wapped
-
-        return self.code(elem, att, inner)
 
     @staticmethod
     @flow.asynchronous(managers=('messenger','presenter','executor'))

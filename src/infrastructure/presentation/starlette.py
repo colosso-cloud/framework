@@ -4,6 +4,7 @@ from html import escape
 import re
 import json
 from datetime import datetime
+import copy
 
 resources = {'flow': 'framework/service/flow.py','presentation': 'framework/port/presentation.py'}
 
@@ -124,10 +125,164 @@ except Exception as e:
     from xml.sax.saxutils import escape
 
 class adapter(presentation.port):
+    
+    attributes = {
+        # Attributi HTML diretti
+        'matter': {
+            'id', 'type', 'name', 'component', 'draggable-event','height', 'width',
+            'draggable-maker', 'droppable-data', 'identifier','draggable-component','src','value'
+        },
+
+        # Mappatura eventi
+        'event': {
+            ''''click': ('click', self.event),
+            'change': ('change', self.event),
+            'route': ('click', self.route),
+            'ddd': ('contextmenu', self.open_dropdown),
+            'draggable': ('dragstart', self.on_drag_start),
+            'droppable': ('drop', self.on_drop),
+            'init': ('init', self.event),'''
+        },
+
+        # Mappatura layout
+        'layout': {
+            'space': lambda v: f"gap-{v}",
+            'border': lambda v: f"border-{v}",
+            'border-top': lambda v: f"border-top-{v}",
+            'border-bottom': lambda v: f"border-bottom-{v}",
+            'border-left': lambda v: f"border-start-{v}",
+            'border-right': lambda v: f"border-end-{v}",
+            'border-radius': lambda v: f"rounded-{v}",
+
+            'margin': lambda v: ' '.join(v.strip() for v in v.split(';')),
+            'margin-top': lambda v: 'mt-' + v,
+            'margin-bottom': lambda v: 'mb-' + v,
+            'margin-left': lambda v: 'ms-' + v,
+            'margin-right': lambda v: 'me-' + v,
+
+            'padding-top': lambda v: 'pt-' + v,
+            'padding-bottom': lambda v: 'pb-' + v,
+            'padding-left': lambda v: 'ps-' + v,
+            'padding-right': lambda v: 'pe-' + v,
+            'padding': lambda v: ' '.join(v.strip() for v in v.split(';')),
+
+            'position': lambda v: {
+                'static': 'position-static',
+                'relative': 'position-relative',
+                'absolute': 'position-absolute',
+                'fixed': 'position-fixed',
+                'sticky': 'position-sticky',
+            }.get(v,''),
+            'expand': lambda v: {
+                'vertical': 'h-100',
+                'horizontal': 'w-100',
+                'full': 'w-100 h-100',
+                'auto': 'col-auto',
+                'dynamic': 'col'
+            }.get(v, f"col-{v}"),
+            'collapse': lambda v: 'd-none' if v == 'full' else 'invisible',
+            'alignment-horizontal': lambda v: f"justify-content-{v}" if v in ['start', 'end', 'center', 'between', 'around', 'evenly'] else '',
+            'alignment-vertical': lambda v: f"align-items-{v}" if v in ['start', 'end', 'center', 'baseline', 'stretch'] else '',
+            'alignment-content': lambda v: {
+                    'vertical': 'd-flex flex-column',
+                    'horizontal': 'd-flex flex-row',
+                    'center': 'd-flex justify-content-center align-items-center',
+                    'between': 'd-flex justify-content-between align-items-center',
+                    'around': 'd-flex justify-content-around align-items-center',
+                    'evenly': 'd-flex justify-content-evenly align-items-center',    
+                }.get(v, ''),
+        },
+
+        # Mappatura classi CSS
+        'style': {
+            'background': lambda v: f"bg-{v}" if not v.startswith('#') else None,
+            'background-color': lambda v: f"bg-{v}" if not v.startswith('#') else None,
+            'text-color': lambda v: f"text-{v}",
+            'text-size': lambda v: f"fs-{v}" if v.isdigit() else None,
+            'shadow': lambda v: {
+                '0': 'shadow-none', '1': 'shadow-sm',
+                '2': 'shadow', '3': 'shadow-lg'
+            }.get(v, ''),
+            'opacity': lambda v: f"opacity-{v}" if v.isdigit() else None,
+            'border': lambda v: f"border-{v}",
+            'border-thickness': lambda v: f"border-{v}",
+            'border-radius-size': lambda v: f"rounded-{v}",
+            'border-color': lambda v: f"border-{v}",
+            'border-radius': lambda v: {
+                'pill': "rounded-pill", 'circle': "rounded-circle",
+                'top': "rounded-top", 'bottom': "rounded-bottom",
+                'right': "rounded-start", 'left': "rounded-end"
+            }.get(v, ''),
+            'border-position': lambda v: {
+                'outer': "border", 'top': "border-top", 'bottom': "border-bottom",
+                'right': "border-start", 'left': "border-end"
+            }.get(v, ''),
+            'class': lambda v: v
+        }
+    }
 
     WIDGETS = {
+        'accordion': {
+            'tag': 'div',
+            'attributes': {'class': 'accordion'},
+            '!attributes': {'id':['accordion-item']},
+            'case': lambda attributes: {
+                'accordion': ('div', {'class': 'accordion', 'id': attributes.get('id', 'test')}),
+                'accordion-item': ('div', {'class': 'accordion-item'}),
+            }.get(attributes.get('type', 'accordion')),
+            'inner_overwrite': lambda adapter, attributes, inner: {
+                'accordion': ({'class': 'accordion-item'}, ''),
+            }.get('accordion'),
+            'inner_last': lambda adapter, attributes, inner: {
+                'accordion-item': ({'class': 'accordion-collapse collapse ','id':attributes.get('id',''),'data-bs-parent':'#test'}, ""),
+            }.get(attributes.get('type')),
+            'inner_first': lambda adapter, attributes, inner: {
+                'accordion-item': ({'class': 'accordion-header', 'id':'h'+attributes.get('id')}, adapter.code('button', {'class': 'accordion-button collapsed', 'type': 'button', 'data-bs-toggle': 'collapse', 'data-bs-target': f'#{attributes.get("id")}', 'aria-expanded': 'false', 'aria-controls': attributes.get('id')}, inner[0])),
+            }.get(attributes.get('type')),
+        },
+        'defender': {
+            'tag': 'div',
+            'attributes': {'class': 'container-fluid'},
+        },
+        'storekeeper': {
+            'tag': 'div',
+            'attributes': {'class': 'container-fluid'},
+        },
+        'presenter': {
+            'tag': 'div',
+            'attributes': {'class': 'container-fluid'},
+        },
+        'view': {
+            'tag': 'div',
+            'attributes': {'class': 'container-fluid'},
+        },
+        'divider': {
+            'tag': 'div',
+            'attributes': {'class': 'container-fluid'},
+        },
         'embed': {
             'tag': 'iframe',
+        },
+        'icon': {
+            'tag': 'i',
+            'attributes': {'class': 'bi'},
+            'case': lambda attributes: {
+                'icon': ('i', {'class': f"bi {attributes.get('src', '')}"}),
+            }.get(attributes.get('type', 'icon')),
+        },
+        'badge': {
+            'tag': 'span',
+            'attributes': {'class': 'badge'},
+            'case': lambda attributes: {
+                'primary': ('span', {'class': 'badge bg-primary'}),
+                'secondary': ('span', {'class': 'badge bg-secondary'}),
+                'success': ('span', {'class': 'badge bg-success'}),
+                'danger': ('span', {'class': 'badge bg-danger'}),
+                'warning': ('span', {'class': 'badge bg-warning'}),
+                'info': ('span', {'class': 'badge bg-info'}),
+                'light': ('span', {'class': 'badge bg-light text-dark'}),
+                'dark': ('span', {'class': 'badge bg-dark'}),
+            }.get(attributes.get('type', 'primary')),
         },
         'data': {
             'tag': 'data',
@@ -222,6 +377,13 @@ class adapter(presentation.port):
             }.get(attributes.get('type')),
             'inner_overwrite': lambda adapter, attributes, inner: {
                 'dropdown': ({'class':'dropdown-item'},''),
+            }.get(attributes.get('type')),
+        },
+        'messenger': {
+            'tag': 'div',
+            'attributes': {},
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'messenger': lambda adapter, attributes, inner: adapter.code('div', {'class': 'messenger-body'}, inner),
             }.get(attributes.get('type')),
         },
         'message': {
@@ -326,10 +488,13 @@ class adapter(presentation.port):
             'tag': 'div',
             'attributes': {'data-bs-ride':'carousel','class':'carousel slide'},
             'wrapper_each':lambda adapter,attributes,inner: {
-                'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-item active'}, inner),
+                'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-item w-100 h-100'}, inner),
             }.get(attributes.get('type')),
             'wrapper_once':lambda adapter,attributes,inner: {
-                'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-inner'}, inner),
+                'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-inner w-100 h-100'}, inner),
+            }.get(attributes.get('type')),
+            'inner_first': lambda adapter, attributes, inner: {
+                'carousel': ({'class':'carousel-item w-100 h-100 active'},''),
             }.get(attributes.get('type')),
         },
         'bar': {
@@ -591,23 +756,184 @@ class adapter(presentation.port):
     def code(self, tag, attr, inner=[]):
         att = ''
         html = ''
-        for key, value in attr.items():
+
+        '''for key, value in attr.items():
             # Gestione attributi booleani: True o "true" → solo nome attributo
             if value.lower() == "true":
                 att += f' {key}'
             else:
-                att += f' {key}="{value}"'
+                att += f' {key}="{value}"'''
         if isinstance(inner, list):
             for item in inner:
                 html += str(item)
             if len(inner) > 0:
-                return f'<{tag}{att}>{html}</{tag}>'
+                ele = f'<{tag}{att}>{html}</{tag}>'
             else:
-                return f'<{tag}{att}/>'
+                ele = f'<{tag}{att}/>'
         elif isinstance(inner, str):
-            return f'<{tag}{att}>{inner}</{tag}>'
+            ele = f'<{tag}{att}>{inner}</{tag}>'
         else:
-            return f'<{tag}{att}/>'
+            ele = f'<{tag}{att}/>'
+        
+        return self.att(ele, attr)
+
+    def att(self, element, attributes):
+            
+            def set_style(css, element):
+                style = self.get_attribute(element, 'style')
+                if style is not str:
+                    style = ''
+                
+                style += f" {css}"
+                element = self.set_attribute(element, 'style', style.strip())
+                print(style, 'style',element)
+                return element
+
+            def add_class(cls, element, current_classes=''):
+                value = self.get_attribute(element, 'class')
+                # + f" {cls}" if current_classes else cls
+                #if cls is str:
+                if value is not str:
+                    value = ''
+                value += cls
+                out = self.set_attribute(element, 'class', current_classes + f" {cls} ")
+                #print(f"old:{element}| old: {value} - new: {cls} |return: {out}")
+                return out
+
+                
+
+            for key, value in attributes.items():
+                #print(key, value, 'key,value')
+                if key in self.attributes['matter']:
+                    if key == 'width':
+                      element = set_style(f'max-width:{value};width:{value};', element)
+                    elif key == 'height':
+                      element = set_style(f'max-height:{value};height:{value};', element)
+                    else:
+                      element = self.set_attribute(element, key, value)
+                      #element.setAttribute(key, value)
+
+                elif key in self.attributes['event']:
+                    if key == 'init':
+                        #print(f"[DEBUG] Executor: {executor}",value,key)
+                        #asyncio.create_task(executor.act(action=value))
+                        pass
+                    elif key == 'hide':
+                        mode, _ = map(str.strip, value.split(':'))
+                        #element.setAttribute('data-bs-dismiss', mode)
+                        self.set_attribute(element, 'data-bs-dismiss', mode)
+                    elif key == 'show':
+                        mode, target = map(str.strip, value.split(':'))
+                        element.setAttribute('data-bs-target', f'#{target}')
+                        element.setAttribute('data-bs-toggle', mode)
+                    elif key == 'route' and ':' in value:
+                        mode, target = map(str.strip, value.split(':', 1))
+                        if mode == 'link':
+                            element.setAttribute('href', target)
+                        else:
+                            element.setAttribute('data-bs-toggle', mode)
+                            element.setAttribute('href', f'#{target}')
+                    elif key == 'link':
+                        element.setAttribute('href', value)
+                    elif key == 'draggable':
+                        element.setAttribute(key,'true')
+                        element.setAttribute('ondragstart','drag(event)')
+                        element.setAttribute('draggable-domain',value)
+                        #element.addEventListener('dragstart',pyodide.ffi.create_proxy(self.on_drag_start))
+                        #element.addEventListener('dragend',pyodide.ffi.create_proxy(self.on_drag_end))
+                    elif key == 'droppable':
+                        element.setAttribute('ondragover','allowDrop(event)')
+                        element.setAttribute('draggable-domain',value)
+                        #element.addEventListener('drop',pyodide.ffi.create_proxy(self.on_drop))
+                        #element.addEventListener('dragover',pyodide.ffi.create_proxy(self.on_drag_over))
+                        #element.addEventListener('dragleave',pyodide.ffi.create_proxy(self.on_drag_leave))
+                    else:
+                      event_name, handler_fn = self.attributes['event'][key]
+                      #element.setAttribute('event', value)
+                      element.setAttribute(key, value)
+                      #element.addEventListener(event_name, pyodide.ffi.create_proxy(handler_fn))
+
+                elif key in self.attributes['style']:
+                    mapping = self.attributes['style'][key]
+                    cls = mapping(value) if callable(mapping) else mapping.get(value, f"{key}-{value}")
+                    if cls:
+                        element = add_class(cls, element)
+                    elif key == 'background-color' and value.startswith('#'):
+                        element = set_style(f'background-color:{value};', element)
+                    elif key == 'text-size' and 'px' in value:
+                        element = set_style(f'font-size: {value};', element)
+                    elif key == 'style':
+                        element = set_style(value, element)
+                elif key in self.attributes['layout']:
+                    mapping = self.attributes['layout'][key]
+                    cls = mapping(value) if callable(mapping) else mapping.get(value, f"{key}-{value}")
+                    #print(cls, 'CLSSSSSSSSSSSSS')
+                    #if key == 'class':
+                    if cls:
+                        old = self.get_attribute(element, 'class')
+                        element = add_class(cls,element,old)
+                else:
+                    # Attributi non riconosciuti, li aggiunge come sono
+                    element = self.set_attribute(element, key, value)
+                    #element.setAttribute(key, value)
+                
+            
+            return element
+
+    def code2(self, tag, attributes, inner=None):
+        """
+        Genera HTML a partire da tag, attributi e contenuto,
+        applicando le regole definite in self.attributes.
+        """
+        if attributes is None:
+            attributes = {}
+        if inner is None:
+            inner = []
+
+        rendered_attrs = []
+
+        for key, value in attributes.items():
+            # Applica le trasformazioni dal dizionario attributi
+            handler = self.attributes.get(key)
+
+            if handler is None:
+                transformed = value
+            elif callable(handler):
+                transformed = handler(value)
+            elif isinstance(handler, tuple):
+                # Eventi (es: click, change...)
+                event_type, callback = handler
+                transformed = f"{event_type}:{callback.__name__}"
+            elif handler is True:
+                # Attributi "matter": usa il valore così com’è
+                transformed = value
+            else:
+                transformed = value
+
+            # Se la trasformazione restituisce None → non renderizzare
+            if transformed is None:
+                continue
+
+            # Gestione attributi booleani
+            if isinstance(transformed, bool) and transformed:
+                rendered_attrs.append(f"{key}")
+            else:
+                rendered_attrs.append(f'{key}="{transformed}"')
+
+        # Costruzione finale degli attributi
+        attr_str = " " + " ".join(rendered_attrs) if rendered_attrs else ""
+
+        # Costruzione del contenuto interno
+        if isinstance(inner, list):
+            html = "".join(str(item) for item in inner)
+            if html:
+                return f"<{tag}{attr_str}>{html}</{tag}>"
+            else:
+                return f"<{tag}{attr_str}/>"
+        elif isinstance(inner, str):
+            return f"<{tag}{attr_str}>{inner}</{tag}>"
+        else:
+            return f"<{tag}{attr_str}/>"
 
     def code_update(self, view, attr=None, inner=None, position='end'):
         """
@@ -695,28 +1021,50 @@ class adapter(presentation.port):
         html = str(soup)
         return html
 
-    async def set_attribute(self, widget, field, value):
+    def set_attribute(self, widget, field, value):
         """
-        Sets or updates a single attribute on the root element of an HTML string.
+        Sets or updates a single attribute on the root element of an HTML string,
+        applying transformation rules from self.attributes when available.
         """
-        # print(widget, field, value) # For debugging purposes
-        
-        # Handle cases where widget is not a string (e.g., None, int, etc.)
+        # Se non è una stringa HTML valida → ritorna direttamente
         if not isinstance(widget, str):
-            # As per tests, for non-string widget, return None for attribute ops.
-            # Or raise an error based on your desired behavior for invalid input.
-            return widget # Return original widget if it's not a string to parse
-
-        # Handle invalid field names before passing to code_update
-        if not isinstance(field, str) or not field.strip() or ' ' in field.strip():
-            # If the field name is invalid, return the original widget as no modification should occur.
             return widget
 
-        # Now pass to code_update.
-        # code_update is designed to handle the `None` value for `value` to remove attributes.
-        return self.code_update(widget, {field: value})
+        # Campo non valido → ritorno senza modificare
+        if not isinstance(field, str) or not field.strip() or ' ' in field.strip():
+            return widget
 
-    async def get_attribute(self, widget, field):
+        # Cerca nel dizionario attributi
+        handler = self.attributes.get(field)
+
+        transformed_value = None
+
+        if handler is None:
+            # Fallback: nessuna regola → usa il valore diretto
+            transformed_value = value
+        elif callable(handler):
+            # Caso: funzione di trasformazione (layout, style, ecc.)
+            transformed_value = handler(value)
+        elif isinstance(handler, tuple):
+            # Caso: mappatura evento -> (event_type, callback)
+            event_type, callback = handler
+            # qui potresti gestire diversamente, per esempio aggiungere listener
+            transformed_value = f"{event_type}:{callback.__name__}"
+        elif handler is True:
+            # Caso: attributi "matter" → li includo così come sono
+            transformed_value = value
+        else:
+            # Qualsiasi altro caso non previsto
+            transformed_value = value
+
+        # Se la trasformazione restituisce None → significa "rimuovi l'attributo"
+        if transformed_value is None:
+            return self.code_update(widget, {field: None})
+
+        # Aggiorna il widget con il valore trasformato
+        return self.code_update(widget, {field: transformed_value})
+
+    def get_attribute(self, widget, field):
         """
         Extracts an attribute's value from an HTML string or a widget object.
         Handles various attribute formats including boolean attributes, case insensitivity,
@@ -803,7 +1151,7 @@ class adapter(presentation.port):
                         return a
                     a = getattr(widget, 'content', None)
                     if a:
-                        return await self.get_attribute(a, 'elements')
+                        return self.get_attribute(a, 'elements')
                 return None # No elements found or widget is just a string
             case 'class':
                 # For 'class', we should extract it from the HTML string directly,
