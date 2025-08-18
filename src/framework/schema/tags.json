@@ -222,17 +222,20 @@
     "Window": {
         "type": "dict", 
         "schema": {
+            "title": {"type": "string"},
+            "layout": {"type": "string"},
+            "class": {"type": "string"},
             "id": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["still","embed","dialog"],
+                "allowed": ["still","embed","dialog","root"],
                 "default": "embed"
             },
             "src": {"type": "string"}
         },
-        "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed"}
+        "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed","root": "window"}
     },
     "Text": {
         "type": "dict", 

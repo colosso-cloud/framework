@@ -1,7 +1,10 @@
 import json
 import sys
 
-modules = {'flow': 'framework.service.flow'}
+resources = {
+    'flow': 'framework/service/flow.py',
+    'user': 'framework/schema/user.py',
+}
     
 if sys.platform == 'emscripten':
     import js
@@ -89,6 +92,7 @@ class adapter:
             
     @flow.asynchronous(outputs='transaction',managers=('messenger',))
     async def whoami(self, messenger, **data):
+        print("Autenticazione con Supabase",user.user)
         result = await self.supabase.auth.getUser()
         result_dict = result.to_py()
         print(result_dict)
@@ -114,6 +118,7 @@ class adapter:
             print(f"Errore di autenticazione: {e}")
 
     async def authenticate(self, **data):
+        print("Autenticazione con Supabase",user.user)
         email = data.get("email", "").strip()
         password = data.get("password", "").strip()
 

@@ -22,8 +22,8 @@
     </Container>
     <Container class="col bg-dark border border-1 rounded" padding="p-5" alignment-content="center">
         <Media type="carousel" class="w-100 h-100">
-            <Card >
-                <Navigation type="accordion" id="test" >
+            <Card expand="full">
+                <Navigation type="accordion" id="prova" >
                     <Navigation type="accordion-item" id="nb" >
                         <Text>H11</Text>
                         <Container><Text>T12</Text></Container>

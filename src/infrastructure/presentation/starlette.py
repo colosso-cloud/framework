@@ -8,66 +8,6 @@ import copy
 
 resources = {'flow': 'framework/service/flow.py','presentation': 'framework/port/presentation.py'}
 
-html_layout = """
-<!DOCTYPE html>
-<html class="h-100" data-navigation-type="default" data-navbar-horizontal-shape="default" lang="it" dir="ltr">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta http-equiv='cache-control' content='no-cache'>
-        <meta http-equiv='expires' content='0'>
-        <meta http-equiv='pragma' content='no-cache'>
-        <!-- ===============================================-->
-        <!--    Document Title-->
-        <!-- ===============================================-->
-        <title>{{ title or '@Title' }}</title>
-  
-        <!-- ===============================================-->
-        <!--    Favicons-->
-        <!-- ===============================================-->
-        <meta name="theme-color" content="#ffffff">
-        <link rel="icon" type="image/x-icon" href="static/logo.png">
-  
-        <!-- ===============================================-->
-        <!--    Stylesheets-->
-        <!-- ===============================================-->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.css" integrity="sha512-gGkweS4I+MDqo1tLZtHl3Nu3PGY7TU8ldedRnu60fY6etWjQ/twRHRG2J92oDj7GDU2XvX8k6G5mbp0yCoyXCA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-        {% block style %}
-        {% endblock %}
-        <link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css" />
-        <script src="https://unpkg.com/xterm/lib/xterm.js"></script>
-        <script src="https://unpkg.com/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
-        <!-- ===============================================-->
-        <!--    Javascript-->
-        <!-- ===============================================-->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js" integrity="sha512-NgXVRE+Mxxf647SqmbB9wPS5SEpWiLFp5G7ItUNFi+GVUyQeP+7w4vnKtc2O/Dm74TpTFKXNjakd40pfSKNulg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        {% block head_script %}
-        {% endblock %}
-                
-    </head>
-    <body id="body" class="d-flex h-100 flex-column">
-        <!-- ===============================================-->
-        <!--    Main Content-->
-        <!-- ===============================================-->
-        <!-- Body -->
-        {% block main %}
-        {% endblock %}
-        <!-- ===============================================-->
-        <!--    JavaScripts-->
-        <!-- ===============================================-->
-        {% block body_script %}
-        {% endblock %}
-    </body>
-</html>
-"""
-
 try:
     from starlette.applications import Starlette
     from starlette.requests import Request
@@ -233,11 +173,11 @@ class adapter(presentation.port):
             'inner_overwrite': lambda adapter, attributes, inner: {
                 'accordion': ({'class': 'accordion-item'}, ''),
             }.get('accordion'),
-            'inner_last': lambda adapter, attributes, inner: {
+            'inner_last': lambda adapter, attributes, inner,father: {
                 'accordion-item': ({'class': 'accordion-collapse collapse ','id':attributes.get('id',''),'data-bs-parent':'#test'}, ""),
             }.get(attributes.get('type')),
-            'inner_first': lambda adapter, attributes, inner: {
-                'accordion-item': ({'class': 'accordion-header', 'id':'h'+attributes.get('id')}, adapter.code('button', {'class': 'accordion-button collapsed', 'type': 'button', 'data-bs-toggle': 'collapse', 'data-bs-target': f'#{attributes.get("id")}', 'aria-expanded': 'false', 'aria-controls': attributes.get('id')}, inner[0])),
+            'inner_first': lambda adapter, attributes, inner,father: {
+                'accordion-item': ({'class': 'accordion-header', 'id':'h'+attributes.get('id')}, adapter.code('button', {'class': 'accordion-button collapsed', 'type': 'button', 'data-bs-toggle': 'collapse', 'data-bs-target': f'#{father.get("id")}', 'aria-expanded': 'false', 'aria-controls': attributes.get('id')}, inner[0])),
             }.get(attributes.get('type')),
         },
         'defender': {
@@ -355,7 +295,7 @@ class adapter(presentation.port):
             'case': lambda attributes: {
                 'select':  ('select', {'class': 'form-select'}),
             }.get(attributes.get('type', 'text'), ('input', {'class': 'form-control', 'type': attributes.get('type','text')})),
-            'wrapper':lambda adapter,attributes,inner: {
+            'wrapper_each':lambda adapter,attributes,inner: {
                 'select': lambda adapter,attributes,inner: adapter.code('option', {}, inner),
             }.get(attributes.get('type', 'text'))
         },
@@ -408,7 +348,54 @@ class adapter(presentation.port):
         },
         'window': {
             'tag': 'div',
-            'attributes': {'class': 'window'}
+            'attributes': {'class': 'window'},
+            'case': lambda attributes: {
+                'dialog': ('div', {'class': 'modal-dialog'}),
+                'offcanvas': ('div', {'class': 'offcanvas'}),
+                'root': ('html', {'class': 'h-100', 'data-navigation-type': 'default', 'data-navbar-horizontal-shape': 'default', 'lang': 'it', 'dir': 'ltr'}),
+            }.get(attributes.get('type', 'dialog')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'root': lambda adapter, attributes, inner: [
+                    adapter.code('head', {}, f"""
+                        <meta charset="utf-8">
+                        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <meta http-equiv='cache-control' content='no-cache'>
+                        <meta http-equiv='expires' content='0'>
+                        <meta http-equiv='pragma' content='no-cache'>
+                        <!-- ===============================================-->
+                        <!--    Document Title-->
+                        <!-- ===============================================-->
+                        <title>{attributes.get('title','')}</title>
+                
+                        <!-- ===============================================-->
+                        <!--    Favicons-->
+                        <!-- ===============================================-->
+                        <meta name="theme-color" content="#ffffff">
+                        <link rel="icon" type="image/x-icon" href="static/logo.png">
+                
+                        <!-- ===============================================-->
+                        <!--    Stylesheets-->
+                        <!-- ===============================================-->
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.css" integrity="sha512-gGkweS4I+MDqo1tLZtHl3Nu3PGY7TU8ldedRnu60fY6etWjQ/twRHRG2J92oDj7GDU2XvX8k6G5mbp0yCoyXCA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+                        <link rel="preconnect" href="https://fonts.googleapis.com">
+                        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+                        
+                        <link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css" />
+                        <script src="https://unpkg.com/xterm/lib/xterm.js"></script>
+                        <script src="https://unpkg.com/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+                        <!-- ===============================================-->
+                        <!--    Javascript-->
+                        <!-- ===============================================-->
+                        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+                        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js" integrity="sha512-NgXVRE+Mxxf647SqmbB9wPS5SEpWiLFp5G7ItUNFi+GVUyQeP+7w4vnKtc2O/Dm74TpTFKXNjakd40pfSKNulg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>  
+                    """),
+                    adapter.code('body', {'class':"d-flex h-100 flex-column",'id':attributes.get('id')}, inner)
+                ]
+            }.get(attributes.get('type')),
         },
         'chart': {
             'tag': 'div',
@@ -493,7 +480,7 @@ class adapter(presentation.port):
             'wrapper_once':lambda adapter,attributes,inner: {
                 'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-inner w-100 h-100'}, inner),
             }.get(attributes.get('type')),
-            'inner_first': lambda adapter, attributes, inner: {
+            'inner_first': lambda adapter, attributes, inner,father: {
                 'carousel': ({'class':'carousel-item w-100 h-100 active'},''),
             }.get(attributes.get('type')),
         },
@@ -742,16 +729,17 @@ class adapter(presentation.port):
         return await self.builder(url=url)
     
     async def starlette_view(self,request):
-        html_body = await self.mount_view(request.url.path)
-        print(html_body, "html_body**********************",request.url.path)
-        layout = 'application/view/layout/base.html'
+        html = await self.mount_view(request.url.path)
+        print(html, "html_body**********************",request.url.path)
+        '''layout = 'application/view/layout/base.html'
         file = await self.fetch_resource({'url':layout})
         css = await self.fetch_resource({'url':layout.replace('.html','.css').replace('.xml','.css')})
         #template = self.env.from_string(file.replace('{% block style %}','{% block style %}<style>'+css+'</style>'))
         template = self.env.from_string(file)
         content = template.render()
-        content = content.replace('<!-- Body -->',str(html_body))
-        return HTMLResponse(content)
+        content = content.replace('<!-- Body -->',str(html_body))'''
+        #return HTMLResponse(content)
+        return HTMLResponse('<!DOCTYPE html>'+html)
         
     def code(self, tag, attr, inner=[]):
         att = ''
@@ -935,79 +923,63 @@ class adapter(presentation.port):
         else:
             return f"<{tag}{attr_str}/>"
 
-    def code_update(self, view, attr=None, inner=None, position='end'):
+    def code_update(self, view, attr=None, inner=None, mode=[]):
         """
         Modifies an existing HTML view (string):
         - updates or sets attributes based on 'attr' dictionary.
-        - adds child elements from 'inner' (list of HTML/XML strings) as children of the root node
-          based on 'position': 'start' (beginning) or 'end' (default).
-        
+        - handles 'inner' depending on 'mode':
+            * ["append", "end"] (default): adds 'inner' at the end
+            * ["append", "start"]: adds 'inner' at the beginning
+            * ["replace"]: replaces the innerHTML entirely
+
         Args:
             view (str): The HTML string to be modified.
             attr (dict, optional): A dictionary of attributes to set or update.
-                                   If a value is None, the attribute will be removed.
-                                   Defaults to None.
-            inner (list, optional): A list of HTML/XML strings to add as children.
-                                    Defaults to None.
-            position (str): Where to add inner elements ('start' or 'end'). Defaults to 'end'.
-        
+                                If a value is None, the attribute will be removed.
+                                Defaults to None.
+            inner (list|str, optional): A list (or single string) of HTML/XML to add or replace.
+                                        Defaults to None.
+            mode (list, optional): Controls behavior of inner insertion.
+                                - ["append", "end"] (default)
+                                - ["append", "start"]
+                                - ["replace"]
+
         Returns:
             str: The modified HTML string.
         """
         if not isinstance(view, str) or not view.strip():
-            # Handle empty or non-string view gracefully
-            return view # Return original view if it's not a valid string to parse
+            return view  
 
-        # Attempt to parse the HTML. BeautifulSoup is robust but can still result in empty soup
-        # if the HTML is severely malformed.
         soup = BeautifulSoup(view, 'html.parser')
-        root = soup.find()  # Gets the first root node
+        root = soup.find()  
 
-        # If no root tag is found (e.g., input was just text or severely malformed), return original view
         if not root:
             return view 
 
-        # --- Aggiorna/Imposta/Rimuovi Attributi ---
+        # --- Update/Remove Attributes ---
         if attr:
             for key, value in attr.items():
-                # Validate attribute name: Must be a non-empty string and no spaces
                 if not isinstance(key, str) or not key.strip() or ' ' in key.strip():
-                    # For invalid attribute names, we simply skip them as per test expectations
-                    # (they should not be added/modified).
                     continue 
-
-
                 if value is None:
-                    # If value is None, remove the attribute
-                    if key in root.attrs: # Check if attribute exists before trying to delete
+                    if key in root.attrs:
                         del root[key]
-                
                 else:
-                    # Set or update the attribute. BeautifulSoup handles adding if not exists.
-                    # It automatically converts non-string values to strings.
-                    root[key] = str(value) # Ensure value is a string for HTML attributes
+                    root[key] = str(value)
 
-        # --- Aggiungi nuovi figli ---
-        if inner:
-            # Ensure inner is iterable
+        # --- Normalize mode ---
+        if not mode:
+            mode = ["append", "end"]
+        if isinstance(mode, str):
+            mode = [mode]
+
+        # --- Handle Inner Content ---
+        if inner is not None:
             if not isinstance(inner, list):
-                # You might want to raise an error here or log it, depending on desired behavior
-                inner = [inner] # Treat single item as a list
+                inner = [inner]
 
-            if position == 'start':
-                for item_html in reversed(inner):  # Reversed to maintain original order when inserting at start
-                    # Parse each inner item and append its contents
-                    # Use lxml for fragments for better robustness if dealing with partial HTML
-                    try:
-                        child_soup = BeautifulSoup(item_html, 'html.parser')
-                        # Check if child_soup found any content. If not, skip.
-                        if child_soup.contents:
-                            for child_element in reversed(child_soup.contents):
-                                root.insert(0, child_element)
-                    except Exception:
-                        # Log error or skip malformed inner HTML fragments
-                        continue 
-            else:  # 'end' (default)
+            if "replace" in mode:
+                root.clear()
                 for item_html in inner:
                     try:
                         child_soup = BeautifulSoup(item_html, 'html.parser')
@@ -1015,11 +987,33 @@ class adapter(presentation.port):
                             for child_element in child_soup.contents:
                                 root.append(child_element)
                     except Exception:
-                        # Log error or skip malformed inner HTML fragments
                         continue
 
-        html = str(soup)
-        return html
+            elif "append" in mode:
+                pos = "end"
+                if len(mode) > 1 and mode[1] in ("start", "end"):
+                    pos = mode[1]
+
+                if pos == "start":
+                    for item_html in reversed(inner):
+                        try:
+                            child_soup = BeautifulSoup(item_html, 'html.parser')
+                            if child_soup.contents:
+                                for child_element in reversed(child_soup.contents):
+                                    root.insert(0, child_element)
+                        except Exception:
+                            continue
+                else:  # end
+                    for item_html in inner:
+                        try:
+                            child_soup = BeautifulSoup(item_html, 'html.parser')
+                            if child_soup.contents:
+                                for child_element in child_soup.contents:
+                                    root.append(child_element)
+                        except Exception:
+                            continue
+
+        return str(soup)
 
     def set_attribute(self, widget, field, value):
         """

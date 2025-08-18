@@ -16,12 +16,13 @@ def asynchronous(**constants):
             args_inject = list(args) + inject
             try:
                 if 'inputs' in constants:
-                    kwargs_builder = await language.builder(input, kwargs, {}, 'filtered', language)
-                    outcome = await function(*args_inject, **kwargs_builder)
+                    #kwargs_builder = await language.model(input, kwargs, 'filtered', language)
+                    outcome = await function(*args_inject, **kwargs)
                 else:
                     outcome = await function(*args_inject, **kwargs)
                 if 'outputs' in constants:
-                    return await language.builder(output, outcome, {}, 'full', language)
+                    #return await language.model(output, outcome, 'full', language)
+                    return outcome
                 else:
                     return outcome
 

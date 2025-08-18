@@ -87,7 +87,7 @@ async def model(schema, value=None, mode='full', lang=None):
     if isinstance(schema, str):
         try:
             # Qui si aspetta che il modulo caricato contenga lo schema Cerberus
-            module = await load_module(lang, path=f'application.model.{schema}')
+            module = await resource(lang, path=f'application/model/{schema}.py')
             # Supponiamo che lo schema sia un attributo 'SCHEMA' nel modulo
             cerberus_schema = getattr(module, 'SCHEMA', None)
             if not cerberus_schema:

@@ -167,12 +167,13 @@ class port(ABC):
             method = setting.get_attribute('method')
             typee = setting.get_attribute('type')
             view = setting.get_attribute('view')
+            layout = setting.get_attribute('layout')
             if view:
                 view = 'application/view/page/'+view
                 if not path:
                     path = view.replace('.xml','')
 
-            self.routes[path] = {'view':view,'type':typee,'method':method}
+            self.routes[path] = {'view':view,'type':typee,'method':method, 'layout':layout}
 
     @flow.asynchronous(managers=('storekeeper','messenger'))
     async def render_view(self,root,data,storekeeper,messenger):
@@ -569,19 +570,27 @@ class port(ABC):
         
         for hook_name, arg_type in [
             ('case', 0),
+            
             ('wrapper_each', 1),
             ('inner_overwrite', 1),
-            ('inner_last', 1),
-            ('inner_first', 1),
+            ('inner_last', 2),
+            ('inner_first', 2),
             ('wrapper_once', 1),
-            
-            
+            ('inner_append', 1), 
+                
         ]:
             if hook_name not in widget_config:
                 continue
 
             hook = widget_config[hook_name]
-            hook_result = hook(element_attrs) if arg_type == 0 else hook(self, element_attrs, children)
+            match arg_type:
+                case 0:
+                    hook_result = hook(element_attrs)
+                case 1:
+                    hook_result = hook(self, element_attrs, children)
+                case 2:
+                    hook_result = hook(self, element_attrs, children, user_attrs)
+                    print("HOOK RESULT:",user_attrs)
 
             match hook_name:
                 case 'case':
@@ -597,7 +606,7 @@ class port(ABC):
                         children = [hook_result(self, element_attrs, child) for child in children]
                 case 'wrapper_once':
                     if callable(hook_result):
-                        children = [hook_result(self, element_attrs, children)]
+                        children = hook_result(self, element_attrs, children)
                 case 'inner_overwrite':
                     print("*********************HOOKKKKKK***************************",hook_result)
                     if hook_result:
@@ -606,13 +615,25 @@ class port(ABC):
                 case 'inner_last':
                     if hook_result:
                         overwrite_attrs, ggg = hook_result
-                        children[-1] = self.code_update(children[-1], overwrite_attrs,ggg)
+                        if ggg == '':
+                            mode = []
+                        else:
+                            mode = ['replace']
+                        children[-1] = self.code_update(children[-1], overwrite_attrs,ggg,mode)
                         print("********************************************",children[-1],overwrite_attrs,ggg)
                 case 'inner_first':
                     if hook_result:
                         overwrite_attrs, ggg = hook_result
-                        children[0] = self.code_update(children[0], overwrite_attrs,ggg)
+                        if ggg == '':
+                            mode = []
+                        else:
+                            mode = ['replace']
+                        children[0] = self.code_update(children[0], overwrite_attrs,ggg,mode)
                         print("********************************************",children[0],overwrite_attrs,ggg)
+                case 'inner_append':
+                    if hook_result:
+                        tagg,overwrite_attrs, inn = hook_result
+                        children.append(self.code(tagg, overwrite_attrs,inn))
 
         for key in widget_config.get('!attributes', {}):
             value = widget_config.get('!attributes', {}).get(key, [])

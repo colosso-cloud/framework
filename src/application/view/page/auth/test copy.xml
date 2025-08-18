@@ -1,6 +1,6 @@
-{% extends "auth.xml" %}
+{% extends "mono.xml" %}
 {% block content %}
-<Navigation orientation="horizontal">
+<!-- <Navigation orientation="horizontal">
     <Action type="link" route="/home"><Text>Home</Text></Action>
     <Action type="dropdown">
         <Text>Products</Text>
@@ -80,7 +80,7 @@
 <Window type="dialog" id="dialogExample">
     <Text>This is an offcanvas window.</Text>
     <Action type="button" ><Text>Close</Text></Action>
-</Window>
+</Window> -->
 
 <Data type="table">
     <Data type="table.header">
