@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {% if not user %}
-<Window type="root" title="Colosso - App" layour="stack">
+<Window type="root" title="Colosso - App" layout="stack">
     <Column expand="full">
-        {% block content %}
+        {% block main %}
         {% endblock %}
     </Column>
 </Window>

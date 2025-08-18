@@ -116,7 +116,7 @@ class port(ABC):
         view = await self.render_view(xml,constants)
         await self.render_css(view)
         return view
-    
+
     async def rebuild(self, id, tag, **data):
           try:
               #url = f"application/view/component/{tag}.xml"

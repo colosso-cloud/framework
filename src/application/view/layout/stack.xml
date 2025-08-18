@@ -1,9 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Container size="full">
-    <Group type="nav" padding="px-5;py-0" margin="m-0" class="nav-scroller bg-body shadow-sm">
-        {% block bar %}
-        {% endblock %}
-    </Group>
-    {% block content %}
-    {% endblock %}
-</Container>
+{% extends "auth.xml" %}
+<Column id="stack" expand="full">
+    <Text>ciao</Text>
+        
+</Column>

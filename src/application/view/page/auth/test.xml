@@ -1,4 +1,4 @@
-{% extends "auth.xml" %}
+{% extends "base.xml" %}
 {% block content %}
 <Navigation orientation="horizontal">
     <Action type="link" route="/home"><Text>Home</Text></Action>

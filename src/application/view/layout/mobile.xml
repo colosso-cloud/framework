@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Column expand="fill">
-    <Row expand="fill">
-        {% block main %}
-        {% endblock %}
-    </Row>
-    <Navigation type="bar">
-        
-    </Navigation>
+{% extends "auth.xml" %}
+{% block main %}
+<Column  expand="full">
+    <Text>mobile</Text>
+    {% block layout %}
+    {% endblock %}
 </Column>
+{% endblock %}
