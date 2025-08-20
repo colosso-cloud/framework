@@ -1,6 +1,19 @@
-<Window type="root">
-    <Column expand="full">
-        {% block content %}
-        {% endblock %}
-    </Column>
-</Window>
+<?xml version="1.0" encoding="UTF-8"?>
+<Column expand="full">
+    <Navigation orientation="horizontal" alignment-content="around" class="bg-light border-bottom">
+        <Media type="image" height="50px" src="https://app.colosso.cloud/static/logo.png" />
+        <Text>Mono</Text>
+        <Action type="link" route="/home"><Text>Home</Text></Action>
+        <Action type="dropdown">
+            <Text>Products</Text>
+            <Action type="link" route="/products/item1"><Text>Item 1</Text></Action>
+            <Action type="link" route="/products/item2"><Text>Item 2</Text></Action>
+            <Action type="link" route="/products/item3"><Text>Item 3</Text></Action>
+        </Action>
+        <Action route="/contact" alignment-content="horizontal">
+            <Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" />
+            <Text>Contact</Text>
+        </Action>
+    </Navigation>
+    {{ inner }}
+</Column>

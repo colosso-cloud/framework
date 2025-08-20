@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {% if not user %}
-<Window type="root" title="Colosso - App" layout="stack">
+<Window type="root" title="Colosso - App" layout="mono">
     <Column expand="full">
         {% block main %}
         {% endblock %}

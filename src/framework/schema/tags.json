@@ -65,6 +65,11 @@
         "type": "dict",
         "schema": {
             "id": {"type": "string"},
+            "class": {"type": "string"},
+            "alignment-content": {
+                "type": "string",
+                "allowed": ["horizontal", "center", "end", "between", "around"]
+            },
             "orientation": {
                 "type": "string",
                 "allowed": ["horizontal", "vertical"],
@@ -148,6 +153,7 @@
                 "allowed": ["fluid", "fixed"],
                 "default": "fluid"
             },
+            "id": {"type": "string"},
             "class": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
@@ -202,6 +208,10 @@
         "type": "dict",
         "schema": {
             "id": {"type": "string"},
+            "alignment-content": {
+                "type": "string",
+                "allowed": ["horizontal", "center", "end", "between", "around"]
+            },
             "width": {"type": "string"},
             "height": {"type": "string"},
             "class": {"type": "string"},
@@ -230,12 +240,13 @@
             "height": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["still","embed","dialog","root"],
+                "allowed": ["still","embed","dialog","root","inner"],
                 "default": "embed"
             },
             "src": {"type": "string"}
         },
-        "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed","root": "window"}
+        "_input": "mixed",
+        "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed","root": "window", "inner": "window"}
     },
     "Text": {
         "type": "dict", 

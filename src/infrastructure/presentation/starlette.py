@@ -290,6 +290,10 @@ class adapter(presentation.port):
             'tag': 'p',
             'attributes': {'class': 'text'}
         },
+        'placeholder': {
+            'tag': 'span',
+            #'in': lambda adapter,attributes,inner: inner,
+        },
         'input': {
             'tag': 'input',
             'case': lambda attributes: {
@@ -313,7 +317,7 @@ class adapter(presentation.port):
                 'dropdown': lambda adapter, attributes, inner: adapter.code('li', {}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
-                'dropdown': lambda adapter, attributes, inner: adapter.code('div', {'class': 'dropdown'}, [adapter.code('button', {'class':'btn btn-secondary dropdown-toggle','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('ul', {'class': 'dropdown-menu'}, inner[1:])]),
+                'dropdown': lambda adapter, attributes, inner: [adapter.code('button', {'class':'btn btn-secondary dropdown-toggle','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('ul', {'class': 'dropdown-menu'}, inner[1:])]
             }.get(attributes.get('type')),
             'inner_overwrite': lambda adapter, attributes, inner: {
                 'dropdown': ({'class':'dropdown-item'},''),
@@ -350,6 +354,7 @@ class adapter(presentation.port):
             'tag': 'div',
             'attributes': {'class': 'window'},
             'case': lambda attributes: {
+                'inner': ('div', {'class': ''}),
                 'dialog': ('div', {'class': 'modal-dialog'}),
                 'offcanvas': ('div', {'class': 'offcanvas'}),
                 'root': ('html', {'class': 'h-100', 'data-navigation-type': 'default', 'data-navbar-horizontal-shape': 'default', 'lang': 'it', 'dir': 'ltr'}),
@@ -394,8 +399,13 @@ class adapter(presentation.port):
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js" integrity="sha512-NgXVRE+Mxxf647SqmbB9wPS5SEpWiLFp5G7ItUNFi+GVUyQeP+7w4vnKtc2O/Dm74TpTFKXNjakd40pfSKNulg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>  
                     """),
                     adapter.code('body', {'class':"d-flex h-100 flex-column",'id':attributes.get('id')}, inner)
-                ]
+                ],
+                'inner': lambda adapter, attributes, inner: inner,
             }.get(attributes.get('type')),
+            'test': lambda adapter, attributes, inner: {
+                'root': ('application/view/layout/'+attributes.get('layout','')+'.xml',inner),
+            }.get(attributes.get('type')),
+            
         },
         'chart': {
             'tag': 'div',
@@ -489,7 +499,7 @@ class adapter(presentation.port):
             'attributes': {'class': 'navigation'},
             'case': lambda attributes: {
                 'horizontal':  ('div', {'class': 'navbar'}),
-                'vertical': ('div', {'class': 'sidebar'}),
+                'vertical': ('div', {'class': 'sidebar d-flex flex-column'}),
             }.get(attributes.get('orientation')),
         },
     }
@@ -739,7 +749,7 @@ class adapter(presentation.port):
         content = template.render()
         content = content.replace('<!-- Body -->',str(html_body))'''
         #return HTMLResponse(content)
-        return HTMLResponse('<!DOCTYPE html>'+html)
+        return HTMLResponse('<!DOCTYPE html>'+str(html))
         
     def code(self, tag, attr, inner=[]):
         att = ''

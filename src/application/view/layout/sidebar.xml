@@ -1,19 +1,22 @@
-{% extends "mobile.xml" %}
+{% extends "auth.xml" %}
 {% block main %}
-<Row expand="fill" >
+<Row expand="dynamic" >
     {% block start %}
     {% endblock %}
     <Row>
-        <Navigation>
+        <Navigation orientation="vertical" class="bg-light">
         {% block bar %}
         {% endblock %}
         </Navigation>
     </Row>
-    <Column expand="fill">
-        
+    <Column expand="dynamic">
+            <Navigation type="breadcrumb">
+                <Action type="link" route="/home"><Text>Home</Text></Action>
+                <Action type="link" route="/products"><Text>Products</Text></Action>
+                <Action type="link" route="/products/item"><Text>Item</Text></Action>
             {% block breadcrumb %}
             {% endblock %}
-        
+            </Navigation>
         <Row>
             <Column >
                 <Text>{% block title %}{% endblock %}</Text>

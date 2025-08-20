@@ -1,27 +1,11 @@
-{% extends "base.xml" %}
+{% extends "sidebar.xml" %}
+{% block bar %}
+<Action type="link" route="/home"><Text>Home</Text></Action>
+<Action type="link" route="/home"><Text>Home</Text></Action>
+<Action type="link" route="/home"><Text>Home</Text></Action>
+<Action type="link" route="/home"><Text>Home</Text></Action>
+{% endblock %}
 {% block content %}
-<Navigation orientation="horizontal">
-    <Action type="link" route="/home"><Text>Home</Text></Action>
-    <Action type="dropdown">
-        <Text>Products</Text>
-        <Action type="link" route="/products/item1"><Text>Item 1</Text></Action>
-        <Action type="link" route="/products/item2"><Text>Item 2</Text></Action>
-        <Action type="link" route="/products/item3"><Text>Item 3</Text></Action>
-    </Action>
-    <Action type="link" route="/contact"><Text>Contact</Text></Action>
-</Navigation>
-<Navigation type="breadcrumb">
-    <Action type="link" route="/home"><Text>Home</Text></Action>
-    <Action type="link" route="/products"><Text>Products</Text></Action>
-    <Action type="link" route="/products/item"><Text>Item</Text></Action>
-</Navigation>
-<Navigation type="pagination">
-    <Action type="link" route="/page/1"><Text>1</Text></Action>
-    <Action type="link" route="/page/2"><Text>2</Text></Action>
-    <Action type="link" route="/page/3"><Text>3</Text></Action>
-    <Action type="link" route="/page/next"><Text>Next</Text></Action>
-    <Action type="link" route="/page/last"><Text>Last</Text></Action>
-</Navigation>
 <Media width="500px" height="500px" type="embed" src="https://www.youtube.com/embed/FkgC37ERJCY?si=RdT-GibC8pnJ5L1C" />
 <Media width="500px" height="500px" type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" controls="" autoplay="" />
 <Text type="code">print("Hello, World!")</Text>
@@ -36,7 +20,7 @@
     <Text>Maschio</Text>
     <Text>Femmina</Text>
 </Input>
-<Window width="1980px" height="1080px" src="https://web.archive.org" />
+<!-- <Window width="1980px" height="1080px" src="https://web.archive.org" /> -->
 <Message type="success" mode="alert" title="Alert" >
     <Text>This is an alert message.</Text>
 </Message>

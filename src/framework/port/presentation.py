@@ -106,15 +106,23 @@ class port(ABC):
         if 'view' not in constants:
             constants['view'] = {}
         
+        if 'inner' in constants:
+            inner = constants['inner']
+            placeholder = markupsafe.Markup('<Text>aaa</Text>')
+            ppp = await self.mount_widget('Text', ['aaa'], {'type':'text'})
+            constants['inner'] = placeholder
+
         constants['user'] = await defender.whoami()
         print(constants)
 
         content = template.render(constants)
-        #print('CONTENT',content)
+        print('Content:---------------------------*******************',content)
         xml = ET.fromstring(content)
         #print(xml)
         view = await self.render_view(xml,constants)
         await self.render_css(view)
+        if 'inner' in constants:
+            view = view.replace(ppp,inner)
         return view
 
     async def rebuild(self, id, tag, **data):
@@ -207,7 +215,11 @@ class port(ABC):
                 args = [attributes[arg] for arg in schema['_return'].get('args',[]) if arg in attributes]
                 input_type = schema.get('_input','inner')
                 if input_type == 'text':
-                    inner = text
+                    inner = str(text)
+                if input_type == 'mixed' and text is not None:
+                    inner.append(str(text))
+
+                #print('Function#################################:',inner)
                 match function:
                     case 'mount_view':
                         print('Mounting view:',args)
@@ -218,12 +230,17 @@ class port(ABC):
             if '_type' in schema:
                 schema_type = schema['_type'].get(attributes.get('type', ''))
                 input_type = schema.get('_input','inner')
-                print("---->",input_type,text)
+                if input_type == 'text':
+                    inner = str(text)
+                if input_type == 'mixed' and text is not None:
+                    inner.append(str(text))
                 if schema_type:
                     if input_type == 'inner':
                         return await self.render_widget(schema_type, inner, attributes)
                     elif input_type == 'text':
                         return await self.render_widget(schema_type, text, attributes)
+                    elif input_type == 'mixed':
+                        return await self.render_widget(schema_type, inner, attributes)
                     else:
                         print('Unknown input type:',input_type)
                 print('Mounting widget:',schema_type,tag,attributes.get('type',''))
@@ -570,13 +587,15 @@ class port(ABC):
         
         for hook_name, arg_type in [
             ('case', 0),
-            
+            ('test', 1), 
             ('wrapper_each', 1),
             ('inner_overwrite', 1),
             ('inner_last', 2),
             ('inner_first', 2),
             ('wrapper_once', 1),
-            ('inner_append', 1), 
+            ('inner_append', 1),
+            ('in', 1),
+            
                 
         ]:
             if hook_name not in widget_config:
@@ -634,6 +653,10 @@ class port(ABC):
                     if hook_result:
                         tagg,overwrite_attrs, inn = hook_result
                         children.append(self.code(tagg, overwrite_attrs,inn))
+                case 'test':
+                    if hook_result:
+                        overwrite_attrs, ggg = hook_result
+                        children = await self.builder(url=overwrite_attrs,inner=''.join(ggg))
 
         for key in widget_config.get('!attributes', {}):
             value = widget_config.get('!attributes', {}).get(key, [])
