@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Column id="{{ component.id }}" expand="full">
+{% extends "auth.xml" %}
+{% block main %}
+<Column expand="full">
     <Row background="#fcfcfc" width="auto" class="border-end">
         {% block west %}
         {% endblock %}
@@ -23,3 +24,4 @@
         {% endblock %}
     </Row>
 </Column>
+{% endblock %}

@@ -1,128 +1,101 @@
 {% extends "sidebar.xml" %}
-{% block start %}
-<Storekeeper method="gather" alignment-content="horizontal" repository='services' filter="project(eq: {'id':'{{query.id.0}}'})" >
-{% endblock %}
-{% block fine %}
-</Storekeeper>
-{% endblock %}
-{% block breadcrumb %}
-<Action route="application/view/page/inventory/overview.xml" ><Graph icon="bi-speedometer2"/></Action>
-<Action route="application/view/page/inventory/services.xml" space="1"><Graph icon="bi-boxes"/><Text>Services</Text></Action>
-<Action space="1"><Graph icon="bi-box-fill"/><Text>api service</Text></Action>
-{% endblock %}
-{% block title %}Service{% endblock %}
-{% block subtitle %}service #api-service{% endblock %}
 {% block bar %}
-<SideBar from="inventory" select="application/view/page/inventory/services.xml"/>
-{% endblock %}
-{% block action %}
-<Group type="button">
-    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-success"><Graph icon="bi-play-fill"/><Text class="text-uppercase">Start</Text></Action>
-    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-warning"><Graph icon="bi-arrow-repeat"/><Text class="text-uppercase">Restart</Text></Action>
-    <Action type="button" route="tab:overview" class="d-inline-flex btn-outline-danger"><Graph icon="bi-trash"/><Text class="text-uppercase">Delete</Text></Action>
-</Group>
+<Action route="/home"><Media type="icon" src="bi-pc-horizontal"/> <Text>Machines</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-box-seam"/> <Text>Containers</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-boxes"/> <Text>Services</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-database"/> <Text>Volumes</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-globe"/> <Text>Domains</Text></Action>
 {% endblock %}
 {% block content %}
-<Container class="card-group" padding="p-4">
-    <Container class="card">
-        <Container class="card-header">
-            <Text>General</Text>
-        </Container>
-        <Group type="list" class="list-group-flush" expand="vertical">
-            <Text>ID: svc-api-01</Text>
-            <Text>Name: api-service</Text>
-            <Text>Description: Servizio backend REST</Text>
-            <Text>Image: node:20-alpine</Text>
-            <Text>Tags: Backend, API</Text>
-            <Text>Owner: team-dev</Text>
-            <Text>Replicas: 3</Text>
-            <Text>Location: Cluster A</Text>
-        </Group>
-        <Container class="card-footer">
-            <Text>State: 🟢 Active | Uptime: 5h 42m</Text>
-        </Container>
-    </Container>
+<Media width="500px" height="500px" type="embed" src="https://www.youtube.com/embed/tujkoXI8rWM?si=7OFG-u-przarv7KE" />
+<Media width="500px" height="500px" type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" controls="" autoplay="" />
+<Text type="code">print("Hello, World!")</Text>
+<Action width="100px" type="button" ><Media width="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" /></Action>
+<Action type="form" action="/auth/login" >
+    <Input type="text" name="username" placeholder="Username" />
+    <Input type="password" name="password" placeholder="Password" />
+    <Action type="submit" ><Text>Login</Text></Action>
+</Action>
 
-    <Container class="card">
-        <Container class="card-header">
-            <Text>Networking</Text>
-        </Container>
-        <Group type="list" class="list-group-flush" expand="vertical">
-            <Text>Cluster IP: 10.96.0.15</Text>
-            <Text>External IP: 192.168.1.200</Text>
-            <Text>Port: 80 → 3000/TCP</Text>
-            <Text>DNS: api.internal.local</Text>
-            <Text>Gateway: 192.168.1.1</Text>
-            <Text>Load Balancer: Enabled</Text>
-        </Group>
-        <Container class="card-footer">
-            <Text>Health: 🟢 OK | Last Check: 2025-04-16 09:10</Text>
-        </Container>
-    </Container>
-
-    <Container class="card">
-        <Container class="card-header">
-            <Text>Configuration</Text>
-        </Container>
-        <Group type="list" class="list-group-flush" expand="vertical">
-            <Text>Environment: NODE_ENV=production</Text>
-            <Text>Command: node server.js</Text>
-            <Text>Args: --port=3000</Text>
-            <Text>Volumes: /config, /data</Text>
-            <Text>Secrets: JWT_SECRET, DB_PASSWORD</Text>
-        </Group>
-        <Container class="card-footer">
-            <Text>Restart Policy: Always</Text>
-        </Container>
-    </Container>
-
-    <Container class="card">
-        <Container class="card-header">
-            <Text>Monitoring</Text>
-        </Container>
-        <Group type="list" class="list-group-flush" expand="vertical">
-            <Text>CPU Usage: 1.2%</Text>
-            <Text>Memory Usage: 150MB</Text>
-            <Text>Requests: CPU: 500m, RAM: 256Mi</Text>
-            <Text>Limits: CPU: 1000m, RAM: 512Mi</Text>
-        </Group>
-        <Container class="card-footer">
-            <Text>Last Scaled: 2025-04-15 17:00</Text>
-        </Container>
-    </Container>
-
-    <Container class="card">
-        <Container class="card-header">
-            <Text>Sicurezza</Text>
-        </Container>
-        <Group type="list" class="list-group-flush" expand="vertical">
-            <Text>Security Context: Non-root</Text>
-            <Text>AppArmor: Enabled</Text>
-            <Text>Network Policy: Isolated</Text>
-            <Text>Service Account: api-sa</Text>
-        </Group>
-        <Container class="card-footer">
-            <Text>Last Audit: 2025-04-14</Text>
-        </Container>
-    </Container>
-</Container>
-
-<Group type="nav" class="border-bottom">
-    <Action route="tab:overview"><Graph icon="bi-info-circle"/><Text class="text-uppercase">Overview</Text></Action>
-    <Action route="tab:logs"><Graph icon="bi-journal-richtext"/><Text class="text-uppercase">Logs</Text></Action>
-    <Action route="tab:events"><Graph icon="bi-lightning"/><Text class="text-uppercase">Events</Text></Action>
-    <Action route="tab:metrics"><Graph icon="bi-bar-chart"/><Text class="text-uppercase">Metrics</Text></Action>
-    <Action route="tab:security"><Graph icon="bi-shield-check"/><Text class="text-uppercase">Security</Text></Action>
-    <Action route="tab:history"><Graph icon="bi-clock-history"/><Text class="text-uppercase">History</Text></Action>
+<Input type="select" name="gender" placeholder="gender" >
+    <Text>Maschio</Text>
+    <Text>Femmina</Text>
+</Input>
+<!-- <Window width="1980px" height="1080px" src="https://web.archive.org" /> -->
+<Message type="success" mode="alert" title="Alert" >
+    <Text>This is an alert message.</Text>
+</Message>
+<Group>
+    <Input type="text" name="name" placeholder="name" />
+    <Input type="text" name="surname" placeholder="surname" />
 </Group>
-<Container background="#f8f9fa" size="fluid" padding="p-4" expand="True" class="border-top border-bottom">
-    <Group type="tab">
-        <Container id="overview"><Text>Overview del servizio</Text></Container>
-        <Container id="logs"><Text>Log recenti</Text></Container>
-        <Container id="events"><Text>Eventi generati</Text></Container>
-        <Container id="metrics"><Text>Metriche</Text></Container>
-        <Container id="security"><Text>Policy di sicurezza</Text></Container>
-        <Container id="history"><Text>Cronologia attività</Text></Container>
-    </Group>
-</Container>
+<Group type="list">
+    <Text>Item 1</Text>
+    <Text>Item 2</Text>
+    <Text>Item 3</Text>
+</Group>
+<Group type="card">
+    <Card>
+        <Media width="100px" height="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+        <Text>Card 1</Text>
+    </Card>
+    <Card>
+        <Media width="100px" height="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+        <Text>Card 2</Text>
+    </Card>
+    <Card>
+        <Media width="100px" height="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+        <Text>Card 3</Text>
+    </Card>
+</Group>
+<Media type="carousel" width="500px" height="500px">
+    <Media type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+    <Media type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+    <Media type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" />
+</Media>
+<Data type="text" >
+    <Text>This is a text data element.</Text>
+</Data>
+<Action type="link" route="#offcanvasExample"><Text>Offcanvas</Text></Action>
+<Action type="link" route="#dialogExample"><Text>Dialog</Text></Action>
+<Window type="still" id="offcanvasExample">
+    <Text>This is an offcanvas window.</Text>
+    <Action type="button" ><Text>Close</Text></Action>
+</Window>
+<Window type="dialog" id="dialogExample">
+    <Text>This is an offcanvas window.</Text>
+    <Action type="button" ><Text>Close</Text></Action>
+</Window>
+
+<Data type="table">
+    <Data type="table.header">
+        <Data type="table.cell">
+            <Text>Header 1</Text>
+        </Data>
+        <Data type="table.cell">
+            <Text>Header 2</Text>
+        </Data>
+        <Data type="table.cell">
+            <Text>Header 3</Text>
+        </Data>
+    </Data>
+    <Data type="table.body">
+        <Data type="table.row">
+            <Text>Cell 1</Text>
+            <Text>Cell 2</Text>
+            <Text>Cell 3</Text>
+        </Data>
+        <Data type="table.row">
+            <Text>Cell 1</Text>
+            <Text>Cell 2</Text>
+            <Text>Cell 3</Text>
+        </Data>
+        <Data type="table.row">
+            <Text>Cell 1</Text>
+            <Text>Cell 2</Text>
+            <Text>Cell 3</Text>
+        </Data>
+    </Data>
+</Data>
 {% endblock %}

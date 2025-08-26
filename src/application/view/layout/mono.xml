@@ -1,19 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Column expand="full">
-    <Navigation orientation="horizontal" alignment-content="around" class="bg-light border-bottom">
-        <Media type="image" height="50px" src="https://app.colosso.cloud/static/logo.png" />
-        <Text>Mono</Text>
-        <Action type="link" route="/home"><Text>Home</Text></Action>
-        <Action type="dropdown">
-            <Text>Products</Text>
-            <Action type="link" route="/products/item1"><Text>Item 1</Text></Action>
-            <Action type="link" route="/products/item2"><Text>Item 2</Text></Action>
-            <Action type="link" route="/products/item3"><Text>Item 3</Text></Action>
-        </Action>
-        <Action route="/contact" alignment-content="horizontal">
-            <Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" />
-            <Text>Contact</Text>
-        </Action>
+    <Window type="still" id="offcanvasExample">
+        <Text>This is an offcanvas window.</Text>
+        <Action type="button" ><Text>Close</Text></Action>
+    </Window>
+    <Navigation orientation="horizontal" alignment-content="between" class="bg-light border-bottom px-2">
+        <Navigation type="breadcrumb" alignment-content="center">
+                <Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" />
+                <Input width="auto" type="select">
+                    <Text>Colosso</Text>
+                    <Text>SottoMonte</Text>
+                </Input>
+                <Input width="auto" type="select">
+                    <Text>DEV</Text>
+                    <Text>OPS</Text>
+                    <Text>GOV</Text>
+                    <Text>ADMIN</Text>
+                </Input>
+        </Navigation>
+        <Group width="auto">
+            <Input width="auto" type="search" />
+            <Action type="submit" class="border"><Media type="icon" src="bi-search" /></Action>
+        </Group>
+        
+        <Group width="auto" alignment-content="center">
+            <Group width="auto" alignment-content="center">
+    <Media type="icon" src="bi-sun-fill"/>
+    <Action type="switch" route="/products"/>
+    <Media type="icon" src="bi-moon-fill"/>
+</Group>
+            <Action route="/contact"><Media type="icon" src="bi-question-circle" /></Action>
+            <Action route="/contact"><Media type="icon" src="bi-inbox" /></Action>
+            <Action route="/contact"><Media type="icon" src="bi-bug" /></Action>
+            <Action type="link" route="#offcanvasExample" alignment-content="center" class="d-inline-flex">
+                <Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" class="rounded-circle border" />
+                <Text>{{user.email}}</Text>
+            </Action>
+        </Group>
     </Navigation>
     {{ inner }}
 </Column>

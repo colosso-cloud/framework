@@ -17,7 +17,12 @@
     <Input type="password" name="password" placeholder="Password" />
     <Action type="submit" ><Text>Login</Text></Action>
 </Action>
-
+<Action type="dropdown">
+                <Text>Products</Text>
+                <Action type="link" route="/products/item1"><Text>Item 1</Text></Action>
+                <Action type="link" route="/products/item2"><Text>Item 2</Text></Action>
+                <Action type="link" route="/products/item3"><Text>Item 3</Text></Action>
+</Action>
 <Input type="select" name="gender" placeholder="gender" >
     <Text>Maschio</Text>
     <Text>Femmina</Text>

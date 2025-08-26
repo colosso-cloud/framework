@@ -1,11 +1,5 @@
 {% extends "sidebar.xml" %}
 {% block bar %}
-<Action route="/home"><Media type="icon" src="bi-pc-horizontal"/> <Text>Machines</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-box-seam"/> <Text>Containers</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-boxes"/> <Text>Services</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-database"/> <Text>Volumes</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-globe"/> <Text>Domains</Text></Action>
 {% endblock %}
 {% block content %}
 <Data type="table">

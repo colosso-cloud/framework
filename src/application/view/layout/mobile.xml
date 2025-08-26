@@ -1,8 +1,0 @@
-{% extends "auth.xml" %}
-{% block main %}
-<Column  expand="full">
-    <Text>mobile</Text>
-    {% block layout %}
-    {% endblock %}
-</Column>
-{% endblock %}

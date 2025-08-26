@@ -34,18 +34,10 @@
         },
         "_return": {"function": "render_widget", "args": ["data"]}
     },
-    "Resource": {
-        "type": "dict",
-        "schema": {
-            "type": {
-                "type": "string",
-                "allowed": ["image", "video", "audio"]
-            }
-        }
-    },
     "Media": {
         "type": "dict", 
         "schema": {
+            "allow": {"type": "string"},
             "class": {"type": "string"},
             "controls": {"type": "string"},
             "autoplay": {"type": "string" },
@@ -66,6 +58,8 @@
         "schema": {
             "id": {"type": "string"},
             "class": {"type": "string"},
+            "width": {"type": "string"},
+            "height": {"type": "string"},
             "alignment-content": {
                 "type": "string",
                 "allowed": ["horizontal", "center", "end", "between", "around"]
@@ -195,7 +189,7 @@
             "autofocus": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox"],
+                "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox","search"],
                 "default": "text"
             },
             "name": {"type": "string"},
@@ -217,7 +211,7 @@
             "class": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["button", "submit", "form","dropdown", "link"],
+                "allowed": ["button", "submit", "form","dropdown", "link","switch"],
                 "default": "button"
             },
             "action": {
@@ -227,11 +221,12 @@
                 "type": "string"
             }
         },
-        "_type": {"button": "action","submit": "action", "form": "action", "dropdown": "action", "link": "action"}
+        "_type": {"button": "action","submit": "action", "form": "action", "dropdown": "action", "link": "action", "switch": "action"}
     },
     "Window": {
         "type": "dict", 
         "schema": {
+            "allow": {"type": "string"},
             "title": {"type": "string"},
             "layout": {"type": "string"},
             "class": {"type": "string"},
@@ -245,7 +240,6 @@
             },
             "src": {"type": "string"}
         },
-        "_input": "mixed",
         "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed","root": "window", "inner": "window"}
     },
     "Text": {
@@ -268,6 +262,15 @@
         "schema": {
             "width": {"type": "string"},
             "height": {"type": "string"},
+            "expand": {"type": "string"},
+            "alignment-content": {
+                "type": "string",
+                "allowed": ["horizontal", "center", "end", "between", "around"]
+            },
+            "alignment-vertical": {
+                "type": "string",
+                "allowed": ["top", "center", "bottom"]
+            },
             "type": {
                 "type": "string",
                 "allowed": ["input", "list", "card", "tab"],

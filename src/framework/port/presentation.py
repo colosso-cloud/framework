@@ -5,6 +5,7 @@ from html import escape
 import uuid
 import untangle
 import markupsafe
+import re
 
 resources = {
     'flow': 'framework/service/flow.py',
@@ -120,8 +121,11 @@ class port(ABC):
         xml = ET.fromstring(content)
         #print(xml)
         view = await self.render_view(xml,constants)
-        await self.render_css(view)
+        print('View:---------------------------*******************',type(view))
+        #await self.render_css(view,view))
         if 'inner' in constants:
+            if isinstance(inner, list):
+                inner = ''.join(str(x) for x in inner)
             view = view.replace(ppp,inner)
         return view
 
@@ -169,19 +173,70 @@ class port(ABC):
         await self.apply_css(*services)
 
     def parse_route(self, file):
-        
-        for setting in untangle.parse(file).get_elements()[0].get_elements():
-            path = setting.get_attribute('path')
-            method = setting.get_attribute('method')
-            typee = setting.get_attribute('type')
-            view = setting.get_attribute('view')
-            layout = setting.get_attribute('layout')
-            if view:
-                view = 'application/view/page/'+view
-                if not path:
-                    path = view.replace('.xml','')
+        # Regex per opzioni multiple tra virgolette (es. {'a'|'b'})
+        regex_quoted = r'\{((?:\'[^\']+\'\|?)+)\}'
+        # Regex per parametri dinamici con $ (es. {$id})
+        regex_param = r'\{(\$[a-zA-Z0-9_]+)\}'
+        # Regex per opzioni multiple senza virgolette (es. {a|b})
+        regex_simple_options = r'\{([a-zA-Z0-9_|]+)\}'
 
-            self.routes[path] = {'view':view,'type':typee,'method':method, 'layout':layout}
+        try:
+            tree = untangle.parse(file)
+            if not tree or not tree.get_elements() or not tree.get_elements()[0].get_elements():
+                print("Errore: Il file XML è vuoto o malformato.")
+                return
+
+            for setting in tree.get_elements()[0].get_elements():
+                path_attribute = setting.get_attribute('path')
+                method = setting.get_attribute('method')
+                typee = setting.get_attribute('type')
+                view = setting.get_attribute('view')
+                layout = setting.get_attribute('layout')
+
+                if view:
+                    view = 'application/view/page/' + view
+                    if not path_attribute:
+                        path_attribute = view.replace('.xml', '')
+
+                # 1. Gestisce i percorsi con opzioni multiple tra virgolette
+                match = re.search(regex_quoted, path_attribute)
+                if match:
+                    dynamic_part = match.group(0)
+                    options_str = match.group(1)
+                    options = options_str.replace("'", "").split('|')
+                    
+                    for option in options:
+                        new_path = path_attribute.replace(dynamic_part, option)
+                        self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+                    continue
+
+                # 2. Gestisce i percorsi con opzioni multiple senza virgolette
+                match = re.search(regex_simple_options, path_attribute)
+                if match:
+                    dynamic_part = match.group(0)
+                    options_str = match.group(1)
+                    options = options_str.split('|')
+                    
+                    for option in options:
+                        new_path = path_attribute.replace(dynamic_part, option)
+                        self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+                    continue
+                
+                # 3. Gestisce i percorsi con parametri dinamici ($)
+                match = re.search(regex_param, path_attribute)
+                if match:
+                    param_with_dollar = match.group(1)
+                    param_name = param_with_dollar.lstrip('$')
+                    new_path = path_attribute.replace(param_with_dollar, param_name)
+                    self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+                    continue
+
+                # 4. Gestisce i percorsi statici
+                self.routes[path_attribute] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+        
+        except Exception as e:
+            print(f"Si è verificato un errore durante il parsing del file: {e}")
+
 
     @flow.asynchronous(managers=('storekeeper','messenger'))
     async def render_view(self,root,data,storekeeper,messenger):
@@ -202,7 +257,7 @@ class port(ABC):
         
         if tag in tags:
             schema = tags[tag]
-            #print('Schema:',schema,{tag:attributes})
+
             schema_data = await language.model({tag:schema.copy()},{tag:attributes})
             attributes |= schema_data.get(tag,{})
             #print('Schema:',tttt)
@@ -244,6 +299,8 @@ class port(ABC):
                     else:
                         print('Unknown input type:',input_type)
                 print('Mounting widget:',schema_type,tag,attributes.get('type',''))
+        else:
+            return await self.render_widget(tag, inner, attributes)
 
         '''#if tag in self.tags:
         #    return await self.tags[tag]()
@@ -326,241 +383,6 @@ class port(ABC):
                 output = await self.compose_view('Container',inner_context)
                 await self.mount_property('Container',output,att)
                 return output
-            case 'Media':
-                #resource
-                kind = att['type'] if 'type' in att else 'image'
-                src = att['src'] if 'src' in att else None
-                if src:
-                    #resource = await self.compose_view('VideoMedia',src)
-                    #inner.append(resource)
-                    pass
-
-                if kind == 'video':
-                    media = await self.render_widget('Video',inner, att)
-                    #await self.mount_property('Video',media,att)
-                    return media
-                media = await self.render_widget('Video',inner, att)
-                #await self.mount_property('Video',media,att)
-                return media
-            case 'View':
-                
-                if 'storekeeper' in data and 'storekeeper' in att:
-                    if type(data['storekeeper']) == type(dict()):
-                        text = str(language.get(att['storekeeper'],data['storekeeper']))
-                    else:
-                        text = str(data['storekeeper'])
-                    view = await self.builder(**data|{'text':text})
-                elif 'code' in data and 'code' in att:
-                    print('View-data:',data)
-                    view = await self.builder(**data|{'text':data['code']})
-                elif 'route' in att:
-                    #await self.apply_route(url=att['route'])
-                    #output = await self.compose_view('Container',inner,**att)
-                    #await self.mount_property('Container',output,att)
-                    return await self.mount_view(att['route'])
-                elif 'url' in att:
-                    dataview = None
-                    if 'data' in att:
-                        dataview = att['data']
-                        dataview = language.get(dataview,data['storekeeper'])
-                    view = await self.builder(**data|{'url':att['url'],'data':dataview})
-                    view = self.code_update(view, {}, inner,'start')
-                elif 'content' in att:
-                    view = await self.builder(**data|{'url':'application/view/content/'+att['content']})
-                else:
-                    view = None
-
-                if 'id' in att:
-                    id = att.get('id')
-                    if id not in self.components:
-                        self.components[id] = {'id': id}
-                    a = self.code('div',{'class':'container-fluid d-flex flex-row p-0 m-0'},[view])
-                    self.att(a,att)
-                    #print('View:',view,'inner',inner)
-                    return a
-                else:
-                    return view
-            case 'Resource':
-                return await self.compose_view('VideoMedia',text)
-            case 'Action':
-                model = att['type'] if 'type' in att else 'button'
-                url = att['url'] if 'url' in att else '#'
-                valor = att['value'] if 'value' in att else ''
-                match model:
-                    case 'form':
-                        action = att['action'] if 'action' in att else '#'
-                        #form = self.code('form',{'action':action,'method':'POST'},inner)
-                        #self.att(form,att)
-                        
-                        return await self.render_widget('Form', inner, att)
-                    case 'submit':
-                        return await self.render_widget('Button', inner, att)
-                    case 'button':
-                        return await self.render_widget('Button', inner, att)
-                    case 'nav':
-                        output = await self.compose_view('Button',inner,**att)
-                        await self.mount_property('Button',output,att)
-                        return output
-                    case _:
-                        return await self.render_widget('Button', inner, att)
-            case 'Window':
-                tipo = att['type'] if 'type' in att else 'None'
-                id = att['id'] if 'id' in att else 'None'
-                match tipo:
-                    case 'drawer':
-                        output = await self.compose_view('Drawer',inner,**att)
-                        await self.mount_property('Drawer',output,att)
-                        return output
-                    case 'window':
-                        output = await self.compose_view('Window',inner,**att)
-                        await self.mount_property('Window',output,att)
-                        return output
-                    case 'modal':
-                        output = await self.compose_view('Modal',inner,**att)
-                        await self.mount_property('Modal',output,att)
-                        return output
-                    case _:
-                        return await self.render_widget('Window', inner, att)
-            case 'Card':
-                output = await self.compose_view('Container',inner,**att)
-                await self.mount_property('Container',output,att)
-                return output
-            case 'Navigation':
-                kind = att['type'] if 'type' in att else 'menu'
-
-                match kind:
-                    case 'app':
-                        output = await self.compose_view('NavigationApp',inner,**att)
-                        await self.mount_property('NavigationApp',output,att)
-                        return output
-                    case 'menu':
-                        output = await self.compose_view('NavigationMenu',inner,**att)
-                        await self.mount_property('NavigationMenu',output,att)
-                        return output
-                    case 'rail':
-                        output = await self.compose_view('NavigationRail',inner,**att)
-                        await self.mount_property('NavigationRail',output,att)
-                        return output
-                    case 'bar':
-                        output = await self.compose_view('NavigationBar',inner,**att)
-                        await self.mount_property('NavigationBar',output,att)
-                        return output
-                    case 'tab':
-                        return await self.render_widget('Button', inner, att)
-            case 'Group':
-                tipo = att['type'] if 'type' in att else 'None'
-                output = await self.compose_view('Container',inner,**att)
-                await self.mount_property('Container',output,att)
-                return output
-            case 'Input':
-                #id = att['id'] if 'id' in att else str(uuid.uuid4())
-                tipo = att['type'] if 'type' in att else 'text'
-                
-                match tipo:
-                    case 'text':
-                        return await self.render_widget('Input', inner, att)
-                    case _:
-                        return await self.render_widget('Input', inner, att)
-            case 'Text':
-                #text-muted text-truncate
-                tipo = att['type'] if 'type' in att else 'text'
-                #return await self.render_widget('Input', inner, att)
-                match tipo:
-                    case 'editable':
-                        if text:
-                            text = escape(text)
-                        text = self.code('div',{'contenteditable':'true'},text)
-                        self.att(text,att)
-                        return text
-                    case 'code':
-                        #if text:
-                        #    text = escape(text)
-                        code = self.code('code',{},[text])
-                        pre = self.code('pre',{},[code])
-                        self.att(pre,att)
-                        return pre
-                    case 'text':
-                        
-                        return await self.render_widget('Text', text, att)
-                    case 'data':
-                        if text:
-                            text = escape(text)
-                        dt = datetime.fromisoformat(text)
-                        text = dt.strftime('%Y-%m-%d %H:%M')
-                        obj = self.code('p',{'class':'fw-lighter p-0 m-0','type':'data'},text)
-                        self.att(obj,att)
-                        return obj
-                    case _:
-                        if text:
-                            text = escape(text)
-                        inner.append(text)
-                        obj = self.code('p',{'class':'text-truncate fw-lighter p-0 m-0','type':'data'},inner)
-                        self.att(obj,att)
-                        return obj
-            case 'Data':
-                return await self.compose_view('VideoMedia',text)
-            case 'Row':
-                
-                return await self.render_widget('Row', inner, att)
-            case 'Container':
-                return await self.render_widget('Container', inner, att)
-            case 'Column':
-                return await self.render_widget('Column', inner, att)
-            case _:
-                def elements_to_xml_string(elements):
-                    # Crea un elemento root temporaneo
-                    root = ET.Element('root')
-                    
-                    # Aggiungi tutti gli elementi alla root temporanea
-                    for element in elements:
-                        root.append(element)
-                    
-                    # Converti l'elemento root temporaneo in una stringa XML
-                    xml_string = ET.tostring(root, encoding='unicode', method='xml')
-                    
-                    # Rimuovi il tag root temporaneo
-                    xml_string = xml_string.replace('<root>', '').replace('</root>', '').replace('<root />','').strip()
-                    
-                    return xml_string
-                
-                if 'inner' in data:
-                    data.pop('inner')
-                if 'component' in data:
-                    data.pop('component')
-                
-                xml_string = elements_to_xml_string(elements)
-                url = f'application/view/component/{tag}.xml'
-                #attrii = ''.join(x.outerHTML for x in att)
-                id = att['id'] if 'id' in att else str(uuid.uuid1())
-                if id not in self.components:
-                    self.components[id] = {'id': id}
-                    self.components[id]['view'] = f'application/view/component/{tag}.xml'
-                    attributes = " ".join([f"{key}='{value}'" for key, value in att.items()])
-                    self.components[id]['inner'] = f"<{tag} id='{id}' >{markupsafe.Markup(xml_string)}{data.get('code','')}</{tag}>"
-                    self.components[id]['attributes'] = att
-                    #self.components[id]['storekeeper'] = data.get('storekeeper',dict())
-
-                inner = markupsafe.Markup(xml_string)+data.get('code','')
-                if 'text' in data:
-                    data.pop('text')
-                    pass
-                #await messenger.post(domain='debug',message=f"✅ Elemento: {tag}|{id} creato.")
-                
-                argg = data|{
-                    'component':self.components.get(id,{}),
-                    'url':url,
-                    'inner':inner,
-                }
-                #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|COM',data)
-                #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|arg',argg)
-                # Creiamo la vista per il componente
-                
-                view = await self.builder(**argg)
-
-                #view = await self.mount_view(root,data)
-
-                self.att(view, att|{'component':tag})
-                return view
     '''
 
     async def mount_widget(self, tag, children, user_attrs):
@@ -571,7 +393,9 @@ class port(ABC):
         widget_config = self.WIDGETS.get(widget_name)
         
         if not widget_config:
-            return self.code('p', {'class': 'text'}, f"Widget non implementato: {tag}")
+            widget_config = {'component':tag}
+            #return self.code('p', {'class': 'text'}, f"Widget non implementato: {tag}")
+            
 
         # Merge attributi: unisci config + user, con gestione speciale della classe
         default_attrs = widget_config.get('attributes', {})
@@ -595,7 +419,7 @@ class port(ABC):
             ('wrapper_once', 1),
             ('inner_append', 1),
             ('in', 1),
-            
+            ('component', 5),        
                 
         ]:
             if hook_name not in widget_config:
@@ -610,6 +434,9 @@ class port(ABC):
                 case 2:
                     hook_result = hook(self, element_attrs, children, user_attrs)
                     print("HOOK RESULT:",user_attrs)
+                case 5:
+                    hook_result = hook
+                    pass
 
             match hook_name:
                 case 'case':
@@ -655,8 +482,65 @@ class port(ABC):
                         children.append(self.code(tagg, overwrite_attrs,inn))
                 case 'test':
                     if hook_result:
-                        overwrite_attrs, ggg = hook_result
-                        children = await self.builder(url=overwrite_attrs,inner=''.join(ggg))
+                        if isinstance(hook_result, tuple):
+                            overwrite_attrs, ggg = hook_result
+                            children = await self.builder(url=overwrite_attrs,inner=''.join(ggg))
+                case 'component':
+
+                    def elements_to_xml_string(elements):
+                        # Crea un elemento root temporaneo
+                        root = ET.Element('root')
+                        
+                        # Aggiungi tutti gli elementi alla root temporanea
+                        for element in elements:
+                            root.append(element)
+                        
+                        # Converti l'elemento root temporaneo in una stringa XML
+                        xml_string = ET.tostring(root, encoding='unicode', method='xml')
+                        
+                        # Rimuovi il tag root temporaneo
+                        xml_string = xml_string.replace('<root>', '').replace('</root>', '').replace('<root />','').strip()
+                        
+                        return xml_string
+                    
+                    '''if 'inner' in data:
+                        data.pop('inner')
+                    if 'component' in data:
+                        data.pop('component')'''
+                    
+                    #xml_string = elements_to_xml_string(elements)
+                    url = f'application/view/component/{hook_result}.xml'
+                    #attrii = ''.join(x.outerHTML for x in att)
+                    id = element_attrs['id'] if 'id' in element_attrs else str(uuid.uuid1())
+                    if id not in self.components:
+                        self.components[id] = {'id': id}
+                        self.components[id]['view'] = f'application/view/component/{tag}.xml'
+                        #attributes = " ".join([f"{key}='{value}'" for key, value in att.items()])
+                        #self.components[id]['inner'] = f"<{tag} id='{id}' >{markupsafe.Markup(xml_string)}{data.get('code','')}</{tag}>"
+                        self.components[id]['attributes'] = element_attrs
+                        #self.components[id]['storekeeper'] = data.get('storekeeper',dict())
+
+                    '''inner = markupsafe.Markup(xml_string)+data.get('code','')
+                    if 'text' in data:
+                        data.pop('text')
+                        pass'''
+                    #await messenger.post(domain='debug',message=f"✅ Elemento: {tag}|{id} creato.")
+                    
+                    argg = {
+                        'component':self.components.get(id,{}),
+                        'url':url,
+                        'inner':children,
+                    }
+                    #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|COM',data)
+                    #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|arg',argg)
+                    # Creiamo la vista per il componente
+                    
+                    view = await self.builder(**argg)
+
+                    #view = await self.mount_view(root,data)
+
+                    self.att(view, {'component':tag})
+                    return view
 
         for key in widget_config.get('!attributes', {}):
             value = widget_config.get('!attributes', {}).get(key, [])

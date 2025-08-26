@@ -4,16 +4,13 @@
     {% block start %}
     {% endblock %}
     <Row>
-        <Navigation orientation="vertical" class="bg-light">
+        <Navigation orientation="vertical" class="bg-light border-end">
         {% block bar %}
         {% endblock %}
         </Navigation>
     </Row>
     <Column expand="dynamic">
             <Navigation type="breadcrumb">
-                <Action type="link" route="/home"><Text>Home</Text></Action>
-                <Action type="link" route="/products"><Text>Products</Text></Action>
-                <Action type="link" route="/products/item"><Text>Item</Text></Action>
             {% block breadcrumb %}
             {% endblock %}
             </Navigation>

@@ -1,5 +1,0 @@
-{% extends "auth.xml" %}
-<Column id="stack" expand="full">
-    <Text>ciao</Text>
-        
-</Column>

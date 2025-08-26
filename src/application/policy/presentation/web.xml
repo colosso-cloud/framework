@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Routes path="/api" >
+    <!-- Views -->
+    <Route path="/" type="view" view="auth/login.xml" method="GET" />
+    <Route path="/inventory/repositories/repository" type="view" view="inventory/repository.xml" method="GET" />
+    <Route path="/inventory/domains/domain/{$id}" type="view" view="inventory/domain.xml" method="GET" />
+    <Route path="/inventory/services/service/{$id}" type="view" view="inventory/service.xml" method="GET" />
+    <Route path="/inventory/volumes/volume/{$id}" type="view" view="inventory/volume.xml" method="GET" />
+    <Route path="/inventory/containers/container/{$id}" type="view" view="inventory/container.xml" method="GET" />
+    <Route path="/inventory/machines/machine/{$id}" type="view" view="inventory/machine.xml" method="GET" />
+    <Route path="/inventory/{repositories|domains|services|volumes|containers|machines|secrets}" type="view" view="inventory/tables.xml" method="GET" />
+    <Route path="/dev/ide" type="view" view="dev/ide.xml" method="GET" />
+    <Route path="/profile" type="view" view="auth/profile.xml" method="GET" />
+    <Route path="/auth/signup" type="view" view="auth/registration.xml" method="GET" />
+    <Route path="/auth/signin" type="view" view="auth/login.xml" method="GET" />
+    <Route path="/auth/reset-password" type="view" view="auth/recovery.xml" method="GET" />
+    
+    <!-- Actions -->
     <Route path="/login" type="login" method="POST" />
     <Route path="/logout" type="logout" method="POST" />
-    <Route path="/" type="view" view="application/view/page/crm/overview.xml" method="GET" />
     <Route path="/github/callback" type="login" method="GET" />
     <Route path="/gather" type="action" method="GET" policy="" />
     <Route path="/create" type="action" method="POST" policy="" />

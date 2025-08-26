@@ -1,5 +1,5 @@
-{% extends "mono.xml" %}
-{% block content %}
+{% extends "free.xml" %}
+{% block main %}
 <Row class="p-2" expand="full">
     <Media type="image" height="50px" src="https://app.colosso.cloud/static/logo.png" />
     <Container class="col-8" padding="p-5" alignment-content="center">

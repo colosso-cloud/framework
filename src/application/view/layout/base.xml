@@ -1,6 +1,0 @@
-{% if user %}{% extends "stack.xml" %}{% else %}{% extends "mobile.xml" %}{% endif %}
-{% block layout %}
-    {% block content %}
-    
-    {% endblock %}
-{% endblock %}

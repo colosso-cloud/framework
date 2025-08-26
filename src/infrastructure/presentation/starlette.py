@@ -42,9 +42,6 @@ try:
     from bs4 import BeautifulSoup
     import paramiko
     import asyncio
-    import xml.etree.ElementTree as ET
-    from xml.sax.saxutils import escape
-    import untangle
 
     class NoCacheMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
@@ -57,7 +54,6 @@ try:
 
 except Exception as e:
     #import starlette
-    import untangle
     import markupsafe
     from bs4 import BeautifulSoup
     
@@ -187,6 +183,12 @@ class adapter(presentation.port):
         'storekeeper': {
             'tag': 'div',
             'attributes': {'class': 'container-fluid'},
+            'component': ''
+        },
+        'component': {
+            'tag': 'div',
+            'attributes': {'class': 'container-fluid'},
+            'component': ''
         },
         'presenter': {
             'tag': 'div',
@@ -288,7 +290,7 @@ class adapter(presentation.port):
         },
         'text': {
             'tag': 'p',
-            'attributes': {'class': 'text'}
+            'attributes': {'class': 'text m-0'}
         },
         'placeholder': {
             'tag': 'span',
@@ -312,12 +314,14 @@ class adapter(presentation.port):
                 'button':  ('button', {'class': 'btn', 'type': 'button'}),
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
                 'dropdown': ('div', {'class': 'dropdown'}),
+                'switch':  ('div', {'class': 'form-check form-switch'}),
             }.get(attributes.get('type')),
             'wrapper_each': lambda adapter, attributes, inner: {
                 'dropdown': lambda adapter, attributes, inner: adapter.code('li', {}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
-                'dropdown': lambda adapter, attributes, inner: [adapter.code('button', {'class':'btn btn-secondary dropdown-toggle','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('ul', {'class': 'dropdown-menu'}, inner[1:])]
+                'dropdown': lambda adapter, attributes, inner: [adapter.code('button', {'class':'btn btn-secondary dropdown-toggle','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('ul', {'class': 'dropdown-menu'}, inner[1:])],
+                'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch')},''),
             }.get(attributes.get('type')),
             'inner_overwrite': lambda adapter, attributes, inner: {
                 'dropdown': ({'class':'dropdown-item'},''),
@@ -402,9 +406,7 @@ class adapter(presentation.port):
                 ],
                 'inner': lambda adapter, attributes, inner: inner,
             }.get(attributes.get('type')),
-            'test': lambda adapter, attributes, inner: {
-                'root': ('application/view/layout/'+attributes.get('layout','')+'.xml',inner),
-            }.get(attributes.get('type')),
+            'test': lambda adapter, attributes, inner: ('application/view/layout/'+attributes.get('layout','')+'.xml',inner) if 'layout' in attributes else inner,
             
         },
         'chart': {
@@ -465,7 +467,7 @@ class adapter(presentation.port):
                 'breadcrumb': lambda adapter, attributes, inner: adapter.code('li', {'class': 'breadcrumb-item'}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
-                'breadcrumb': lambda adapter, attributes, inner: adapter.code('ol', {'class': 'breadcrumb'}, inner),
+                'breadcrumb': lambda adapter, attributes, inner: adapter.code('ol', {'class': 'breadcrumb p-0 m-0'}, inner),
             }.get(attributes.get('type')),
         },
         'pagination': {
@@ -735,8 +737,8 @@ class adapter(presentation.port):
                 return RedirectResponse('/', status_code=303)
 
     async def mount_view(self,url):
-        url = self.routes.get(url,{}).get('view')
-        return await self.builder(url=url)
+        path = self.routes.get(url,{}).get('view')
+        return await self.builder(url=path,path=url.split('/'))
     
     async def starlette_view(self,request):
         html = await self.mount_view(request.url.path)

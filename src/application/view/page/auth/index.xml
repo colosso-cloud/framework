@@ -1,7 +1,0 @@
-{% if user %}
-<View route="/inventory/repositories">
-</View>
-{% else %}
-<View route="/auth/signin">
-</View>
-{% endif %}
