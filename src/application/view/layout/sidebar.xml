@@ -15,9 +15,9 @@
             {% endblock %}
             </Navigation>
         <Row>
-            <Column >
-                <Text>{% block title %}{% endblock %}</Text>
-                <Text >{% block subtitle %}{% endblock %}</Text>
+            <Column padding="p-5" >
+                <Text class="h1">{% block title %}{% endblock %}</Text>
+                <Text class="h5">{% block subtitle %}{% endblock %}</Text>
             </Column>
             <Row class="position-sticky">
                 <Container>{% block action %}{% endblock %}</Container>

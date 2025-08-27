@@ -2,7 +2,7 @@
 <Routes path="/api" >
     <!-- Views -->
     <Route path="/" type="view" view="auth/login.xml" method="GET" />
-    <Route path="/inventory/repositories/repository" type="view" view="inventory/repository.xml" method="GET" />
+    <Route path="/inventory/repositories/repository/{$id}" type="view" view="inventory/repository.xml" method="GET" />
     <Route path="/inventory/domains/domain/{$id}" type="view" view="inventory/domain.xml" method="GET" />
     <Route path="/inventory/services/service/{$id}" type="view" view="inventory/service.xml" method="GET" />
     <Route path="/inventory/volumes/volume/{$id}" type="view" view="inventory/volume.xml" method="GET" />

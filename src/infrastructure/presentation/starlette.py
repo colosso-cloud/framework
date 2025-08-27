@@ -4,9 +4,13 @@ from html import escape
 import re
 import json
 from datetime import datetime
-import copy
+from urllib.parse import urlparse, urlunparse, ParseResult
 
-resources = {'flow': 'framework/service/flow.py','presentation': 'framework/port/presentation.py'}
+resources = {
+    'flow': 'framework/service/flow.py',
+    'presentation': 'framework/port/presentation.py',
+    'scheme_url' : 'framework/schema/url.json',
+}
 
 try:
     from starlette.applications import Starlette
@@ -64,97 +68,97 @@ class adapter(presentation.port):
     
     attributes = {
         # Attributi HTML diretti
-        'matter': {
-            'id', 'type', 'name', 'component', 'draggable-event','height', 'width',
-            'draggable-maker', 'droppable-data', 'identifier','draggable-component','src','value'
-        },
-
-        # Mappatura eventi
-        'event': {
-            ''''click': ('click', self.event),
-            'change': ('change', self.event),
-            'route': ('click', self.route),
-            'ddd': ('contextmenu', self.open_dropdown),
-            'draggable': ('dragstart', self.on_drag_start),
-            'droppable': ('drop', self.on_drop),
-            'init': ('init', self.event),'''
-        },
-
+        'id': {'attr':'id'},
+        'type': {'attr':'id'},
+        'name': {'attr':'id'},
+        'component': {},
+        'draggable-event': {},
+        'height': {'style':'style','value': lambda v: f"height:{v};max-height:{v};" if v else ''},
+        'width': {'style':'style','value': lambda v: f"width:{v};max-width:{v};" if v else ''},
+        'draggable-maker': {},
+        'droppable-data': {},
+        'identifier': {},
+        'draggable-component': {},
+        'src': {'attr':'id'},
+        'value': {'attr':'id'},
+        # events
+        'click': ('click', 'self.event'),
+        'change': ('change', 'self.event'),
+        'route': ('click', 'self.route'),
+        'ddd': ('contextmenu', 'self.open_dropdown'),
+        'draggable': ('dragstart', 'self.on_drag_start'),
+        'droppable': ('drop', 'self.on_drop'),
+        'init': ('init', 'self.event'),
         # Mappatura layout
-        'layout': {
-            'space': lambda v: f"gap-{v}",
-            'border': lambda v: f"border-{v}",
-            'border-top': lambda v: f"border-top-{v}",
-            'border-bottom': lambda v: f"border-bottom-{v}",
-            'border-left': lambda v: f"border-start-{v}",
-            'border-right': lambda v: f"border-end-{v}",
-            'border-radius': lambda v: f"rounded-{v}",
+        'spacing': {'class':'','value': lambda v: f"gap-{v}"},
+        'border': {'class':'','value': lambda v: f"border-{v}"},
+        'border-top': {'class':'','value': lambda v: f"border-top-{v}"},
+        'border-bottom': {'class':'','value': lambda v: f"border-bottom-{v}"},
+        'border-left': {'class':'','value': lambda v: f"border-start-{v}"},
+        'border-right': {'class':'','value': lambda v: f"border-end-{v}"},
+        'border-radius': {'class':'','value': lambda v: f"rounded-{v}"},
 
-            'margin': lambda v: ' '.join(v.strip() for v in v.split(';')),
-            'margin-top': lambda v: 'mt-' + v,
-            'margin-bottom': lambda v: 'mb-' + v,
-            'margin-left': lambda v: 'ms-' + v,
-            'margin-right': lambda v: 'me-' + v,
+        'margin': {'class':'','value': lambda v: ' '.join(v.strip() for v in v.split(';'))},
+        'margin-top': {'class':'','value': lambda v: 'mt-' + v},
+        'margin-bottom': {'class':'','value': lambda v: 'mb-' + v},
+        'margin-left': {'class':'','value': lambda v: 'ms-' + v},
+        'margin-right': {'class':'','value': lambda v: 'me-' + v},
 
-            'padding-top': lambda v: 'pt-' + v,
-            'padding-bottom': lambda v: 'pb-' + v,
-            'padding-left': lambda v: 'ps-' + v,
-            'padding-right': lambda v: 'pe-' + v,
-            'padding': lambda v: ' '.join(v.strip() for v in v.split(';')),
+        'padding-top': {'class':'','value': lambda v: 'pt-' + v},
+        'padding-bottom': {'class':'','value': lambda v: 'pb-' + v},
+        'padding-left': {'class':'','value': lambda v: 'ps-' + v},
+        'padding-right': {'class':'','value': lambda v: 'pe-' + v},
+        'padding': {'class':'','value': lambda v: ' '.join(v.strip() for v in v.split(';'))},
 
-            'position': lambda v: {
-                'static': 'position-static',
-                'relative': 'position-relative',
-                'absolute': 'position-absolute',
-                'fixed': 'position-fixed',
-                'sticky': 'position-sticky',
-            }.get(v,''),
-            'expand': lambda v: {
-                'vertical': 'h-100',
-                'horizontal': 'w-100',
-                'full': 'w-100 h-100',
-                'auto': 'col-auto',
-                'dynamic': 'col'
-            }.get(v, f"col-{v}"),
-            'collapse': lambda v: 'd-none' if v == 'full' else 'invisible',
-            'alignment-horizontal': lambda v: f"justify-content-{v}" if v in ['start', 'end', 'center', 'between', 'around', 'evenly'] else '',
-            'alignment-vertical': lambda v: f"align-items-{v}" if v in ['start', 'end', 'center', 'baseline', 'stretch'] else '',
-            'alignment-content': lambda v: {
-                    'vertical': 'd-flex flex-column',
-                    'horizontal': 'd-flex flex-row',
-                    'center': 'd-flex justify-content-center align-items-center',
-                    'between': 'd-flex justify-content-between align-items-center',
-                    'around': 'd-flex justify-content-around align-items-center',
-                    'evenly': 'd-flex justify-content-evenly align-items-center',    
-                }.get(v, ''),
-        },
-
+        'position': {'class':'','value': lambda v: {
+            'static': 'position-static',
+            'relative': 'position-relative',
+            'absolute': 'position-absolute',
+            'fixed': 'position-fixed',
+            'sticky': 'position-sticky',
+        }.get(v, '')},
+        'expand': {'class':'','value': lambda v: {
+            'vertical': 'h-100',
+            'horizontal': 'w-100',
+            'full': 'w-100 h-100',
+            'auto': 'col-auto',
+            'dynamic': 'col'
+        }.get(v, f"col-{v}")},
+        'collapse': {'class':'','value': lambda v: 'd-none' if v == 'full' else 'invisible'},
+        'alignment-horizontal': {'class':'','value': lambda v: f"justify-content-{v}" if v in ['start', 'end', 'center', 'between', 'around', 'evenly'] else ''},
+        'alignment-vertical': {'class':'','value': lambda v: f"align-items-{v}" if v in ['start', 'end', 'center', 'baseline', 'stretch'] else ''},
+        'alignment-content': {'class':'','value': lambda v: {
+            'vertical': 'd-flex flex-column',
+            'horizontal': 'd-flex flex-row',
+            'center': 'd-flex justify-content-center align-items-center',
+            'between': 'd-flex justify-content-between align-items-center',
+            'around': 'd-flex justify-content-around align-items-center',
+            'evenly': 'd-flex justify-content-evenly align-items-center',
+        }.get(v, '')},
         # Mappatura classi CSS
-        'style': {
-            'background': lambda v: f"bg-{v}" if not v.startswith('#') else None,
-            'background-color': lambda v: f"bg-{v}" if not v.startswith('#') else None,
-            'text-color': lambda v: f"text-{v}",
-            'text-size': lambda v: f"fs-{v}" if v.isdigit() else None,
-            'shadow': lambda v: {
-                '0': 'shadow-none', '1': 'shadow-sm',
-                '2': 'shadow', '3': 'shadow-lg'
-            }.get(v, ''),
-            'opacity': lambda v: f"opacity-{v}" if v.isdigit() else None,
-            'border': lambda v: f"border-{v}",
-            'border-thickness': lambda v: f"border-{v}",
-            'border-radius-size': lambda v: f"rounded-{v}",
-            'border-color': lambda v: f"border-{v}",
-            'border-radius': lambda v: {
-                'pill': "rounded-pill", 'circle': "rounded-circle",
-                'top': "rounded-top", 'bottom': "rounded-bottom",
-                'right': "rounded-start", 'left': "rounded-end"
-            }.get(v, ''),
-            'border-position': lambda v: {
-                'outer': "border", 'top': "border-top", 'bottom': "border-bottom",
-                'right': "border-start", 'left': "border-end"
-            }.get(v, ''),
-            'class': lambda v: v
-        }
+        'background': {'class':'','value': lambda v: f"bg-{v}" if not v.startswith('#') else None},
+        'background-color': {'class':'','value': lambda v: f"bg-{v}" if not v.startswith('#') else None},
+        'text-color': {'class':'','value': lambda v: f"text-{v}"},
+        'text-size': {'class':'','value': lambda v: f"fs-{v}" if v.isdigit() else None},
+        'shadow': {'class':'','value': lambda v: {
+            '0': 'shadow-none', '1': 'shadow-sm',
+            '2': 'shadow', '3': 'shadow-lg'
+        }.get(v, '')},
+        'opacity': {'class':'', 'value': lambda v: f"opacity-{v}" if v.isdigit() else None},
+        'border': {'class':'', 'value': lambda v: f"border-{v}"},
+        'border-thickness': {'class':'','value': lambda v: f"border-{v}"},
+        'border-radius-size': {'class':'','value': lambda v: f"rounded-{v}"},
+        'border-color': {'class':'','value': lambda v: f"border-{v}"},
+        'border-radius': {'class':'','value': lambda v: {
+            'pill': "rounded-pill", 'circle': "rounded-circle",
+            'top': "rounded-top", 'bottom': "rounded-bottom",
+            'right': "rounded-start", 'left': "rounded-end"
+        }.get(v, '')},
+        'border-position': {'class':'','value': lambda v: {
+            'outer': "border", 'top': "border-top", 'bottom': "border-bottom",
+            'right': "border-start", 'left': "border-end"
+        }.get(v, '')},
+        'class': {'value': lambda v: v,'class': ''}
     }
 
     WIDGETS = {
@@ -464,7 +468,7 @@ class adapter(presentation.port):
             'tag': 'nav',
             'attributes': {},
             'wrapper_each': lambda adapter, attributes, inner: {
-                'breadcrumb': lambda adapter, attributes, inner: adapter.code('li', {'class': 'breadcrumb-item'}, inner),
+                'breadcrumb': lambda adapter, attributes, inner: adapter.code('li', {'class': 'breadcrumb-item d-flex justify-content-center align-items-center'}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
                 'breadcrumb': lambda adapter, attributes, inner: adapter.code('ol', {'class': 'breadcrumb p-0 m-0'}, inner),
@@ -538,7 +542,7 @@ class adapter(presentation.port):
                 route_path = self.config.get('route', '')
                 resource_url = f"application/policy/presentation/{route_path}"
 
-                file = await self.fetch_resource({'url': resource_url})
+                file = await self.fetch_resource(url=resource_url)
                 self.parse_route(file)
                 self.mount_route(routes) # 'routes' deve essere accessibile qui
 
@@ -567,6 +571,14 @@ class adapter(presentation.port):
                 uvicorn_config_params['ssl_certfile'] = self.config['ssl_certfile']
             else:
                 print("SSL disabilitato.")
+
+            # Costruisci la stringa della porta
+            port_str = ""
+            if 'port' in uvicorn_config_params:
+                port_str = f":{uvicorn_config_params['port']}"
+
+            # Costruisci l'URL
+            self.url = f"http{'s' if 'ssl_certfile' in self.config else ''}://{uvicorn_config_params['host']}{port_str}"
 
             try:
                 # Crea e avvia il server Uvicorn come task asyncio
@@ -736,13 +748,74 @@ class adapter(presentation.port):
                 #await messenger.post(name=request.url.path[1:],value={'model':data['model'],'value':data})
                 return RedirectResponse('/', status_code=303)
 
-    async def mount_view(self,url):
-        path = self.routes.get(url,{}).get('view')
-        return await self.builder(url=path,path=url.split('/'))
+
+    async def mount_view(self, url):
+        # Dati per un'eventuale rotta corrispondente.
+        def process_url(url, default):
+            deffault_url = urlparse(default)
+            parsed_url = urlparse(url)
+
+            # Crea un dizionario dei campi da unire.
+            # Usa il dizionario di _parsed_url come base.
+            # Nota: urlparse restituisce un namedtuple, quindi usiamo _asdict().
+            merged_dict = parsed_url._asdict()
+
+            # Cicla sui campi dell'URL base e aggiorna solo quelli vuoti nell'URL di destinazione.
+            for field in deffault_url._fields:
+                if not merged_dict[field]: # Se il campo è vuoto
+                    merged_dict[field] = getattr(deffault_url, field)
+
+            # Ricrea l'oggetto parsed_url usando i dati del dizionario unito.
+            # Si usa ** per espandere il dizionario come argomenti keyword.
+            return ParseResult(**merged_dict)
+        #parsed_url = urlparse(url)
+        parsed_url = process_url(url,self.url)
+
+        matched_route = None
+
+        # Iteriamo su tutte le rotte registrate per trovare una corrispondenza.
+        for route_path, route_data in self.routes.items():
+            # Creiamo un pattern regex a partire dal percorso della rotta.
+            # Ad esempio, da '/inventory/{id}' otteniamo r'^/inventory/([^/]+)$'.
+            regex_pattern = re.sub(r'\{([^/]+)\}', r'([^/]+)', route_path)
+            regex_pattern = f'^{regex_pattern}$'
+
+            # Cerchiamo una corrispondenza tra l'URL richiesto e il nostro pattern.
+            match = re.search(regex_pattern, parsed_url.path)
+
+            if match:
+                # Trovata una corrispondenza!
+                matched_route = {
+                    'view': route_data.get('view'),
+                    'params': {},
+                    'layout': route_data.get('layout')
+                }
+
+                # Estraiamo i nomi delle variabili dal percorso originale (es. 'id' da '{id}').
+                param_names = re.findall(r'\{([^/]+)\}', route_path)
+
+                # Mappiamo i valori catturati con i nomi delle variabili.
+                # Ad esempio, se l'URL è '/inventory/123', 'id' corrisponderà a '123'.
+                for i, name in enumerate(param_names):
+                    matched_route['params'][name] = match.group(i + 1)
+                
+                break # Usciamo dal ciclo una volta trovata la prima corrispondenza.
+        
+        # Se abbiamo trovato una rotta, eseguiamo l'azione.
+        if matched_route:
+            print(f"Percorso trovato: {matched_route['view']} per l'URL: {url}",parsed_url)
+            print(f"Parametri estratti: {matched_route['params']}")
+            url = await language.model(scheme_url,{'url':self.url,'protocol':parsed_url.scheme,'host':parsed_url.hostname,'port':parsed_url.port,'path':parsed_url.path.split('/'),'query':parsed_url.query.split('&'),'fragment':parsed_url.fragment.split('&')},'full',language)
+            print(url, 'url after model')
+            return await self.builder(file=matched_route['view'],url=url)
+        else:
+            # Nessuna rotta corrispondente, gestiamo l'errore (ad esempio, un 404).
+            print(f"Nessuna rotta corrispondente per l'URL: {url}")
+            return None
     
     async def starlette_view(self,request):
-        html = await self.mount_view(request.url.path)
-        print(html, "html_body**********************",request.url.path)
+        html = await self.mount_view(str(request.url))
+        print(html, "html_body**********************",str(request.url))
         '''layout = 'application/view/layout/base.html'
         file = await self.fetch_resource({'url':layout})
         css = await self.fetch_resource({'url':layout.replace('.html','.css').replace('.xml','.css')})
@@ -778,7 +851,8 @@ class adapter(presentation.port):
         return self.att(ele, attr)
 
     def att(self, element, attributes):
-            
+            output = element[:]
+            cccc = ''
             def set_style(css, element):
                 style = self.get_attribute(element, 'style')
                 if style is not str:
@@ -788,97 +862,43 @@ class adapter(presentation.port):
                 element = self.set_attribute(element, 'style', style.strip())
                 print(style, 'style',element)
                 return element
-
-            def add_class(cls, element, current_classes=''):
-                value = self.get_attribute(element, 'class')
-                # + f" {cls}" if current_classes else cls
-                #if cls is str:
-                if value is not str:
-                    value = ''
-                value += cls
-                out = self.set_attribute(element, 'class', current_classes + f" {cls} ")
-                #print(f"old:{element}| old: {value} - new: {cls} |return: {out}")
-                return out
-
-                
-
+            
             for key, value in attributes.items():
-                #print(key, value, 'key,value')
-                if key in self.attributes['matter']:
-                    if key == 'width':
-                      element = set_style(f'max-width:{value};width:{value};', element)
-                    elif key == 'height':
-                      element = set_style(f'max-height:{value};height:{value};', element)
-                    else:
-                      element = self.set_attribute(element, key, value)
-                      #element.setAttribute(key, value)
-
-                elif key in self.attributes['event']:
-                    if key == 'init':
-                        #print(f"[DEBUG] Executor: {executor}",value,key)
-                        #asyncio.create_task(executor.act(action=value))
-                        pass
-                    elif key == 'hide':
-                        mode, _ = map(str.strip, value.split(':'))
-                        #element.setAttribute('data-bs-dismiss', mode)
-                        self.set_attribute(element, 'data-bs-dismiss', mode)
-                    elif key == 'show':
-                        mode, target = map(str.strip, value.split(':'))
-                        element.setAttribute('data-bs-target', f'#{target}')
-                        element.setAttribute('data-bs-toggle', mode)
-                    elif key == 'route' and ':' in value:
-                        mode, target = map(str.strip, value.split(':', 1))
-                        if mode == 'link':
-                            element.setAttribute('href', target)
-                        else:
-                            element.setAttribute('data-bs-toggle', mode)
-                            element.setAttribute('href', f'#{target}')
-                    elif key == 'link':
-                        element.setAttribute('href', value)
-                    elif key == 'draggable':
-                        element.setAttribute(key,'true')
-                        element.setAttribute('ondragstart','drag(event)')
-                        element.setAttribute('draggable-domain',value)
-                        #element.addEventListener('dragstart',pyodide.ffi.create_proxy(self.on_drag_start))
-                        #element.addEventListener('dragend',pyodide.ffi.create_proxy(self.on_drag_end))
-                    elif key == 'droppable':
-                        element.setAttribute('ondragover','allowDrop(event)')
-                        element.setAttribute('draggable-domain',value)
-                        #element.addEventListener('drop',pyodide.ffi.create_proxy(self.on_drop))
-                        #element.addEventListener('dragover',pyodide.ffi.create_proxy(self.on_drag_over))
-                        #element.addEventListener('dragleave',pyodide.ffi.create_proxy(self.on_drag_leave))
-                    else:
-                      event_name, handler_fn = self.attributes['event'][key]
-                      #element.setAttribute('event', value)
-                      element.setAttribute(key, value)
-                      #element.addEventListener(event_name, pyodide.ffi.create_proxy(handler_fn))
-
-                elif key in self.attributes['style']:
-                    mapping = self.attributes['style'][key]
-                    cls = mapping(value) if callable(mapping) else mapping.get(value, f"{key}-{value}")
-                    if cls:
-                        element = add_class(cls, element)
-                    elif key == 'background-color' and value.startswith('#'):
-                        element = set_style(f'background-color:{value};', element)
-                    elif key == 'text-size' and 'px' in value:
-                        element = set_style(f'font-size: {value};', element)
-                    elif key == 'style':
-                        element = set_style(value, element)
-                elif key in self.attributes['layout']:
-                    mapping = self.attributes['layout'][key]
-                    cls = mapping(value) if callable(mapping) else mapping.get(value, f"{key}-{value}")
-                    #print(cls, 'CLSSSSSSSSSSSSS')
-                    #if key == 'class':
-                    if cls:
-                        old = self.get_attribute(element, 'class')
-                        element = add_class(cls,element,old)
-                else:
-                    # Attributi non riconosciuti, li aggiunge come sono
-                    element = self.set_attribute(element, key, value)
-                    #element.setAttribute(key, value)
+                map = self.attributes.get(key)
+                if map is None:
+                    output = self.set_attribute(output, key, value)
+                    print(key, 'key not in attributes################################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',attributes)
+                    continue
+                for yyy in ['style','attr','task','class']:
+                    if yyy not in map : continue
+                    
+                    value = map.get(yyy) if isinstance(map,dict) else None
+                    if key in attributes and 'value' in map:
+                        fff = map.get('value')
+                        value = fff(attributes.get(key)) if callable(fff) else fff
+                    elif key in attributes:
+                        value = attributes.get(key)
+                    print(f"key:{key} | yyy:{yyy} | map:{map} | value:{value} | attributes:{attributes}")
+                    match yyy:
+                        case 'style':
+                            output = set_style(value, output)
+                        case 'attr':
+                            output = self.set_attribute(output, key, value)
+                        case 'task':
+                            #asyncio.create_task(executor.act(action=value))
+                            pass
+                        case 'class':
+                            
+                            '''gg = self.get_attribute(str(output), 'class')
+                            if gg is None:
+                                gg = '''
+                            cccc += ' ' + value
+                            #value += f" {cccc} "
+                            #print('add class---------------------------------------------------------------------------------------------------******',gg)
+                            output = self.set_attribute(output, 'class', f"{cccc} ")
                 
             
-            return element
+            return output
 
     def code2(self, tag, attributes, inner=None):
         """

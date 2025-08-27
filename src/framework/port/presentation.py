@@ -87,7 +87,7 @@ class port(ABC):
     async def mount_widget(self, tag, inner, attributes):
         pass'''
 
-    async def fetch_resource(self,constants={},**c):
+    async def fetch_resource(self,**constants):
         #import os
         #print(os.getcwd())
         with open('src/'+constants['url'], 'r', encoding='utf-8') as file:
@@ -99,7 +99,7 @@ class port(ABC):
         if 'text' in constants:
             text = constants['text']
         else:
-            text = await self.fetch_resource(constants)
+            text = await self.fetch_resource(url=constants.get('file',''))
 
         template = self.env.from_string(text)
         if 'data' not in constants:
@@ -484,7 +484,7 @@ class port(ABC):
                     if hook_result:
                         if isinstance(hook_result, tuple):
                             overwrite_attrs, ggg = hook_result
-                            children = await self.builder(url=overwrite_attrs,inner=''.join(ggg))
+                            children = await self.builder(file=overwrite_attrs,inner=''.join(ggg))
                 case 'component':
 
                     def elements_to_xml_string(elements):
@@ -528,7 +528,7 @@ class port(ABC):
                     
                     argg = {
                         'component':self.components.get(id,{}),
-                        'url':url,
+                        'file':url,
                         'inner':children,
                     }
                     #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|COM',data)
@@ -551,6 +551,7 @@ class port(ABC):
                 # per evitare conflitti con gli attributi predefiniti del widget
                 #del user_attrs[key]
                 element_attrs.pop(key)
+        print(element_tag,'-----------------------------------------FINAL ATTRS:-------------------------------',element_attrs)
         return self.code(element_tag, element_attrs, children)
 
 

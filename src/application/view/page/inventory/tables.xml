@@ -1,11 +1,11 @@
 {% extends "sidebar.xml" %}
-{% set name = path[-1].capitalize() %}
+{% set name = url.path[-1].capitalize() %}
 {% block breadcrumb %}
 <Action route="application/view/page/inventory/overview.xml" ><Media type="icon" src="bi-speedometer2"/></Action>
 <Action route="application/view/page/inventory/repositories.xml" ><Media type="icon" src="bi-bookmarks-fill"/><Text>{{name}}</Text></Action>
 {% endblock %}
 {% block title %}Overview{% endblock %}
-{% block subtitle %}Keep track of your inventory{{path}}{% endblock %}
+{% block subtitle %}Keep track of your inventory{{name}}{% endblock %}
 {% block bar %}
 
 {% endblock %}

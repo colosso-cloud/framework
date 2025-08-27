@@ -2,7 +2,7 @@
 {% block main %}
 <Row class="p-2" expand="full">
     <Media type="image" height="50px" src="https://app.colosso.cloud/static/logo.png" />
-    <Container class="col-8" padding="p-5" alignment-content="center">
+    <Container expand="full" padding="p-5" alignment-content="center">
         <Card width="400px" padding="p-5" alignment-content="center">
             <Messenger>
                 <Message type="warning" mode="alert" >
@@ -20,7 +20,7 @@
             <Action route="/auth/reset-password"><Text>Forgot password? Reset it</Text></Action>
         </Card>
     </Container>
-    <Container class="col bg-dark border border-1 rounded" padding="p-5" alignment-content="center">
+    <Container expand="4" class="bg-dark border border-1 rounded" padding="p-5" alignment-content="center">
         <Media type="carousel" class="w-100 h-100">
             <Card expand="full">
                 <Navigation type="accordion" id="prova" >

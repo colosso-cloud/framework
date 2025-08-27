@@ -121,9 +121,15 @@
     "Column": {
         "type": "dict",
         "schema": {
+            "padding": {"type": "string"},
+            "margin": {"type": "string"},
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "class": {"type": "string"},
             "expand": {
                 "type": "string"
             }
+
         },
         "_return": {"function": "render_widget", "args": ["Column"]}
     },
@@ -152,7 +158,9 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "padding": {"type": "string"},
+            "spacing": {"type": "string"},
             "margin": {"type": "string"},
+            "expand": {"type": "string"},
             "alignment-content": {
                 "type": "string",
                 "allowed": ["horizontal", "center", "end", "between", "around"]
@@ -191,6 +199,10 @@
                 "type": "string",
                 "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox","search"],
                 "default": "text"
+            },
+            "alignment-content": {
+                "type": "string",
+                "allowed": ["horizontal", "center", "end", "between", "around"]
             },
             "name": {"type": "string"},
             "placeholder": {"type": "string"},
@@ -263,6 +275,10 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "expand": {"type": "string"},
+            "class": {"type": "string"},
+            "padding": {"type": "string"},
+            "spacing": {"type": "string"},
+            "margin": {"type": "string"},
             "alignment-content": {
                 "type": "string",
                 "allowed": ["horizontal", "center", "end", "between", "around"]
