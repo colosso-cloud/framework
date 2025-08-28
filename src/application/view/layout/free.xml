@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {% if not user %}
-<Window type="root" title="Colosso - App">
+<Window type="{% if not model %}root{% else %}inner{% endif %}" title="Colosso - App">
+    <Text>{{model}}</Text>
     <Column expand="full">
         {% block main %}
         {% endblock %}
@@ -8,6 +9,7 @@
 </Window>
 {% else %}
 <Window type="root">
+    <Text>{{model}}</Text>
     <View route="/profile"/>
 </Window>
 {% endif %}

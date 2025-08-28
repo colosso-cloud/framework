@@ -4,7 +4,7 @@
     {% block start %}
     {% endblock %}
     <Row>
-        <Navigation orientation="vertical" class="bg-light border-end">
+        <Navigation orientation="vertical" class="bg-body-tertiary border-end">
         {% block bar %}
         {% endblock %}
         </Navigation>

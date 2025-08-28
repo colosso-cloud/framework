@@ -69,8 +69,9 @@ class adapter(presentation.port):
     attributes = {
         # Attributi HTML diretti
         'id': {'attr':'id'},
-        'type': {'attr':'id'},
-        'name': {'attr':'id'},
+        'type': {'attr':'type'},
+        'name': {'attr':'name'},
+        'tooltip': {'attr':'data-bs-title','attrs':{'data-bs-toggle':'tooltip'}},
         'component': {},
         'draggable-event': {},
         'height': {'style':'style','value': lambda v: f"height:{v};max-height:{v};" if v else ''},
@@ -79,10 +80,10 @@ class adapter(presentation.port):
         'droppable-data': {},
         'identifier': {},
         'draggable-component': {},
-        'src': {'attr':'id'},
-        'value': {'attr':'id'},
+        'src': {'attr':'src'},
+        'value': {'attr':'value'},
         # events
-        'click': ('click', 'self.event'),
+        'click': {'attr':'onclick'},
         'change': ('change', 'self.event'),
         'route': ('click', 'self.route'),
         'ddd': ('contextmenu', 'self.open_dropdown'),
@@ -302,12 +303,17 @@ class adapter(presentation.port):
         },
         'input': {
             'tag': 'input',
+            '!attributes': {'id': 'switch','click':'switch'},
             'case': lambda attributes: {
                 'select':  ('select', {'class': 'form-select'}),
+                'switch': ('div', {'class': 'form-switch'}),
             }.get(attributes.get('type', 'text'), ('input', {'class': 'form-control', 'type': attributes.get('type','text')})),
             'wrapper_each':lambda adapter,attributes,inner: {
                 'select': lambda adapter,attributes,inner: adapter.code('option', {}, inner),
-            }.get(attributes.get('type', 'text'))
+            }.get(attributes.get('type', 'text')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch'),**({'click': attributes['click']} if 'click' in attributes else {}),**({'checked': attributes['selected']} if 'selected' in attributes else {})},''),
+            }.get(attributes.get('type')),
         },
         'action': {
             'tag': None,  # Determinato dinamicamente
@@ -318,17 +324,15 @@ class adapter(presentation.port):
                 'button':  ('button', {'class': 'btn', 'type': 'button'}),
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
                 'dropdown': ('div', {'class': 'dropdown'}),
-                'switch':  ('div', {'class': 'form-check form-switch'}),
             }.get(attributes.get('type')),
             'wrapper_each': lambda adapter, attributes, inner: {
-                'dropdown': lambda adapter, attributes, inner: adapter.code('li', {}, inner),
+                #'dropdown': lambda adapter, attributes, inner: adapter.code('li', {}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
-                'dropdown': lambda adapter, attributes, inner: [adapter.code('button', {'class':'btn btn-secondary dropdown-toggle','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('ul', {'class': 'dropdown-menu'}, inner[1:])],
-                'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch')},''),
+                'dropdown': lambda adapter, attributes, inner: [adapter.code('button', {'class':'btn','type':"button", 'data-bs-toggle':"dropdown", 'aria-expanded':"false"}, inner[0]),adapter.code('form', {'class': 'dropdown-menu'}, inner[1:])],
             }.get(attributes.get('type')),
             'inner_overwrite': lambda adapter, attributes, inner: {
-                'dropdown': ({'class':'dropdown-item'},''),
+                #'dropdown': ({'class':'dropdown-item'},''),
             }.get(attributes.get('type')),
         },
         'messenger': {
@@ -341,14 +345,19 @@ class adapter(presentation.port):
         'message': {
             'case': lambda attributes: {
                 'alert':  ('div', {'class': f"alert alert-{attributes.get('type')}", 'role': 'alert'}),
-            }.get(attributes.get('mode', 'alert'))
+                'toast':  ('div', {'class': 'toast', 'role': 'alert', 'aria-live': 'assertive', 'aria-atomic': 'true'}),
+            }.get(attributes.get('mode', 'alert')),
+            'wrapper_once': lambda adapter, attributes, inner: {
+                'toast': lambda adapter, attributes, inner: [adapter.code('div', {'class': 'toast-header'}, 'test'), adapter.code('div', {'class': 'toast-body'}, inner)],
+            }.get(attributes.get('mode')),
         },
         'group': {
             'case': lambda attributes: {
                 'input':  ('div', {'class': 'input-group'}),
                 'list': ('ul', {'class': 'list-group'}),
-                'card': ('ul', {'class': 'card-group'}),
+                'card': ('div', {'class': 'card-group'}),
                 'tab': ('div', {'class': 'tab-content'}),
+                "action": ('div', {'class': 'btn-group'}),
             }.get(attributes.get('type')),
             'wrapper_each':lambda adapter,attributes,inner: {
                 'list': lambda adapter,attributes,inner: adapter.code('li', {'class':'list-group-item'}, inner),
@@ -365,11 +374,11 @@ class adapter(presentation.port):
                 'inner': ('div', {'class': ''}),
                 'dialog': ('div', {'class': 'modal-dialog'}),
                 'offcanvas': ('div', {'class': 'offcanvas'}),
-                'root': ('html', {'class': 'h-100', 'data-navigation-type': 'default', 'data-navbar-horizontal-shape': 'default', 'lang': 'it', 'dir': 'ltr'}),
+                'root': ('html', {'class': 'h-100', 'data-navigation-type': 'default', 'data-navbar-horizontal-shape': 'default', 'lang': 'it', 'dir': 'ltr','data-bs-theme':'light'}),
             }.get(attributes.get('type', 'dialog')),
             'wrapper_once': lambda adapter, attributes, inner: {
                 'root': lambda adapter, attributes, inner: [
-                    adapter.code('head', {}, f"""
+                    adapter.code('head', {}, """
                         <meta charset="utf-8">
                         <meta http-equiv="X-UA-Compatible" content="IE=edge">
                         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -402,15 +411,36 @@ class adapter(presentation.port):
                         <!-- ===============================================-->
                         <!--    Javascript-->
                         <!-- ===============================================-->
+                        <script>
+                            function toggleTheme(elementId) {
+                                // Usa l'ID passato per ottenere l'elemento
+                                const themeToggle = document.getElementById(elementId);
+                                const html = document.documentElement;
+
+                                if (themeToggle.checked) {
+                                    html.setAttribute('data-bs-theme', 'light');
+                                } else {
+                                    html.setAttribute('data-bs-theme', 'dark');
+                                }
+                            }
+                        </script>
                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
                         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js" integrity="sha512-NgXVRE+Mxxf647SqmbB9wPS5SEpWiLFp5G7ItUNFi+GVUyQeP+7w4vnKtc2O/Dm74TpTFKXNjakd40pfSKNulg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>  
                     """),
-                    adapter.code('body', {'class':"d-flex h-100 flex-column",'id':attributes.get('id')}, inner)
+                    adapter.code('body', {'class':"d-flex h-100 flex-column",'id':attributes.get('id')}, ([inner] if isinstance(inner, str) else inner) + ["""<script>
+
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+</script> """]  )
+                    #+ [str(markupsafe.Markup('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>'))]
+                    #+ ['<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script>const tooltipTriggerList = document.querySelectorAll(\'[data-bs-toggle="tooltip"]\')const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))</script>']
                 ],
                 'inner': lambda adapter, attributes, inner: inner,
             }.get(attributes.get('type')),
-            'test': lambda adapter, attributes, inner: ('application/view/layout/'+attributes.get('layout','')+'.xml',inner) if 'layout' in attributes else inner,
+            'test': lambda adapter, attributes, inner: ('application/view/layout/'+attributes.get('layout','')+'.xml',inner) if 'layout' in attributes else '',
             
         },
         'chart': {
@@ -749,7 +779,7 @@ class adapter(presentation.port):
                 return RedirectResponse('/', status_code=303)
 
 
-    async def mount_view(self, url):
+    async def mount_view(self, url,**kargs):
         # Dati per un'eventuale rotta corrispondente.
         def process_url(url, default):
             deffault_url = urlparse(default)
@@ -807,7 +837,7 @@ class adapter(presentation.port):
             print(f"Parametri estratti: {matched_route['params']}")
             url = await language.model(scheme_url,{'url':self.url,'protocol':parsed_url.scheme,'host':parsed_url.hostname,'port':parsed_url.port,'path':parsed_url.path.split('/'),'query':parsed_url.query.split('&'),'fragment':parsed_url.fragment.split('&')},'full',language)
             print(url, 'url after model')
-            return await self.builder(file=matched_route['view'],url=url)
+            return await self.builder(file=matched_route['view'],url=url,mode=['main'],**kargs)
         else:
             # Nessuna rotta corrispondente, gestiamo l'errore (ad esempio, un 404).
             print(f"Nessuna rotta corrispondente per l'URL: {url}")
@@ -869,7 +899,7 @@ class adapter(presentation.port):
                     output = self.set_attribute(output, key, value)
                     print(key, 'key not in attributes################################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',attributes)
                     continue
-                for yyy in ['style','attr','task','class']:
+                for yyy in ['style','attr','task','class','attrs']:
                     if yyy not in map : continue
                     
                     value = map.get(yyy) if isinstance(map,dict) else None
@@ -883,7 +913,10 @@ class adapter(presentation.port):
                         case 'style':
                             output = set_style(value, output)
                         case 'attr':
-                            output = self.set_attribute(output, key, value)
+                            output = self.set_attribute(output, map['attr'], value)
+                        case 'attrs':
+                            for k, v in map['attrs'].items():
+                                output = self.set_attribute(output, k, v)
                         case 'task':
                             #asyncio.create_task(executor.act(action=value))
                             pass

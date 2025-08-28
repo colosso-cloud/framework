@@ -4,7 +4,7 @@
         <Text>This is an offcanvas window.</Text>
         <Action type="button" ><Text>Close</Text></Action>
     </Window>
-    <Navigation orientation="horizontal" alignment-content="between" class="bg-light border-bottom px-2">
+    <Navigation orientation="horizontal" alignment-content="between" class="bg-body-tertiary border-bottom px-2">
         <Navigation type="breadcrumb" alignment-content="center">
                 <Action route="/contact"><Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" /></Action>
                 <Input width="auto" type="select">
@@ -18,23 +18,47 @@
                     <Text>ADMIN</Text>
                 </Input>
         </Navigation>
-
         <Group width="auto" expand="dynamic" padding="px-4">
             <Input width="auto" type="search" />
             <Action type="submit" class="border"><Media type="icon" src="bi-search" /></Action>
         </Group>
         <Container width="auto" alignment-content="between" spacing="2">
-            <Group width="auto" alignment-content="center">
+            <Group width="auto" alignment-content="center" spacing="1">
                 <Media type="icon" src="bi-moon-fill"/>
-                <Action type="switch" route="/products"/>
+                <Input type="switch" id="theme-toggle" selected="true" click="toggleTheme(this.id)" />
                 <Media type="icon" src="bi-sun-fill"/>
             </Group>
-            <Group width="auto" alignment-content="center"> 
-                <Action route="/contact"><Media type="icon" src="bi-question-circle" /></Action>
-                <Action route="/contact"><Media type="icon" src="bi-inbox" /></Action>
-                <Action route="/contact"><Media type="icon" src="bi-bug" /></Action>
+            <Group type="action" width="auto" alignment-content="center" class="border">
+                <Action type="dropdown" tooltip="Help">
+                    <Media type="icon" src="bi-question-circle" />
+                    <Media width="200px" height="200px" type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" controls="" autoplay="" />
+                    <Action type="link" route="/products/item2"><Text>Item 2</Text></Action>
+                    <Action type="link" route="/products/item3"><Text>Item 3</Text></Action>
+                </Action>
+                <Action type="dropdown" tooltip="Notifications">
+                    <Media type="icon" src="bi-inbox" />
+                    <Messenger>
+                        <Message type="info" title="Info" >
+                            <Text>This is a toast message.</Text>
+                        </Message>
+                    </Messenger>
+                </Action>
+                <Action type="dropdown" tooltip="Feedback">
+                    <Media type="icon" src="bi-bug" />
+                    <Text>What would you like to share?</Text>
+                    <Group type="action" width="250px" padding="p-3">
+                        <Action alignment-content="center" spacing="2" class="border d-inline-flex">
+                            <Media type="icon" src="bi-exclamation-triangle" class="text-danger" />
+                            <Text>Issue</Text>
+                        </Action>
+                        <Action alignment-content="center" spacing="2" class="border">
+                            <Media type="icon" src="bi-lightbulb" class="text-warning" />
+                            <Text>Idea</Text>
+                        </Action>
+                    </Group>
+                </Action>
             </Group>
-            <Action type="link" route="#offcanvasExample" alignment-content="center" class="d-inline-flex">
+            <Action type="link" route="#offcanvasExample" alignment-content="center" class="d-inline-flex" spacing="2">
                 <Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" class="rounded-circle border" />
                 <Text>{{user.email}}</Text>
             </Action>

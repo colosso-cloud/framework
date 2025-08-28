@@ -278,7 +278,7 @@ class port(ABC):
                 match function:
                     case 'mount_view':
                         print('Mounting view:',args)
-                        return await self.mount_view(*args)
+                        return await self.mount_view(*args,model=['ok'])
                     case 'render_widget':
                         return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes)
                 
@@ -484,7 +484,10 @@ class port(ABC):
                     if hook_result:
                         if isinstance(hook_result, tuple):
                             overwrite_attrs, ggg = hook_result
-                            children = await self.builder(file=overwrite_attrs,inner=''.join(ggg))
+                            children = await self.builder(file=overwrite_attrs,inner=ggg)
+                            #return children
+                            #inner.append(ggg)
+                            #children = await self.builder(file=overwrite_attrs,inner=ggg,mode=['layout'])
                 case 'component':
 
                     def elements_to_xml_string(elements):

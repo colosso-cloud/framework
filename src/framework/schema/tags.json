@@ -189,12 +189,15 @@
     "Input": {
         "type": "dict",
         "schema": {
+            "id": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
             "required": {"type": "string"},
             "disabled": {"type": "string"},
             "readonly": {"type": "string"},
             "autofocus": {"type": "string"},
+            "selected": {"type": "string"},
+            "click": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox","search"],
@@ -214,6 +217,8 @@
         "type": "dict",
         "schema": {
             "id": {"type": "string"},
+            "tooltip": {"type": "string"},
+            "spacing": {"type": "string"},
             "alignment-content": {
                 "type": "string",
                 "allowed": ["horizontal", "center", "end", "between", "around"]
@@ -223,17 +228,13 @@
             "class": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["button", "submit", "form","dropdown", "link","switch"],
+                "allowed": ["button", "submit", "form","dropdown", "link"],
                 "default": "button"
             },
-            "action": {
-                "type": "string"
-            },
-            "route": {
-                "type": "string"
-            }
+            "action": { "type": "string"},
+            "route": {"type": "string"}
         },
-        "_type": {"button": "action","submit": "action", "form": "action", "dropdown": "action", "link": "action", "switch": "action"}
+        "_type": {"button": "action","submit": "action", "form": "action", "dropdown": "action", "link": "action"}
     },
     "Window": {
         "type": "dict", 
@@ -245,6 +246,7 @@
             "id": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
+            "expand": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["still","embed","dialog","root","inner"],
@@ -289,7 +291,7 @@
             },
             "type": {
                 "type": "string",
-                "allowed": ["input", "list", "card", "tab"],
+                "allowed": ["input", "list", "card", "tab", "action"],
                 "default": "input"
             }
         },
