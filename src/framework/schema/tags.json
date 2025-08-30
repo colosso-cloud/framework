@@ -26,9 +26,14 @@
     "Data": {
         "type": "dict", 
         "schema": {
+            "id": {"type": "string"},
+            "class": {"type": "string"},
+            "width": {"type": "string"},
+            "height": {"type": "string"},
+            "value": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["text", "table", "table.row", "table.cell", "table.header", "table.body"],
+                "allowed": ["text", "table", "table.row", "table.cell", "table.header", "table.body", "progress"],
                 "default": "text"
             }
         },
@@ -60,6 +65,7 @@
             "class": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
+            "expand": {"type": "string"},
             "alignment-content": {
                 "type": "string",
                 "allowed": ["horizontal", "center", "end", "between", "around"]

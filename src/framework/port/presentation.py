@@ -58,6 +58,7 @@ class port(ABC):
                 raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")
         
         self.env = Environment(loader=fs_loader,autoescape=select_autoescape(["html", "xml"]),undefined=DebugUndefined)
+        self.env.filters['add'] = language.add
 
     @abstractmethod
     async def get_attribute(self, widget, field):
@@ -408,24 +409,28 @@ class port(ABC):
         element_attrs = default_attrs | user_attrs
         if "class" in default_attrs and "class" in user_attrs:
             element_attrs["class"] = f"{default_attrs['class']} {user_attrs['class']}"
+
+         # Gestione dell'ordine di esecuzione
+        execution_order = widget_config.get('order', ['case', 'test', 'wrapper_each', 'inner_overwrite', 'inner_last', 'inner_first', 'wrapper_once', 'inner_append', 'in', 'component'])
+
+        hooks = {
+            'case': (widget_config.get('case'), 0),
+            'test': (widget_config.get('test'), 1),
+            'wrapper_each': (widget_config.get('wrapper_each'), 1),
+            'inner_overwrite': (widget_config.get('inner_overwrite'), 1),
+            'inner_last': (widget_config.get('inner_last'), 2),
+            'inner_first': (widget_config.get('inner_first'), 2),
+            'wrapper_once': (widget_config.get('wrapper_once'), 1),
+            'inner_append': (widget_config.get('inner_append'), 1),
+            'in': (widget_config.get('in'), 1),
+            'component': (widget_config.get('component'), 5),
+        }
         
-        for hook_name, arg_type in [
-            ('case', 0),
-            ('test', 1), 
-            ('wrapper_each', 1),
-            ('inner_overwrite', 1),
-            ('inner_last', 2),
-            ('inner_first', 2),
-            ('wrapper_once', 1),
-            ('inner_append', 1),
-            ('in', 1),
-            ('component', 5),        
-                
-        ]:
-            if hook_name not in widget_config:
+        for hook_name in execution_order:
+            if hook_name not in hooks or hooks[hook_name][0] is None:
                 continue
 
-            hook = widget_config[hook_name]
+            hook, arg_type = hooks[hook_name]
             match arg_type:
                 case 0:
                     hook_result = hook(element_attrs)
@@ -454,9 +459,10 @@ class port(ABC):
                     if callable(hook_result):
                         children = hook_result(self, element_attrs, children)
                 case 'inner_overwrite':
-                    print("*********************HOOKKKKKK***************************",hook_result)
                     if hook_result:
                         overwrite_attrs, _ = hook_result
+                        #print(children,'BOOOOOOOOOOOOOOOOOOOOOOOM KTWWWWWWWWWWWWWWWWWWWWWWWWWW')
+                        
                         children = [self.code_update(child, overwrite_attrs) for child in children]
                 case 'inner_last':
                     if hook_result:
@@ -466,7 +472,6 @@ class port(ABC):
                         else:
                             mode = ['replace']
                         children[-1] = self.code_update(children[-1], overwrite_attrs,ggg,mode)
-                        print("********************************************",children[-1],overwrite_attrs,ggg)
                 case 'inner_first':
                     if hook_result:
                         overwrite_attrs, ggg = hook_result
@@ -475,7 +480,6 @@ class port(ABC):
                         else:
                             mode = ['replace']
                         children[0] = self.code_update(children[0], overwrite_attrs,ggg,mode)
-                        print("********************************************",children[0],overwrite_attrs,ggg)
                 case 'inner_append':
                     if hook_result:
                         tagg,overwrite_attrs, inn = hook_result

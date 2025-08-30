@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Column expand="full">
+    <Data id="page-loader" type="progress" class="rounded-0 fixed-top" height="3px" value="0"/>
     <Window type="still" id="offcanvasExample">
         <Text>This is an offcanvas window.</Text>
         <Action type="button" ><Text>Close</Text></Action>
     </Window>
     <Navigation orientation="horizontal" alignment-content="between" class="bg-body-tertiary border-bottom px-2">
         <Navigation type="breadcrumb" alignment-content="center">
-                <Action route="/contact"><Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" /></Action>
+                <Action route="/contact"><Media type="image" height="35px" src="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png" /></Action>
                 <Input width="auto" type="select">
                     <Text>Colosso</Text>
                     <Text>SottoMonte</Text>

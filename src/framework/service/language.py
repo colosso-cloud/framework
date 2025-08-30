@@ -629,6 +629,42 @@ def replace(self):
 def slice(self):
         pass
 
+def add(url, parameter_name: str, parameter_value: str) -> str:
+    base_url = '/'.join(url.get('path', []))
+    existing_query_params = url.get('query', [])
+    """
+    Adds a query parameter to a base URL, handling existing parameters and avoiding duplicates.
+
+    Args:
+        base_url: The base URL to add the parameter to.
+        parameter_name: The name of the query parameter.
+        parameter_value: The value of the query parameter.
+        existing_query_params: A list of existing query parameters in the URL.
+
+    Returns:
+        The updated URL with the new query parameter.
+    """
+    existing_keys = set()
+    output = ""
+    if "?" not in base_url:
+        output = base_url + "?"
+    else:
+        output = base_url
+    
+    new_param = f"{parameter_name}={parameter_value}"
+    combined_params = [new_param] + existing_query_params
+
+    for value in combined_params:
+        key = value.split("=")[0]
+        if key not in existing_keys:
+            if output.endswith("?") or output.endswith("&"):
+                output += value
+            else:
+                output += "&" + value
+            existing_keys.add(key)
+
+    return output.strip()
+
 def _get_next_schema(schema, key):
     if isinstance(schema, dict):
         if 'schema' in schema:

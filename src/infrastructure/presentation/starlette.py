@@ -85,7 +85,7 @@ class adapter(presentation.port):
         # events
         'click': {'attr':'onclick'},
         'change': ('change', 'self.event'),
-        'route': ('click', 'self.route'),
+        #'route': {'attr':'href'},
         'ddd': ('contextmenu', 'self.open_dropdown'),
         'draggable': ('dragstart', 'self.on_drag_start'),
         'droppable': ('drop', 'self.on_drop'),
@@ -236,15 +236,17 @@ class adapter(presentation.port):
             'attributes': {},
             'case': lambda attributes: {
                 'text': ('span', {'class': 'placeholder'}),
-                'table': ('table', {'class': 'table table-striped'}),
+                'table': ('table', {'class': 'table table-striped m-0'}),
                 'table.row': ('tr', {}),
                 'table.cell': ('td', {}),
                 'table.header': ('thead', {}),
                 'table.body': ('tbody', {'class': 'table-body'}),
+                'progress': ('div', {'class': 'progress','role':'progressbar','aria-valuemin':'0','aria-valuemax':'100','aria-valuenow':attributes.get('value','0')}),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
                 #'table': lambda adapter, attributes, inner: adapter.code('sadsadsads', {}, inner),
                 'table.header': lambda adapter, attributes, inner: adapter.code('tr', {}, inner),
+                'progress': lambda adapter, attributes, inner: adapter.code('div', {'class':'progress-bar','style':f"width:{attributes.get('value','0')}%"}, inner),
                 #'table.row': lambda adapter, attributes, inner: adapter.code('tr', {'class': 'table-row'}, inner),
             }.get(attributes.get('type', 'text')),
             'wrapper_each': lambda adapter, attributes, inner: {
@@ -320,7 +322,7 @@ class adapter(presentation.port):
             'case': lambda attributes: {
                 'submit':  ('button', {'class': 'btn', 'type': 'submit'}),
                 'reset':   ('button', {'class': 'btn', 'type': 'reset'}),
-                'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('route', '/'),'data-bs-toggle': 'offcanvas' }),
+                'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('route', '/'),}),
                 'button':  ('button', {'class': 'btn', 'type': 'button'}),
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
                 'dropdown': ('div', {'class': 'dropdown'}),
@@ -362,7 +364,10 @@ class adapter(presentation.port):
             'wrapper_each':lambda adapter,attributes,inner: {
                 'list': lambda adapter,attributes,inner: adapter.code('li', {'class':'list-group-item'}, inner),
                 'tab' : lambda adapter,attributes,inner: adapter.code('div', {'class':'tab-pane'}, inner),
-            }.get(attributes.get('type'))
+            }.get(attributes.get('type')),
+            'inner_overwrite': lambda adapter, attributes, inner: {
+                #'input': (({'class': f"{adapter.get_attribute(inner,'class')} input-group-text".strip()} if adapter.get_attribute(inner,'class') and 'form-select' not in adapter.get_attribute(inner,'class') else {}),''),
+            }.get(attributes.get('type')),
         },
         'editor': {
             'tag': 'form',
@@ -429,12 +434,33 @@ class adapter(presentation.port):
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js" integrity="sha512-NgXVRE+Mxxf647SqmbB9wPS5SEpWiLFp5G7ItUNFi+GVUyQeP+7w4vnKtc2O/Dm74TpTFKXNjakd40pfSKNulg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>  
                     """),
                     adapter.code('body', {'class':"d-flex h-100 flex-column",'id':attributes.get('id')}, ([inner] if isinstance(inner, str) else inner) + ["""<script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const progressBar = document.querySelector('#page-loader .progress-bar');
+                            const loaderContainer = document.getElementById('page-loader');
+                            let progress = 0;
+                            const interval = setInterval(() => {
+                                progress -= Math.floor(Math.random() * 10) + 1; // Aumenta il progresso in modo casuale
+                                if (progress > 95) {
+                                progress = 95; // Si ferma al 95% per simulare il caricamento
+                                clearInterval(interval);
+                                }
+                                progressBar.style.width = progress + '%';
+                            }, 100);
 
-const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                            // Quando la pagina è completamente caricata, completa l'animazione e nascondi la barra
+                            window.addEventListener('load', () => {
+                                progressBar.style.width = '100%';
+                                setTimeout(() => {
+                                loaderContainer.style.display = 'none';
+                                }, 300); // Ritardo per mostrare l'animazione al 100%
+                            });
+                            });
+                                                                                                                                                           
+                        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
 
-const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-</script> """]  )
+                    </script> """]  )
                     #+ [str(markupsafe.Markup('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>'))]
                     #+ ['<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script>const tooltipTriggerList = document.querySelectorAll(\'[data-bs-toggle="tooltip"]\')const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))</script>']
                 ],
@@ -507,11 +533,12 @@ const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstra
         'pagination': {
             'tag': 'nav',
             'attributes': {'class': 'pagination'},
+            'order':['inner_overwrite','wrapper_each','wrapper_once'],
             'wrapper_each': lambda adapter, attributes, inner: {
                 'pagination': lambda adapter, attributes, inner: adapter.code('li', {'class': 'page-item'}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
-                'pagination': lambda adapter, attributes, inner: adapter.code('ul', {'class': 'pagination'}, inner),
+                'pagination': lambda adapter, attributes, inner: adapter.code('ul', {'class': 'pagination m-0'}, inner),
             }.get(attributes.get('type')),
             'inner_overwrite': lambda adapter, attributes, inner: {
                 'pagination': ({'class':'page-link'},''),

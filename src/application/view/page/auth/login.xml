@@ -1,7 +1,7 @@
 {% extends "free.xml" %}
 {% block main %}
 <Row class="p-2" expand="full">
-    <Media type="image" height="50px" src="https://app.colosso.cloud/static/logo.png" />
+    <Media type="image" height="50px" src="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png" />
     <Container expand="full" padding="p-5" alignment-content="center">
         <Card width="400px" padding="p-5" alignment-content="center">
             <Messenger>
@@ -9,7 +9,7 @@
                     <Text>Login disabilitata</Text>
                 </Message>
             </Messenger>
-            <Media type="image" height="50px" src="https://app.colosso.cloud/static/text.png" />
+            <Media type="image" height="50px" src="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png" />
             <Action type="form" action="/login" id="form-login">
                 <Input name="provider" placeholder="provider" value="supabase" />
                 <Input name="email" type="email" placeholder="email" />

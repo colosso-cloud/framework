@@ -7,10 +7,10 @@
 <Action route="/home"><Media type="icon" src="bi-database"/> <Text>Volumes</Text></Action>
 <Action route="/home"><Media type="icon" src="bi-globe"/> <Text>Domains</Text></Action>
 {% endblock %}
-{% block title %}Domain{% endblock %}
-{% block subtitle %}Details and information about the domain #{{url.path[-1]}}.{% endblock %}
+{% block title %}Domain {% endblock %}
+{% block subtitle %}Details and information about the domain #{{url.path[-1]}}. {{url}}{% endblock %}
 {% block content %}
-<Media width="500px" height="500px" type="embed" src="https://www.youtube.com/embed/tujkoXI8rWM?si=7OFG-u-przarv7KE" />
+<Media height="1000px" type="embed" src="https://www.youtube.com/embed/tujkoXI8rWM?si=7OFG-u-przarv7KE" />
 <Media width="500px" height="500px" type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" controls="" autoplay="" />
 <Text type="code">print("Hello, World!")</Text>
 <Action width="100px" type="button" ><Media width="100px" type="image" src="https://img.animeunity.so/anime/bx143598-FCvAhQJLllSP.png" /></Action>
