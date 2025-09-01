@@ -135,12 +135,14 @@ async def model(schema, value=None, mode='full', lang=None):
     if not v.validate(processed_value):
         # La validazione fallisce, Cerberus fornisce i messaggi di errore
         #errors_str = "; ".join([f"{k}: {', '.join(v)}" for k, v in v.errors.items()])
-        print(f"⚠️ Errore di validazione: {v.errors}")
-        raise ValueError(f"⚠️ Errore di validazione: {v.errors}")
+        print(f"⚠️ Errore di validazione: {v.errors}  | data:{processed_value}")
+        raise ValueError(f"⚠️ Errore di validazione: {v.errors} | data:{processed_value}")
 
     final_output = v.document
 
     return final_output
+
+
 
 def extract_params(s):
     """
@@ -629,7 +631,7 @@ def replace(self):
 def slice(self):
         pass
 
-def add(url, parameter_name: str, parameter_value: str) -> str:
+def add2(url, parameter_name: str, parameter_value: str) -> str:
     base_url = '/'.join(url.get('path', []))
     existing_query_params = url.get('query', [])
     """
@@ -664,6 +666,56 @@ def add(url, parameter_name: str, parameter_value: str) -> str:
             existing_keys.add(key)
 
     return output.strip()
+
+def add(url: dict, parameter_name: str, parameter_value: str) -> str:
+    """
+    Adds a query parameter to a base URL dict, keeping only the latest value
+    for each parameter in the final URL.
+
+    Args:
+        url: A dict containing parts of the URL (protocol, host, port, path, query, fragment).
+        parameter_name: The name of the query parameter.
+        parameter_value: The value of the query parameter.
+
+    Returns:
+        The updated full URL as a string.
+    """
+    # Ricostruisci base_url
+    protocol = url.get("protocol", "http")
+    host = url.get("host", "localhost")
+    port = url.get("port")
+    path = "/".join(url.get("path", []))
+    fragment = url.get("fragment", [""])
+    
+    base_url = ""
+    if path:
+        base_url += f"{path}"
+
+    # Copia query esistente
+    query_params = {k: list(v) for k, v in url.get("query", {}).items()}
+
+    # Aggiungi il nuovo parametro evitando duplicati
+    if parameter_name not in query_params:
+        query_params[parameter_name] = [parameter_value]
+    else:
+        if parameter_value not in query_params[parameter_name]:
+            query_params[parameter_name].append(parameter_value)
+
+    # Ricostruisci la query string con SOLO l'ultimo valore per ogni chiave
+    query_parts = []
+    for key, values in query_params.items():
+        if values:  # prendi solo l'ultimo elemento
+            query_parts.append(f"{key}={values[-1]}")
+    query_string = "&".join(query_parts)
+
+    # Ricostruisci URL finale
+    final_url = base_url
+    if query_string:
+        final_url += "?" + query_string
+    if fragment and fragment[0]:
+        final_url += "#" + fragment[0]
+
+    return final_url
 
 def _get_next_schema(schema, key):
     if isinstance(schema, dict):

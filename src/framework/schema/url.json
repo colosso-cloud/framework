@@ -24,15 +24,19 @@
     }
   },
   "query": {
-    "type": "list",
-    "schema": {
-      "type": "string"
+    "type": "dict",
+    "keysrules": {"type": "string"},
+    "valuesrules": {
+        "type": "list",
+        "schema": {"type": "string"}
     }
   },
   "fragment": {
-    "type": "list",
-    "schema": {
-      "type": "string"
+    "type": "dict",
+    "keysrules": {"type": "string"},
+    "valuesrules": {
+        "type": "list",
+        "schema": {"type": "string"}
     }
   }
 }

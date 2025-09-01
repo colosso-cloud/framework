@@ -59,7 +59,7 @@
                     </Group>
                 </Action>
             </Group>
-            <Action type="link" route="#offcanvasExample" alignment-content="center" class="d-inline-flex" spacing="2">
+            <Action route="#offcanvasExample" alignment-content="center" class="d-inline-flex" spacing="2">
                 <Media type="image" height="40px" src="https://app.colosso.cloud/static/logo.png" class="rounded-circle border" />
                 <Text>{{user.email}}</Text>
             </Action>

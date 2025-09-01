@@ -27,7 +27,7 @@ class port(ABC):
 
         ui_kit = [
             'breadcrumb',
-            'table',
+            #'table',
             'badge',
             'input',
             'action',
@@ -118,11 +118,11 @@ class port(ABC):
         print(constants)
 
         content = template.render(constants)
-        print('Content:---------------------------*******************',content)
+        #print('Content:---------------------------*******************',content)
         xml = ET.fromstring(content)
         #print(xml)
         view = await self.render_view(xml,constants)
-        print('View:---------------------------*******************',type(view))
+        #print('View:---------------------------*******************',type(view))
         #await self.render_css(view,view))
         if 'inner' in constants:
             if isinstance(inner, list):
@@ -155,9 +155,9 @@ class port(ABC):
           except Exception as e:
               print(f"Errore durante la ricostruzione del componente '{id}': {e}")
     
-    async def render_widget(self, tag, inner, attributes):
+    async def render_widget(self, tag, inner, attributes, **context):
 
-        widget = await self.mount_widget(tag, inner, attributes)
+        widget = await self.mount_widget(tag, inner, attributes,**context)
 
         # Mount properties
         #for key in attributes:
@@ -262,7 +262,7 @@ class port(ABC):
             schema_data = await language.model({tag:schema.copy()},{tag:attributes})
             attributes |= schema_data.get(tag,{})
             #print('Schema:',tttt)
-            print('Rendering tag:',tag,attributes,schema)
+            #print('Rendering tag:',tag,attributes,schema)
             
             
             
@@ -278,10 +278,11 @@ class port(ABC):
                 #print('Function#################################:',inner)
                 match function:
                     case 'mount_view':
-                        print('Mounting view:',args)
+                        #print('Mounting view:',args)
                         return await self.mount_view(*args,model=['ok'])
                     case 'render_widget':
-                        return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes)
+                        print('Rendering widget:',data)
+                        return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url','')})
                 
             if '_type' in schema:
                 schema_type = schema['_type'].get(attributes.get('type', ''))
@@ -292,16 +293,16 @@ class port(ABC):
                     inner.append(str(text))
                 if schema_type:
                     if input_type == 'inner':
-                        return await self.render_widget(schema_type, inner, attributes)
+                        return await self.render_widget(schema_type, inner, attributes, **{'url':data.get('url','')})
                     elif input_type == 'text':
-                        return await self.render_widget(schema_type, text, attributes)
+                        return await self.render_widget(schema_type, text, attributes, **{'url':data.get('url','')})
                     elif input_type == 'mixed':
-                        return await self.render_widget(schema_type, inner, attributes)
+                        return await self.render_widget(schema_type, inner, attributes, **{'url':data.get('url','')})
                     else:
                         print('Unknown input type:',input_type)
-                print('Mounting widget:',schema_type,tag,attributes.get('type',''))
+                #print('Mounting widget:',schema_type,tag,attributes.get('type',''))
         else:
-            return await self.render_widget(tag, inner, attributes)
+            return await self.render_widget(tag, inner, attributes, **{'url':data.get('url',''),'mode':['component']})
 
         '''#if tag in self.tags:
         #    return await self.tags[tag]()
@@ -386,7 +387,7 @@ class port(ABC):
                 return output
     '''
 
-    async def mount_widget(self, tag, children, user_attrs):
+    async def mount_widget(self, tag, children, user_attrs, **context):
         """Mounts a widget using data-driven config."""
         user_attrs = user_attrs or {}
         widget_name = tag.lower()
@@ -396,6 +397,7 @@ class port(ABC):
         if not widget_config:
             widget_config = {'component':tag}
             #return self.code('p', {'class': 'text'}, f"Widget non implementato: {tag}")
+            
             
 
         # Merge attributi: unisci config + user, con gestione speciale della classe
@@ -493,7 +495,8 @@ class port(ABC):
                             #inner.append(ggg)
                             #children = await self.builder(file=overwrite_attrs,inner=ggg,mode=['layout'])
                 case 'component':
-
+                    print('Component#############################################################11111#111#111#:',hook_result,element_attrs,children)
+                    #exit(1)
                     def elements_to_xml_string(elements):
                         # Crea un elemento root temporaneo
                         root = ET.Element('root')
@@ -517,6 +520,7 @@ class port(ABC):
                     
                     #xml_string = elements_to_xml_string(elements)
                     url = f'application/view/component/{hook_result}.xml'
+                    print('Component#############################################################11111#111#111#:',url,element_attrs,children)
                     #attrii = ''.join(x.outerHTML for x in att)
                     id = element_attrs['id'] if 'id' in element_attrs else str(uuid.uuid1())
                     if id not in self.components:
@@ -538,6 +542,7 @@ class port(ABC):
                         'file':url,
                         'inner':children,
                     }
+                    argg = context|argg
                     #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|COM',data)
                     #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|arg',argg)
                     # Creiamo la vista per il componente
@@ -558,7 +563,7 @@ class port(ABC):
                 # per evitare conflitti con gli attributi predefiniti del widget
                 #del user_attrs[key]
                 element_attrs.pop(key)
-        print(element_tag,'-----------------------------------------FINAL ATTRS:-------------------------------',element_attrs)
+        #print(element_tag,'-----------------------------------------FINAL ATTRS:-------------------------------',element_attrs)
         return self.code(element_tag, element_attrs, children)
 
 

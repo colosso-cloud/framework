@@ -11,6 +11,7 @@
 {% endblock %}
 {% block content %}
 <Container class="border-top border-bottom">
+    <Table id="tabs"></Table>
     <!--<Table repository="repository" filter="{'eq':{'owner':'SottoMonte'}}" view="repository" create="wizard" delete="wizard" update="wizard">
         <Text click="table(id:'{{ component or '' }}',sortField:'name')">Repository</Text>
         <Text>Description</Text>

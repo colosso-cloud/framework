@@ -285,9 +285,6 @@ class adapter(presentation.port):
         'image': {
             'tag': 'img',
         },
-        'table': {
-            'tag': 'table',
-        },
         'card': {
             'tag': 'div',
             'attributes': {'class': 'card'},
@@ -316,6 +313,7 @@ class adapter(presentation.port):
             'wrapper_once': lambda adapter, attributes, inner: {
                 'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch'),**({'click': attributes['click']} if 'click' in attributes else {}),**({'checked': attributes['selected']} if 'selected' in attributes else {})},''),
             }.get(attributes.get('type')),
+            # [attributes['placeholder'] if 'placeholder' in attributes else {}] +
         },
         'action': {
             'tag': None,  # Determinato dinamicamente
@@ -399,7 +397,7 @@ class adapter(presentation.port):
                         <!--    Favicons-->
                         <!-- ===============================================-->
                         <meta name="theme-color" content="#ffffff">
-                        <link rel="icon" type="image/x-icon" href="static/logo.png">
+                        <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png">
                 
                         <!-- ===============================================-->
                         <!--    Stylesheets-->
@@ -862,8 +860,13 @@ class adapter(presentation.port):
         if matched_route:
             print(f"Percorso trovato: {matched_route['view']} per l'URL: {url}",parsed_url)
             print(f"Parametri estratti: {matched_route['params']}")
-            url = await language.model(scheme_url,{'url':self.url,'protocol':parsed_url.scheme,'host':parsed_url.hostname,'port':parsed_url.port,'path':parsed_url.path.split('/'),'query':parsed_url.query.split('&'),'fragment':parsed_url.fragment.split('&')},'full',language)
-            print(url, 'url after model')
+            #query_params = dict({key: query_params.setdefault(key, []) + [value] for param in parsed_url.query.split('&') if '=' in param for key, value in [param.split('=', 1)]})
+            query_params = {}
+            [query_params.setdefault(k, []).append(v) for k, v in (param.split('=', 1) for param in parsed_url.query.split('&') if '=' in param)]
+            frag_params = {}
+            [frag_params.setdefault(k, []).append(v) for k, v in (param.split('=', 1) for param in parsed_url.fragment.split('&') if '=' in param)]
+            url = {'url':self.url,'protocol':parsed_url.scheme,'host':parsed_url.hostname,'port':parsed_url.port,'path':parsed_url.path.split('/'),'query':query_params,'fragment':frag_params}
+            url = await language.model(scheme_url,url,'full',language)
             return await self.builder(file=matched_route['view'],url=url,mode=['main'],**kargs)
         else:
             # Nessuna rotta corrispondente, gestiamo l'errore (ad esempio, un 404).

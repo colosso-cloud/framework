@@ -196,6 +196,7 @@
         "type": "dict",
         "schema": {
             "id": {"type": "string"},
+            "class": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
             "required": {"type": "string"},
