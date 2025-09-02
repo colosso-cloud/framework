@@ -51,29 +51,15 @@
                 {% endfor %}
                 <Action type="link" route="{{url|add('page_'+component.id,current_page+1)}}" class="border-start border-end rounded-0" ><Text>Next</Text></Action>
             </Navigation>
-                <!-- <Action type="link" class="border-start rounded-0" route="{{url|add('page_'+component.id,current_page-1)}}" ><Text>Previous</Text></Action>
-                {% for page in range(1,5) %}
-                    {% if current_page == page %}
-                <Action type="link" class="active border-start rounded-0" ><Text>{{page}}</Text></Action>
-                    {% else %}
-                <Action type="link" class="border-start rounded-0" route="{{url|add('page_'+component.id,page)}}" ><Text>{{page}}</Text></Action>
-                    {% endif %}
-                {% endfor %}
-                <Action type="link" class="border-start border-end rounded-0" route="{{url|add('page_'+component.id,current_page+1)}}" ><Text>Next</Text></Action> !-->
         </Group>
         <Text class="input-group-text">1 at 10 row from 200 rows for</Text>
-        <Input width="80px" type="select">
-            <Text>5</Text>
-            <Text>10</Text>
-            <Text>15</Text>
-            <Text>20</Text>
-            <Text>25</Text>
-            <Text>30</Text>
-            <Text>40</Text>
-            <Text>50</Text>
+        <Input width="80px" type="select" event-change="route(`{{url|add('row_'+component.id,'${this.value}')}}`)" value="{{rows}}">
+            {% for value_r in [5,10,15,20,25,30,40,50] %}
+            <Text value="{{value_r}}" >{{value_r}}</Text>
+            {% endfor %}
         </Input>
         <Text class="input-group-text rounded-0">rows for page</Text>
     </Group>
     <Text>{{url}}</Text>
-    <Text>{{ (url.query.row or [5])[-1] | int }}</Text>
+    <Text>{{ (url.query.get('row_'+component.id) or [5])[-1] | int }}</Text>
 </Container>

@@ -9,8 +9,12 @@
     <Route path="/inventory/containers/container/{$id}" type="view" view="inventory/container.xml" method="GET" />
     <Route path="/inventory/machines/machine/{$id}" type="view" view="inventory/machine.xml" method="GET" />
     <Route path="/inventory/{repositories|domains|services|volumes|containers|machines|secrets}" type="view" view="inventory/tables.xml" method="GET" />
+    <Route path="/dev" type="view" view="auth/dashboard.xml" method="GET" />
     <Route path="/dev/ide" type="view" view="dev/ide.xml" method="GET" />
+    <Route path="/gov" type="view" view="auth/dashboard.xml" method="GET" />
+    <Route path="/ops" type="view" view="ops/dashboard.xml" method="GET" />
     <Route path="/profile" type="view" view="auth/profile.xml" method="GET" />
+    <Route path="/dashboard" type="view" view="auth/dashboard.xml" method="GET" />
     <Route path="/auth/signup" type="view" view="auth/registration.xml" method="GET" />
     <Route path="/auth/signin" type="view" view="auth/login.xml" method="GET" />
     <Route path="/auth/reset-password" type="view" view="auth/recovery.xml" method="GET" />

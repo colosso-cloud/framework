@@ -10,6 +10,6 @@
 {% else %}
 <Window type="root">
     <Text>{{model}}</Text>
-    <View route="/profile"/>
+    <View route="/dashboard" />
 </Window>
 {% endif %}

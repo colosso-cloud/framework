@@ -11,7 +11,7 @@
 {% endblock %}
 {% block content %}
 <Container class="border-top border-bottom">
-    <Table id="tabs"></Table>
+    <Table id="table_{{name}}"></Table>
     <!--<Table repository="repository" filter="{'eq':{'owner':'SottoMonte'}}" view="repository" create="wizard" delete="wizard" update="wizard">
         <Text click="table(id:'{{ component or '' }}',sortField:'name')">Repository</Text>
         <Text>Description</Text>
@@ -21,47 +21,5 @@
         <Text>Updated</Text>
         <Text>Actions</Text>
     </Table>-->
-    <Data type="table">
-        <Data type="table.header">
-            <Data type="table.cell">
-                <Text>Repository</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Description</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Type</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Platform</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Language</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Updated</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Actions</Text>
-            </Data>
-        </Data>
-        <Data type="table.body">
-            <Data type="table.row">
-                <Text>Cell 1</Text>
-                <Text>Cell 2</Text>
-                <Text>Cell 3</Text>
-            </Data>
-            <Data type="table.row">
-                <Text>Cell 1</Text>
-                <Text>Cell 2</Text>
-                <Text>Cell 3</Text>
-            </Data>
-            <Data type="table.row">
-                <Text>Cell 1</Text>
-                <Text>Cell 2</Text>
-                <Text>Cell 3</Text>
-            </Data>
-        </Data>
-    </Data>
 </Container>
 {% endblock %}

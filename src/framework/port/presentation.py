@@ -490,7 +490,7 @@ class port(ABC):
                     if hook_result:
                         if isinstance(hook_result, tuple):
                             overwrite_attrs, ggg = hook_result
-                            children = await self.builder(file=overwrite_attrs,inner=ggg)
+                            children = await self.builder(file=overwrite_attrs,inner=ggg,**{'url':context.get('url','')})
                             #return children
                             #inner.append(ggg)
                             #children = await self.builder(file=overwrite_attrs,inner=ggg,mode=['layout'])

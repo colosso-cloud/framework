@@ -83,8 +83,8 @@ class adapter(presentation.port):
         'src': {'attr':'src'},
         'value': {'attr':'value'},
         # events
-        'click': {'attr':'onclick'},
-        'change': ('change', 'self.event'),
+        'event-click': {'attr':'onclick'},
+        'event-change': {'attr':'onchange'},
         #'route': {'attr':'href'},
         'ddd': ('contextmenu', 'self.open_dropdown'),
         'draggable': ('dragstart', 'self.on_drag_start'),
@@ -302,16 +302,16 @@ class adapter(presentation.port):
         },
         'input': {
             'tag': 'input',
-            '!attributes': {'id': 'switch','click':'switch'},
+            '!attributes': {'id': 'switch','event-click':'switch'},
             'case': lambda attributes: {
                 'select':  ('select', {'class': 'form-select'}),
                 'switch': ('div', {'class': 'form-switch'}),
             }.get(attributes.get('type', 'text'), ('input', {'class': 'form-control', 'type': attributes.get('type','text')})),
             'wrapper_each':lambda adapter,attributes,inner: {
-                'select': lambda adapter,attributes,inner: adapter.code('option', {}, inner),
+                'select': lambda adapter,attributes,inner: adapter.code('option', {**({'value': adapter.get_attribute(inner,'value')} if adapter.get_attribute(inner,'value') else {}),**({'selected': ''} if 'value' in attributes and attributes['value'] == adapter.get_attribute(inner,'value') else {})}, inner),
             }.get(attributes.get('type', 'text')),
             'wrapper_once': lambda adapter, attributes, inner: {
-                'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch'),**({'click': attributes['click']} if 'click' in attributes else {}),**({'checked': attributes['selected']} if 'selected' in attributes else {})},''),
+                'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch'),**({'event-click': attributes['event-click']} if 'event-click' in attributes else {}),**({'checked': attributes['selected']} if 'selected' in attributes else {})},''),
             }.get(attributes.get('type')),
             # [attributes['placeholder'] if 'placeholder' in attributes else {}] +
         },
@@ -425,6 +425,10 @@ class adapter(presentation.port):
                                 } else {
                                     html.setAttribute('data-bs-theme', 'dark');
                                 }
+                            }
+                                 
+                            function route(url) {
+                                window.location.href = url;
                             }
                         </script>
                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -865,7 +869,11 @@ class adapter(presentation.port):
             [query_params.setdefault(k, []).append(v) for k, v in (param.split('=', 1) for param in parsed_url.query.split('&') if '=' in param)]
             frag_params = {}
             [frag_params.setdefault(k, []).append(v) for k, v in (param.split('=', 1) for param in parsed_url.fragment.split('&') if '=' in param)]
-            url = {'url':self.url,'protocol':parsed_url.scheme,'host':parsed_url.hostname,'port':parsed_url.port,'path':parsed_url.path.split('/'),'query':query_params,'fragment':frag_params}
+            if parsed_url.path.startswith('/'):
+                pppath = parsed_url.path[1:]
+            else:
+                pppath = parsed_url.path
+            url = {'url':self.url,'protocol':parsed_url.scheme,'host':parsed_url.hostname,'port':parsed_url.port,'path':pppath.split('/'),'query':query_params,'fragment':frag_params}
             url = await language.model(scheme_url,url,'full',language)
             return await self.builder(file=matched_route['view'],url=url,mode=['main'],**kargs)
         else:

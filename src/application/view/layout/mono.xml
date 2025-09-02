@@ -7,16 +7,15 @@
     </Window>
     <Navigation orientation="horizontal" alignment-content="between" class="bg-body-tertiary border-bottom px-2">
         <Navigation type="breadcrumb" alignment-content="center">
-                <Action route="/contact"><Media type="image" height="35px" src="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png" /></Action>
+                <Action type="link" route="/dashboard"><Media type="image" height="35px" src="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png" /></Action>
                 <Input width="auto" type="select">
                     <Text>Colosso</Text>
                     <Text>SottoMonte</Text>
                 </Input>
-                <Input width="auto" type="select">
-                    <Text>DEV</Text>
-                    <Text>OPS</Text>
-                    <Text>GOV</Text>
-                    <Text>ADMIN</Text>
+                <Input width="auto" type="select" event-change="route('/'+this.value.toLowerCase())" value="{{url.path[0]}}" >
+                    <Text value="dev" >DEV</Text>
+                    <Text value="ops" >OPS</Text>
+                    <Text value="gov" >GOV</Text>
                 </Input>
         </Navigation>
         <Group width="auto" expand="dynamic" padding="px-4">
@@ -26,7 +25,7 @@
         <Container width="auto" alignment-content="between" spacing="2">
             <Group width="auto" alignment-content="center" spacing="1">
                 <Media type="icon" src="bi-moon-fill"/>
-                <Input type="switch" id="theme-toggle" selected="true" click="toggleTheme(this.id)" />
+                <Input type="switch" id="theme-toggle" selected="true" event-click="toggleTheme(this.id)" />
                 <Media type="icon" src="bi-sun-fill"/>
             </Group>
             <Group type="action" width="auto" alignment-content="center" class="border">

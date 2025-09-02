@@ -204,7 +204,8 @@
             "readonly": {"type": "string"},
             "autofocus": {"type": "string"},
             "selected": {"type": "string"},
-            "click": {"type": "string"},
+            "event-click": {"type": "string"},
+            "event-change": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox","search"],
@@ -269,6 +270,7 @@
             "class": {"type": "string"},
             "width": {"type": "string"},
             "height": {"type": "string"},
+            "value": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["code", "text"],
