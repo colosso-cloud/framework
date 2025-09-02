@@ -1,13 +1,17 @@
 {% extends "sidebar.xml" %}
 {% set name = url.path[-1].capitalize() %}
-{% block breadcrumb %}
-<Action route="application/view/page/inventory/overview.xml" ><Media type="icon" src="bi-speedometer2"/></Action>
-<Action route="application/view/page/inventory/repositories.xml" ><Media type="icon" src="bi-bookmarks-fill"/><Text>{{name}}</Text></Action>
-{% endblock %}
 {% block title %}Overview{% endblock %}
-{% block subtitle %}Keep track of your inventory{{name}}{% endblock %}
+{% block subtitle %}Keep track of your inventory {{name}}{% endblock %}
 {% block bar %}
-
+<Action type="link" route="/dev"><Media type="icon" src="bi-view-list"/> <Text>Overview</Text></Action>
+<Action type="link" route="/{{url.path[0]}}/repositories/"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
+<Action type="link" route="/inventory/services/"><Media type="icon" src="bi-kanban"/> <Text>Projects</Text></Action>
+<Action type="link" route="/inventory/repositories/"><Media type="icon" src="bi-box-seam"/> <Text>Packages</Text></Action>
+<Action type="link" route="/inventory/volumes/"><Media type="icon" src="bi-people"/> <Text>Teams</Text></Action>
+{% endblock %}
+{% block breadcrumb %}
+<Action type="link" route="/{{url.path[0]}}"  ><Media type="icon" src="bi-speedometer2"/></Action>
+<Action route="application/view/page/inventory/repositories.xml" ><Media type="icon" src="bi-bookmarks-fill"/><Text>{{name}}</Text></Action>
 {% endblock %}
 {% block content %}
 <Container class="border-top border-bottom">

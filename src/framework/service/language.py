@@ -689,7 +689,7 @@ def add(url: dict, parameter_name: str, parameter_value: str) -> str:
     
     base_url = ""
     if path:
-        base_url += f"{path}"
+        base_url += f"/{path}"
 
     # Copia query esistente
     query_params = {k: list(v) for k, v in url.get("query", {}).items()}

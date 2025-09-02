@@ -7,6 +7,8 @@ import untangle
 import markupsafe
 import re
 
+import itertools
+
 resources = {
     'flow': 'framework/service/flow.py',
     'tags': 'framework/schema/tags.json',
@@ -173,7 +175,7 @@ class port(ABC):
     async def render_css(self, *services, **constants):
         await self.apply_css(*services)
 
-    def parse_route(self, file):
+    def parse_route2(self, file):
         # Regex per opzioni multiple tra virgolette (es. {'a'|'b'})
         regex_quoted = r'\{((?:\'[^\']+\'\|?)+)\}'
         # Regex per parametri dinamici con $ (es. {$id})
@@ -237,6 +239,58 @@ class port(ABC):
         
         except Exception as e:
             print(f"Si è verificato un errore durante il parsing del file: {e}")
+
+    def parse_route(self, file):
+        # Regex per opzioni multiple senza virgolette (es. {a|b})
+        regex_simple_options = r'\{([a-zA-Z0-9_|]+)\}'
+
+        try:
+            tree = untangle.parse(file)
+            if not tree or not tree.get_elements() or not tree.get_elements()[0].get_elements():
+                print("Errore: Il file XML è vuoto o malformato.")
+                return
+
+            for setting in tree.get_elements()[0].get_elements():
+                path_attribute = setting.get_attribute('path')
+                method = setting.get_attribute('method')
+                typee = setting.get_attribute('type')
+                view = setting.get_attribute('view')
+                layout = setting.get_attribute('layout')
+
+                if view:
+                    view = 'application/view/page/' + view
+                    if not path_attribute:
+                        path_attribute = view.replace('.xml', '')
+
+                # Trova TUTTE le parti dinamiche con opzioni multiple
+                all_matches = re.finditer(regex_simple_options, path_attribute)
+                dynamic_parts = []
+                options_sets = []
+
+                for match in all_matches:
+                    dynamic_parts.append(match.group(0))
+                    options_str = match.group(1)
+                    options = options_str.split('|')
+                    options_sets.append(options)
+                
+                # Se sono state trovate parti dinamiche con opzioni
+                if dynamic_parts:
+                    # Genera tutte le possibili combinazioni di percorsi
+                    for combination in itertools.product(*options_sets):
+                        new_path = path_attribute
+                        for i, part in enumerate(dynamic_parts):
+                            new_path = new_path.replace(part, combination[i], 1)
+                        
+                        self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+                else:
+                    # Gestisce percorsi statici o con parametri dinamici ($)
+                    # La logica per parametri dinamici ($) andrebbe gestita qui
+                    # dato che non sono opzioni multiple
+                    self.routes[path_attribute] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+        
+        except Exception as e:
+            print(f"Si è verificato un errore durante il parsing del file: {e}")
+        print(self.routes)
 
 
     @flow.asynchronous(managers=('storekeeper','messenger'))

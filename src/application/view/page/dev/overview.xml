@@ -1,11 +1,10 @@
 {% extends "sidebar.xml" %}
 {% block bar %}
-<Action type="link" route="/inventory/machines/"><Media type="icon" src="bi-pc-horizontal"/> <Text>Machines</Text></Action>
-<Action type="link" route="/inventory/containers/"><Media type="icon" src="bi-box-seam"/> <Text>Containers</Text></Action>
-<Action type="link" route="/inventory/services/"><Media type="icon" src="bi-boxes"/> <Text>Services</Text></Action>
-<Action type="link" route="/inventory/repositories/"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
-<Action type="link" route="/inventory/volumes/"><Media type="icon" src="bi-database"/> <Text>Volumes</Text></Action>
-<Action type="link" route="/inventory/domains/"><Media type="icon" src="bi-globe"/> <Text>Domains</Text></Action>
+<Action type="link" route="/inventory/machines/"><Media type="icon" src="bi-view-list"/> <Text>Overview</Text></Action>
+<Action type="link" route="/dev/repositories/"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
+<Action type="link" route="/inventory/services/"><Media type="icon" src="bi-kanban"/> <Text>Projects</Text></Action>
+<Action type="link" route="/inventory/repositories/"><Media type="icon" src="bi-box-seam"/> <Text>Packages</Text></Action>
+<Action type="link" route="/inventory/volumes/"><Media type="icon" src="bi-people"/> <Text>Teams</Text></Action>
 {% endblock %}
 {% block content %}
 <Media width="500px" height="1000px" type="embed" src="https://www.youtube.com/embed/tujkoXI8rWM?si=7OFG-u-przarv7KE" />

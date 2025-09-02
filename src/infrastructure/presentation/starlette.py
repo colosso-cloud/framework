@@ -321,7 +321,7 @@ class adapter(presentation.port):
                 'submit':  ('button', {'class': 'btn', 'type': 'submit'}),
                 'reset':   ('button', {'class': 'btn', 'type': 'reset'}),
                 'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('route', '/'),}),
-                'button':  ('button', {'class': 'btn', 'type': 'button'}),
+                'button':  ('button', {'class': 'btn', 'type': 'button',**({'onclick': f"route('{attributes['route']}')"} if 'route' in attributes else {})}),
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
                 'dropdown': ('div', {'class': 'dropdown'}),
             }.get(attributes.get('type')),
@@ -427,8 +427,60 @@ class adapter(presentation.port):
                                 }
                             }
                                  
-                            function route(url) {
-                                window.location.href = url;
+                            function route(destination) {
+                                // Controlla se l'input inizia con un cancelletto (#)
+                                if (destination.startsWith('#')) {
+                                    // Rimuove il '#' per ottenere solo l'ID del componente
+                                    const componentId = destination.substring(1);
+                                    
+                                    // Chiama la funzione per aprire il componente Bootstrap
+                                    openBootstrapComponent(componentId);
+                                } else {
+                                    // Se non è un ID, reindirizza la pagina all'URL fornito
+                                    window.location.href = destination;
+                                }
+                            }
+                                 
+                            function openOffcanvasById(offcanvasId) {
+                                // Seleziona l'elemento offcanvas usando l'ID
+                                const offcanvasElement = document.getElementById(offcanvasId);
+                                
+                                // Verifica se l'elemento esiste
+                                if (offcanvasElement) {
+                                    // Crea un'istanza Offcanvas se non ne esiste già una
+                                    const offcanvasInstance = new bootstrap.Offcanvas(offcanvasElement);
+                                    
+                                    // Mostra l'offcanvas
+                                    offcanvasInstance.show();
+                                } else {
+                                    // Messaggio di errore se l'elemento non viene trovato
+                                    console.error(`Elemento offcanvas con ID "${offcanvasId}" non trovato.`);
+                                }
+                            }
+                                 
+                            function openBootstrapComponent(componentId) {
+                                // 1. Seleziona l'elemento con l'ID fornito
+                                const componentElement = document.getElementById(componentId);
+
+                                // 2. Se l'elemento non esiste, esci e mostra un errore
+                                if (!componentElement) {
+                                    console.error(`Elemento con ID "${componentId}" non trovato.`);
+                                    return;
+                                }
+
+                                // 3. Controlla il tipo di componente in base alle classi CSS
+                                if (componentElement.classList.contains('modal')) {
+                                    // È un modale
+                                    const modalInstance = new bootstrap.Modal(componentElement);
+                                    modalInstance.show();
+                                } else if (componentElement.classList.contains('offcanvas')) {
+                                    // È un offcanvas
+                                    const offcanvasInstance = new bootstrap.Offcanvas(componentElement);
+                                    offcanvasInstance.show();
+                                } else {
+                                    // L'elemento non è né un modale né un offcanvas
+                                    console.warn(`Elemento con ID "${componentId}" non è un componente Bootstrap (modal o offcanvas).`);
+                                }
                             }
                         </script>
                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -494,13 +546,12 @@ class adapter(presentation.port):
         },
         'offcanvas': {
             'tag': 'div',
-            'attributes': {'class': 'offcanvas h-100', 'tabindex': '-1'},
+            'attributes': {'class': 'offcanvas offcanvas-end h-100', 'tabindex': '-1', 'data-bs-backdrop':'false'},
             'wrapper_once': lambda adapter, attributes, inner: {
-                'still': lambda adapter, attributes, inner: adapter.code('div',{},[
+                'still': lambda adapter, attributes, inner: [
                     adapter.code('div', {'class': 'offcanvas-header'}, inner),
                     adapter.code('div', {'class': 'offcanvas-body'}, inner),
-                    
-                ])
+                ]
             }.get(attributes.get('type')),
         },
         'modal': {

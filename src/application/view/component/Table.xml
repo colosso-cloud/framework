@@ -60,6 +60,4 @@
         </Input>
         <Text class="input-group-text rounded-0">rows for page</Text>
     </Group>
-    <Text>{{url}}</Text>
-    <Text>{{ (url.query.get('row_'+component.id) or [5])[-1] | int }}</Text>
 </Container>
