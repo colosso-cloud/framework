@@ -8,18 +8,18 @@
     <Navigation orientation="horizontal" alignment-content="between" class="bg-body-tertiary border-bottom px-2">
         <Navigation type="breadcrumb" alignment-content="center">
                 <Action type="link" route="{{url|route('dashboard')}}"><Media type="image" height="35px" src="https://i.postimg.cc/Kz6yzgHt/20250828-1405-Logo-Paa-S-Trasparente-simple-compose-01k3r909szfba96gd6r8x984sc.png" /></Action>
-                <Input width="auto" type="select" event-change="route(`{{url|route(query={'org':['${this.value}']})}}`)" value="{{url.query.get('org',['SottoMonte'])[0]}}">
+                <Input width="auto" type="select" event-change="route(`{{url|route('?org=${this.value}')}}`)" value="{{url.query.get('org',['SottoMonte'])[-1]}}">
                     <Text value="Colosso">Colosso</Text>
                     <Text value="SottoMonte">SottoMonte</Text>
                 </Input>
-                <Input width="auto" type="select" event-change="route(`{{url|route(path='${this.value.toLowerCase()}')}}`)" value="{{url.path[0]}}" >
+                <Input width="auto" type="select" event-change="route(`{{ url|route('/${this.value}') }}`)" value="{{url.path[-1]}}" >
                     <Text value="dev" >DEV</Text>
                     <Text value="ops" >OPS</Text>
                     <Text value="gov" >GOV</Text>
                 </Input>
         </Navigation>
         <Group width="auto" expand="dynamic" padding="px-4">
-            <Input width="auto" type="search" />
+            <Input width="auto" type="search" value="{{url}}" />
             <Action type="submit" class="border"><Media type="icon" src="bi-search" /></Action>
         </Group>
         <Container width="auto" alignment-content="between" spacing="2">

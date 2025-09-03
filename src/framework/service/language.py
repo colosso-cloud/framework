@@ -646,12 +646,24 @@ def route(url: dict, new_part: str) -> str:
         The updated full URL as a string.
     """
     # Copia i dati dal dizionario URL per sicurezza
+    #url = url.copy()
+    url = copy.deepcopy(url)
     protocol = url.get("protocol", "http")
     host = url.get("host", "localhost")
     port = url.get("port")
     path = url.get("path", [])
-    query = url.get('query', {})
+    query_params = url.get('query', {})
     fragment = url.get("fragment", "")
+
+    # Usa un dizionario per i segnaposto, mappando le stringhe speciali a token unici
+    '''placeholders = {
+        '${this.value}': '__PLACEHOLDER_THIS_VALUE__',
+    }'''
+    
+    # Sostituisci i caratteri speciali con i segnaposto prima di decodificare
+    
+    #for special_string, placeholder in placeholders.items():
+    #    new_part = new_part.replace(special_string, placeholder)
 
     # Analizza la stringa di input per separare il percorso dalla query
     parsed_new_part = urlparse(new_part)
@@ -661,26 +673,60 @@ def route(url: dict, new_part: str) -> str:
         path = [p for p in parsed_new_part.path.split('/') if p]
 
     # Aggiorna i parametri di query se la stringa di input contiene una query
-    if parsed_new_part.query:
-        new_params = parse_qs(parsed_new_part.query, keep_blank_values=True)
+    '''if parsed_new_part.query:
+        query_params = {}
+        [query_params.setdefault(k, []).append(v) for k, v in (param.split('=', 1) for param in parsed_new_part.query.split('&') if '=' in param)]
+        #new_params = parse_qs(parsed_new_part.query, keep_blank_values=True)
         # Unisce e sovrascrive i parametri esistenti con i nuovi
-        for key, value in new_params.items():
-            query[key] = value
+        for key, value in query_params.items():
+            query_params.setdefault(key, []).append(value)
+            #query[key] = [value[-1]]'''
+    
+    if parsed_new_part.query:
+        [query_params.setdefault(k, []).append(v) for k, v in (param.split('=', 1) for param in parsed_new_part.query.split('&') if '=' in param)]
+        for key, value in query_params.items():
+            # ?org=colosso&org=${this.value}
+            # ?org=${this.value}&org=colosso
+            # ?org=${this.value}
+            #query_params.setdefault(key, [])
+            #query_params[key].reverse()
+            
+            #query_params[key] = [query_params[key][-1]]
+            #if "${" in query_params[key][-1]:
+            #    query_params[key].reverse()
+            #query[key] = [value[-1]]
+            pass
+    else:
+        #query_params = query_
+        pass
 
-    # Ricostruisce l'URL completo
+    # Ricostruisci la query string con SOLO l'ultimo valore per ogni chiave
+    query_parts = []
+    query_string = ""
+    for key, values in query_params.items():
+        if values:  # prendi solo l'ultimo elemento
+            query_parts.append(f"{key}={values[-1]}")
+    query_string = "&".join(query_parts)
+
+    base_url = ""
+    '''# Ricostruisce l'URL completo
     base_url = f"{protocol}://{host}"
     if port:
-        base_url += f":{port}"
+        base_url += f":{port}"'''
     if path:
         base_url += "/" + "/".join(path)
 
     # Codifica i parametri di query
-    if query:
-        encoded_query = urlencode(query, doseq=True)
-        base_url += f"?{encoded_query}"
+    if query_string:
+        #encoded_query = urlencode(query, doseq=True)
+        #base_url += f"?{encoded_query}"
+        base_url += f"?{query_string}"
     
     if fragment:
         base_url += f"#{fragment}"
+
+    #for key, value in placeholders.items():
+    #    base_url = base_url.replace(value,key)
 
     return base_url
 

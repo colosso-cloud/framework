@@ -41,19 +41,19 @@
     <Group type="input" >
         <Group expand="dynamic" alignment-content="center" class="border-bottom">
             <Navigation type="pagination" class="h-100" >
-                <Action type="link" route="{{url|route(query={'page_'+component.id:[current_page-1]})}}" class="border-start rounded-0" ><Text>Previous</Text></Action>
+                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page - 1)|string)}}" class="border-start rounded-0" ><Text>Previous</Text></Action>
                 {% for page in range(1,5) %}
                     {% if current_page == page %}
                 <Action class="active" ><Text>{{page}}</Text></Action>
                     {% else %}
-                <Action type="link" route="{{url|route(query={'page_'+component.id:[page]})}}" class="border-start rounded-0"><Text>{{page}}</Text></Action>
+                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (page)|string)}}" class="border-start rounded-0"><Text>{{page}}</Text></Action>
                     {% endif %}
                 {% endfor %}
-                <Action type="link" route="{{url|route(query={'page_'+component.id:[current_page+1]})}}" class="border-start border-end rounded-0" ><Text>Next</Text></Action>
+                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page + 1)|string)}}" class="border-start border-end rounded-0" ><Text>Next</Text></Action>
             </Navigation>
         </Group>
         <Text class="input-group-text">1 at 10 row from 200 rows for</Text>
-        <Input width="80px" type="select" event-change="route(`{{url|route(query={'row_'+component.id:['${this.value}']})}}`)" value="{{rows}}">
+        <Input width="80px" type="select" event-change="route(`{{ url|route('?row_'+component.id+'=${this.value}') }}`)" value="{{rows}}">
             {% for value_r in [5,10,15,20,25,30,40,50] %}
             <Text value="{{value_r}}" >{{value_r}}</Text>
             {% endfor %}
