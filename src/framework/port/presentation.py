@@ -60,7 +60,7 @@ class port(ABC):
                 raise NotImplementedError(f"Tag '{widget}' non gestito in compose_view")
         
         self.env = Environment(loader=fs_loader,autoescape=select_autoescape(["html", "xml"]),undefined=DebugUndefined)
-        self.env.filters['add'] = language.add
+        self.env.filters['route'] = language.route
 
     @abstractmethod
     async def get_attribute(self, widget, field):

@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import uuid
 import json
 import copy
+from urllib.parse import parse_qs,urlencode,urlparse
 
 from cerberus import Validator, TypeDefinition, errors
 
@@ -631,43 +632,109 @@ def replace(self):
 def slice(self):
         pass
 
-def add2(url, parameter_name: str, parameter_value: str) -> str:
-    base_url = '/'.join(url.get('path', []))
-    existing_query_params = url.get('query', [])
+def route(url: dict, new_part: str) -> str:
     """
-    Adds a query parameter to a base URL, handling existing parameters and avoiding duplicates.
+    Updates the URL's path and/or adds query parameters based on the input string.
+    New values overwrite existing ones with the same name.
 
     Args:
-        base_url: The base URL to add the parameter to.
-        parameter_name: The name of the query parameter.
-        parameter_value: The value of the query parameter.
-        existing_query_params: A list of existing query parameters in the URL.
+        url: A dict containing parts of the URL (protocol, host, port, path, query, fragment).
+        new_part: The new path string (e.g., '/nuova/pagina') or a query string (e.g., '?id=100'),
+                  or a combination of both (e.g., '/nuova/pagina?page=2&category=tech').
 
     Returns:
-        The updated URL with the new query parameter.
+        The updated full URL as a string.
     """
-    existing_keys = set()
-    output = ""
-    if "?" not in base_url:
-        output = base_url + "?"
-    else:
-        output = base_url
+    # Copia i dati dal dizionario URL per sicurezza
+    protocol = url.get("protocol", "http")
+    host = url.get("host", "localhost")
+    port = url.get("port")
+    path = url.get("path", [])
+    query = url.get('query', {})
+    fragment = url.get("fragment", "")
+
+    # Analizza la stringa di input per separare il percorso dalla query
+    parsed_new_part = urlparse(new_part)
+
+    # Aggiorna il percorso se la stringa di input contiene un percorso
+    if parsed_new_part.path:
+        path = [p for p in parsed_new_part.path.split('/') if p]
+
+    # Aggiorna i parametri di query se la stringa di input contiene una query
+    if parsed_new_part.query:
+        new_params = parse_qs(parsed_new_part.query, keep_blank_values=True)
+        # Unisce e sovrascrive i parametri esistenti con i nuovi
+        for key, value in new_params.items():
+            query[key] = value
+
+    # Ricostruisce l'URL completo
+    base_url = f"{protocol}://{host}"
+    if port:
+        base_url += f":{port}"
+    if path:
+        base_url += "/" + "/".join(path)
+
+    # Codifica i parametri di query
+    if query:
+        encoded_query = urlencode(query, doseq=True)
+        base_url += f"?{encoded_query}"
     
-    new_param = f"{parameter_name}={parameter_value}"
-    combined_params = [new_param] + existing_query_params
+    if fragment:
+        base_url += f"#{fragment}"
 
-    for value in combined_params:
-        key = value.split("=")[0]
-        if key not in existing_keys:
-            if output.endswith("?") or output.endswith("&"):
-                output += value
-            else:
-                output += "&" + value
-            existing_keys.add(key)
+    return base_url
 
-    return output.strip()
+def route3(url: dict, query_string: str) -> str:
+    """
+    Adds query parameters from a string to an existing URL dictionary.
+    New parameters overwrite existing ones with the same name.
 
-def add(url: dict, parameter_name: str, parameter_value: str) -> str:
+    Args:
+        url: A dict containing parts of the URL (protocol, host, port, path, query, fragment).
+        query_string: The query string to add (e.g., "id=100").
+
+    Returns:
+        The updated full URL as a string.
+    """
+    # Combina la query esistente con la nuova stringa
+    existing_query = url.get('query', {})
+    
+    # Decodifica la stringa di query in un dizionario
+    new_params = parse_qs(query_string, keep_blank_values=True)
+    
+    # Unisci i dizionari, sovrascrivendo i valori esistenti con i nuovi
+    # Assicurati che i valori siano liste per compatibilità con urlencode
+    combined_params = {k: v for k, v in existing_query.items()}
+    for key, value in new_params.items():
+        combined_params[key] = value
+
+    # Ricostruisci l'URL base dal dizionario `url`
+    protocol = url.get("protocol", "http")
+    host = url.get("host", "localhost")
+    port = url.get("port")
+    path_list = url.get("path", [])
+    fragment = url.get("fragment", "")
+
+    # Costruisci l'URL in modo pulito
+    base_url = f"{protocol}://{host}"
+    if port:
+        base_url += f":{port}"
+    if path_list:
+        base_url += "/" + "/".join(path_list)
+
+    # Codifica i parametri combinati in una nuova stringa di query
+    encoded_query = urlencode(combined_params, doseq=True)
+    
+    # Assembla l'URL finale
+    final_url = base_url
+    if encoded_query:
+        final_url += "?" + encoded_query
+    if fragment:
+        final_url += "#" + fragment
+    
+    return final_url
+
+def route2(url: dict, **data) -> str:
     """
     Adds a query parameter to a base URL dict, keeping only the latest value
     for each parameter in the final URL.
@@ -680,26 +747,27 @@ def add(url: dict, parameter_name: str, parameter_value: str) -> str:
     Returns:
         The updated full URL as a string.
     """
+    #parsed_url = urlparse(url)
     # Ricostruisci base_url
     protocol = url.get("protocol", "http")
     host = url.get("host", "localhost")
     port = url.get("port")
-    path = "/".join(url.get("path", []))
-    fragment = url.get("fragment", [""])
+    path = "/".join(url.get("path", [])) if 'path' not in data else data['path']
+    fragment = url.get("fragment", [])
+    query = url.get('query',{})
+    qq = data.get('query',{})
     
     base_url = ""
     if path:
         base_url += f"/{path}"
 
     # Copia query esistente
-    query_params = {k: list(v) for k, v in url.get("query", {}).items()}
+    query_params = {k: list(v) for k, v in query.items()}
 
-    # Aggiungi il nuovo parametro evitando duplicati
-    if parameter_name not in query_params:
-        query_params[parameter_name] = [parameter_value]
-    else:
-        if parameter_value not in query_params[parameter_name]:
-            query_params[parameter_name].append(parameter_value)
+    # Sovrascrivi o aggiungi nuovi parametri dal dizionario 'query' passato in 'data'
+    if 'query' in data and isinstance(data['query'], dict):
+        for key, value in data['query'].items():
+            query_params[key] = value
 
     # Ricostruisci la query string con SOLO l'ultimo valore per ogni chiave
     query_parts = []
@@ -712,8 +780,8 @@ def add(url: dict, parameter_name: str, parameter_value: str) -> str:
     final_url = base_url
     if query_string:
         final_url += "?" + query_string
-    if fragment and fragment[0]:
-        final_url += "#" + fragment[0]
+    if len(fragment):
+        final_url += "#" + "&".join(fragment)
 
     return final_url
 

@@ -1,7 +1,7 @@
 {% extends "sidebar.xml" %}
 {% block bar %}
 <Action type="link" route="/inventory/machines/"><Media type="icon" src="bi-view-list"/> <Text>Overview</Text></Action>
-<Action type="link" route="/dev/repositories/"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
+<Action type="link" route="{{url|route(path='dev/repositories/')}}"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
 <Action type="link" route="/inventory/services/"><Media type="icon" src="bi-kanban"/> <Text>Projects</Text></Action>
 <Action type="link" route="/inventory/repositories/"><Media type="icon" src="bi-box-seam"/> <Text>Packages</Text></Action>
 <Action type="link" route="/inventory/volumes/"><Media type="icon" src="bi-people"/> <Text>Teams</Text></Action>
