@@ -66,9 +66,11 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "expand": {"type": "string"},
+            "padding": {"type": "string"},
+            "margin": {"type": "string"},
             "alignment-content": {
                 "type": "string",
-                "allowed": ["horizontal", "center", "end", "between", "around"]
+                "allowed": ["horizontal", "vertical", "center", "end", "between", "around"]
             },
             "orientation": {
                 "type": "string",
@@ -87,7 +89,7 @@
             "pagination": "pagination",
             "accordion": "accordion",
             "accordion-item": "accordion",
-            "tab": "tab"
+            "tab": "bar"
         }
     },
     "View": {
@@ -257,6 +259,8 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "expand": {"type": "string"},
+            "action": {"type": "string"},
+            "size": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["still","embed","dialog","root","inner"],
@@ -267,7 +271,7 @@
         "_type": {"dialog": "modal", "still": "offcanvas", "embed": "embed","root": "window", "inner": "window"}
     },
     "Text": {
-        "type": "dict", 
+        "type": "dict",
         "schema": {
             "class": {"type": "string"},
             "width": {"type": "string"},

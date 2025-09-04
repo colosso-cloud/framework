@@ -1,12 +1,10 @@
-{% extends "auth.xml" %}
-{% block main %}
-<Column expand="full">
-    <Row background="#fcfcfc" width="auto" class="border-end">
+<Row expand="full">
+    <Row width="auto" class="border-end bg-body-secondary">
         {% block west %}
         {% endblock %}
     </Row>
-    <Row expand="dynamic" padding="p-0" margin="m-0" class="overflow-auto">
-        <Column expand="auto" background="#fcfcfc" height="auto" class="border-bottom">
+    <Column expand="dynamic" padding="p-0" margin="m-0" class="overflow-auto">
+        <Column expand="auto" height="auto" class="border-bottom bg-body-secondary">
             {% block north %}
             {% endblock %}
         </Column>
@@ -14,14 +12,13 @@
             {% block center %}
             {% endblock %}
         </Column>
-        <Column expand="auto" background="#fcfcfc" height="auto" class="border-top">
+        <Column expand="auto" height="auto" class="border-top bg-body-secondary">
             {% block south %}
             {% endblock %}
         </Column>
-    </Row>
-    <Row background="#fcfcfc" width="auto" class="border-start">
+    </Column>
+    <Row width="auto" class="border-start bg-body-secondary">
         {% block east %}
         {% endblock %}
     </Row>
-</Column>
-{% endblock %}
+</Row>

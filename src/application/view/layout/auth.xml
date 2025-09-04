@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {% if user %}
-<Window type="{% if not model %}root{% else %}inner{% endif %}" title="Colosso - App" layout="mono" expand="full">
+<Window type="{% if not model %}root{% else %}inner{% endif %}" title="Colosso - App" layout="page" expand="full">
     
     <Column expand="full">
         {% block main %}

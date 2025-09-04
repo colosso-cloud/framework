@@ -23,7 +23,7 @@
                 <Container>{% block action %}{% endblock %}</Container>
             </Row>
         </Row>
-        <Column>
+        <Column expand="dynamic">
             <Container id="alerts">
                 
             </Container>

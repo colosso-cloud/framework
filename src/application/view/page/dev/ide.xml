@@ -1,35 +1,6 @@
-{% extends "sidebar.xml" %}
+{% extends "mono.xml" %}
 {% block bar %}
 {% endblock %}
 {% block content %}
-<Data type="table">
-    <Data type="table.header">
-        <Data type="table.cell">
-            <Text>Header 1</Text>
-        </Data>
-        <Data type="table.cell">
-            <Text>Header 2</Text>
-        </Data>
-        <Data type="table.cell">
-            <Text>Header 3</Text>
-        </Data>
-    </Data>
-    <Data type="table.body">
-        <Data type="table.row">
-            <Text>Cell 1</Text>
-            <Text>Cell 2</Text>
-            <Text>Cell 3</Text>
-        </Data>
-        <Data type="table.row">
-            <Text>Cell 1</Text>
-            <Text>Cell 2</Text>
-            <Text>Cell 3</Text>
-        </Data>
-        <Data type="table.row">
-            <Text>Cell 1</Text>
-            <Text>Cell 2</Text>
-            <Text>Cell 3</Text>
-        </Data>
-    </Data>
-</Data>
+<IDE />
 {% endblock %}

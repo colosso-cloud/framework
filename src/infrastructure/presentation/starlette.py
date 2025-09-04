@@ -321,7 +321,7 @@ class adapter(presentation.port):
                 'submit':  ('button', {'class': 'btn', 'type': 'submit'}),
                 'reset':   ('button', {'class': 'btn', 'type': 'reset'}),
                 'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('route', '/'),}),
-                'button':  ('button', {'class': 'btn', 'type': 'button',**({'onclick': f"route('{attributes['route']}')"} if 'route' in attributes else {})}),
+                'button':  ('button', {'class': 'btn', 'type': 'button',**({'onclick': f"route('{attributes['route']}',this)"} if 'route' in attributes else {})}),
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
                 'dropdown': ('div', {'class': 'dropdown'}),
             }.get(attributes.get('type')),
@@ -361,9 +361,10 @@ class adapter(presentation.port):
             }.get(attributes.get('type')),
             'wrapper_each':lambda adapter,attributes,inner: {
                 'list': lambda adapter,attributes,inner: adapter.code('li', {'class':'list-group-item'}, inner),
-                'tab' : lambda adapter,attributes,inner: adapter.code('div', {'class':'tab-pane'}, inner),
+                #'tab' : lambda adapter,attributes,inner: adapter.code('div', attributes|{'class':'tab-pane fade'}, inner),
             }.get(attributes.get('type')),
             'inner_overwrite': lambda adapter, attributes, inner: {
+                'tab': (attributes|{'class':'tab-pane fade','role':'tabpanel','tabindex':0},inner)
                 #'input': (({'class': f"{adapter.get_attribute(inner,'class')} input-group-text".strip()} if adapter.get_attribute(inner,'class') and 'form-select' not in adapter.get_attribute(inner,'class') else {}),''),
             }.get(attributes.get('type')),
         },
@@ -427,14 +428,14 @@ class adapter(presentation.port):
                                 }
                             }
                                  
-                            function route(destination) {
+                            function route(destination,triggerElement=null) {
                                 // Controlla se l'input inizia con un cancelletto (#)
                                 if (destination.startsWith('#')) {
                                     // Rimuove il '#' per ottenere solo l'ID del componente
                                     const componentId = destination.substring(1);
                                     
                                     // Chiama la funzione per aprire il componente Bootstrap
-                                    openBootstrapComponent(componentId);
+                                    openBootstrapComponent(componentId,triggerElement);
                                 } else {
                                     // Se non è un ID, reindirizza la pagina all'URL fornito
                                     window.location.href = destination;
@@ -458,7 +459,7 @@ class adapter(presentation.port):
                                 }
                             }
                                  
-                            function openBootstrapComponent(componentId) {
+                            function openBootstrapComponent2(componentId) {
                                 // 1. Seleziona l'elemento con l'ID fornito
                                 const componentElement = document.getElementById(componentId);
 
@@ -480,6 +481,49 @@ class adapter(presentation.port):
                                 } else {
                                     // L'elemento non è né un modale né un offcanvas
                                     console.warn(`Elemento con ID "${componentId}" non è un componente Bootstrap (modal o offcanvas).`);
+                                }
+                            }
+                                 
+                            function openBootstrapComponent(componentId,triggerElement=null) {
+                                // 1. Seleziona l'elemento con l'ID fornito
+                                const componentElement = document.getElementById(componentId);
+
+                                // 2. Se l'elemento non esiste, esci e mostra un errore
+                                if (!componentElement) {
+                                    console.error(`Elemento con ID "${componentId}" non trovato.`);
+                                    return;
+                                }
+
+                                // 3. Controlla il tipo di componente in base alle classi CSS
+                                if (componentElement.classList.contains('modal')) {
+                                    // È un modale
+                                    const modalInstance = new bootstrap.Modal(componentElement);
+                                    modalInstance.show();
+                                } else if (componentElement.classList.contains('offcanvas')) {
+                                    // È un offcanvas
+                                    const offcanvasInstance = new bootstrap.Offcanvas(componentElement);
+                                    offcanvasInstance.show();
+                                } else if (componentElement.classList.contains('tab-pane')) {
+                                    // È una tab
+        
+                                    // Verifica se l'elemento di attivazione esiste e ha gli attributi necessari
+                                    if (triggerElement) {
+                                        // Se il trigger non ha gli attributi, li aggiunge
+                                        if (!triggerElement.hasAttribute('data-bs-toggle')) {
+                                            triggerElement.setAttribute('data-bs-toggle', 'tab');
+                                        }
+                                        if (!triggerElement.hasAttribute('data-bs-target')) {
+                                            triggerElement.setAttribute('data-bs-target', `#${componentId}`);
+                                        }
+
+                                        const tabInstance = new bootstrap.Tab(triggerElement);
+                                        tabInstance.show();
+                                    } else {
+                                        console.warn(`Nessun trigger di tab valido è stato fornito per l'ID "${componentId}".`);
+                                    }
+                                } else {
+                                    // L'elemento non è né un modale, né un offcanvas, né una tab
+                                    console.warn(`Elemento con ID "${componentId}" non è un componente Bootstrap supportato (modal, offcanvas o tab).`);
                                 }
                             }
                         </script>
@@ -611,12 +655,15 @@ class adapter(presentation.port):
             }.get(attributes.get('type')),
         },
         'bar': {
-            'tag': 'div',
+            'tag': 'ul',
             'attributes': {'class': 'navigation'},
             'case': lambda attributes: {
-                'horizontal':  ('div', {'class': 'navbar'}),
-                'vertical': ('div', {'class': 'sidebar d-flex flex-column'}),
-            }.get(attributes.get('orientation')),
+                'bar':  ('nav', {'class': 'navbar'}),
+                'tab': ('ul', {'class': 'nav nav-tabs','role':'tablist'}),
+            }.get(attributes.get('type')),
+            'wrapper_each':lambda adapter,attributes,inner: {
+                'tab': lambda adapter,attributes,inner: adapter.code('li', {'class':'nav-item','role':'presentation'}, inner),
+            }.get(attributes.get('type')),
         },
     }
 
@@ -718,6 +765,8 @@ class adapter(presentation.port):
         
         client_ip = request.client.host
         session_identifier = request.cookies.get('session_identifier', secrets.token_urlsafe(16))
+        # Recupera l'URL dalla sessione
+        url_precedente = request.session.get("url_precedente",request.url)
         
         # Determina le credenziali in base al metodo HTTP
         if request.method == 'GET':
@@ -738,8 +787,7 @@ class adapter(presentation.port):
         #    request.session.update(session)
 
         # Crea la risposta di reindirizzamento
-        response = RedirectResponse('/', status_code=303)
-
+        response = RedirectResponse(url_precedente, status_code=303)
         # Imposta i cookie della sessione se non già presenti
         if 'session_identifier' not in request.cookies:
             response.set_cookie(key='session_identifier', value=session_identifier)
@@ -933,6 +981,7 @@ class adapter(presentation.port):
             return None
     
     async def starlette_view(self,request):
+        request.session["url_precedente"] = str(request.url)
         html = await self.mount_view(str(request.url))
         print(html, "html_body**********************",str(request.url))
         '''layout = 'application/view/layout/base.html'
