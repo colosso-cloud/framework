@@ -33,7 +33,7 @@
             "value": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["text", "table", "table.row", "table.cell", "table.header", "table.body", "progress"],
+                "allowed": ["text", "table", "table.row", "table.cell", "table.header", "table.body", "progress", "placeholder"],
                 "default": "text"
             }
         },
@@ -149,7 +149,11 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "padding": {"type": "string"},
-            "margin": {"type": "string"}
+            "margin": {"type": "string"},
+            "spacing":{"type": "string"},
+            "alignment-vertical":{"type": "string"},
+            "alignment-horizontal":{"type": "string"},
+            "alignment-content":{"type": "string"}
         },
         "_return": {"function": "render_widget", "args": ["Row"]}
     },
@@ -242,6 +246,7 @@
                 "default": "button"
             },
             "action": { "type": "string"},
+            "active": { "type": "string"},
             "route": {"type": "string"},
             "event-change": {"type": "string"},
             "event-click": {"type": "string"}
@@ -277,6 +282,7 @@
             "width": {"type": "string"},
             "height": {"type": "string"},
             "value": {"type": "string"},
+            "disabled": {"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["code", "text"],

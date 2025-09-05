@@ -21,7 +21,7 @@
 {% endblock %}
 <!-- West -->
 {% block west %}
-    <Navigation type="tab" margin="m-0" padding="p-0" alignment-content="vertical" class="border-end">
+    <Navigation type="tab" margin="m-0" padding="p-0" orientation="vertical" class="border-end">
         <Action width="75px" route="#tab-explore" ><Media type="icon" src="bi-archive"/><Text>Explore</Text></Action>
         <Action width="75px" route="#tab-view" ><Media type="icon" src="bi-view-list"/><Text>Views</Text></Action>
         <Action width="75px" route="#tab-model" ><Media type="icon" src="bi-file-earmark-spreadsheet"/><Text>Models</Text></Action>
@@ -195,7 +195,26 @@
 {% endblock %}
 <!-- South -->
 {% block south %}
-<Text>s</Text>
+<Row alignment-content="between" spacing="2">
+    <Row alignment-vertical="center" spacing="2">
+        <Action class="btn-primary" ><Media type="icon" src="bi-ubuntu"/></Action>
+        <Media type="icon" src="bi-git"/>
+        <Input type="select" >
+            <Text>Main</Text>
+            <Text>Presentation</Text>
+        </Input>
+    </Row>
+    <Row alignment-vertical="center" spacing="2">
+        <Media type="icon" src="bi-zoom-in"/>
+        <Media type="icon" src="bi-zoom-out"/>
+        <Text>Row 207, Column 30</Text>
+        <Text>Space: 4</Text>
+        <Text>UTF-8</Text>
+        <Text>XML</Text>
+        <Action ><Media type="icon" src="bi-arrow-bar-left"/></Action>
+    </Row>
+</Row>
+
 {% endblock %}
 <!-- East -->
 {% block east %}

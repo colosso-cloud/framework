@@ -15,7 +15,7 @@
                 </Input>
                 <Input width="auto" type="select" event-change="route(`{{ url|route('/${this.value}') }}`)" value="{{url.path[-1]}}" >
                     <Text value="dev" >DEV</Text>
-                    <Text value="ops" >OPS</Text>
+                    <Text value="ops" disabled="">OPS</Text>
                     <Text value="gov" >GOV</Text>
                 </Input>
         </Navigation>

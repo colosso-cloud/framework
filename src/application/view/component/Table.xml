@@ -31,9 +31,9 @@
         <Data type="table.body">
             {% for value in range(rows) %}
             <Data type="table.row">
-                <Text class="placeholder w-25">Cell 1</Text>
-                <Text class="placeholder w-100">Cell 1</Text>
-                <Text class="placeholder w-50">Cell 1</Text>
+                <Data type="placeholder" >Cell 1</Data>
+                <Data type="placeholder" >Cell 1</Data>
+                <Data type="placeholder" >Cell 1</Data>
             </Data>
             {% endfor %}
         </Data>
@@ -44,7 +44,7 @@
                 <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page - 1)|string)}}" class="border-start rounded-0" ><Text>Previous</Text></Action>
                 {% for page in range(1,5) %}
                     {% if current_page == page %}
-                <Action class="active" ><Text>{{page}}</Text></Action>
+                <Action active=""><Text>{{page}}</Text></Action>
                     {% else %}
                 <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (page)|string)}}" class="border-start rounded-0"><Text>{{page}}</Text></Action>
                     {% endif %}

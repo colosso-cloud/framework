@@ -71,6 +71,7 @@ class adapter(presentation.port):
         'id': {'attr':'id'},
         'type': {'attr':'type'},
         'name': {'attr':'name'},
+        'disabled': {'attr':'disabled'},
         'tooltip': {'attr':'data-bs-title','attrs':{'data-bs-toggle':'tooltip'}},
         'component': {},
         'draggable-event': {},
@@ -91,6 +92,7 @@ class adapter(presentation.port):
         'droppable': ('drop', 'self.on_drop'),
         'init': ('init', 'self.event'),
         # Mappatura layout
+        'active': {'class':'','value': lambda v: 'active'},
         'spacing': {'class':'','value': lambda v: f"gap-{v}"},
         'border': {'class':'','value': lambda v: f"border-{v}"},
         'border-top': {'class':'','value': lambda v: f"border-top-{v}"},
@@ -242,11 +244,13 @@ class adapter(presentation.port):
                 'table.header': ('thead', {}),
                 'table.body': ('tbody', {'class': 'table-body'}),
                 'progress': ('div', {'class': 'progress','role':'progressbar','aria-valuemin':'0','aria-valuemax':'100','aria-valuenow':attributes.get('value','0')}),
+                'placeholder': ('p',{'class': 'placeholder-glow'}),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
                 #'table': lambda adapter, attributes, inner: adapter.code('sadsadsads', {}, inner),
                 'table.header': lambda adapter, attributes, inner: adapter.code('tr', {}, inner),
                 'progress': lambda adapter, attributes, inner: adapter.code('div', {'class':'progress-bar','style':f"width:{attributes.get('value','0')}%"}, inner),
+                'placeholder': lambda adapter, attributes, inner: adapter.code('span', {'class':'placeholder col-12'}, inner),
                 #'table.row': lambda adapter, attributes, inner: adapter.code('tr', {'class': 'table-row'}, inner),
             }.get(attributes.get('type', 'text')),
             'wrapper_each': lambda adapter, attributes, inner: {
@@ -308,7 +312,7 @@ class adapter(presentation.port):
                 'switch': ('div', {'class': 'form-switch'}),
             }.get(attributes.get('type', 'text'), ('input', {'class': 'form-control', 'type': attributes.get('type','text')})),
             'wrapper_each':lambda adapter,attributes,inner: {
-                'select': lambda adapter,attributes,inner: adapter.code('option', {**({'value': adapter.get_attribute(inner,'value')} if adapter.get_attribute(inner,'value') else {}),**({'selected': ''} if 'value' in attributes and attributes['value'] == adapter.get_attribute(inner,'value') else {})}, inner),
+                'select': lambda adapter,attributes,inner: adapter.code('option', {**({'value': adapter.get_attribute(inner,'value')} if adapter.get_attribute(inner,'value') else {}),**({'disabled': adapter.get_attribute(inner,'disabled')} if True else {}),**({'selected': ''} if 'value' in attributes and attributes['value'] == adapter.get_attribute(inner,'value') else {})}, inner),
             }.get(attributes.get('type', 'text')),
             'wrapper_once': lambda adapter, attributes, inner: {
                 'switch': lambda adapter, attributes, inner: adapter.code('input', {'class':'form-check-input','type':'checkbox','role':'switch','id':attributes.get('id','switch'),**({'event-click': attributes['event-click']} if 'event-click' in attributes else {}),**({'checked': attributes['selected']} if 'selected' in attributes else {})},''),
@@ -318,10 +322,10 @@ class adapter(presentation.port):
         'action': {
             'tag': None,  # Determinato dinamicamente
             'case': lambda attributes: {
-                'submit':  ('button', {'class': 'btn', 'type': 'submit'}),
+                'submit':  ('button', {'class': 'btn '+attributes.get('active', ''), 'type': 'submit'}),
                 'reset':   ('button', {'class': 'btn', 'type': 'reset'}),
-                'link':    ('a',      {'class': 'btn btn-link', 'href': attributes.get('route', '/'),}),
-                'button':  ('button', {'class': 'btn', 'type': 'button',**({'onclick': f"route('{attributes['route']}',this)"} if 'route' in attributes else {})}),
+                'link':    ('a',      {'class': 'btn btn-link '+attributes.get('active', ''), 'href': attributes.get('route', '/'),}),
+                'button':  ('button', {'class': 'btn '+attributes.get('active', ''), 'type': 'button',**({'onclick': f"route('{attributes['route']}',this)"} if 'route' in attributes else {})}),
                 'form':    ('form', {'class': 'form-control', 'method': 'POST'}),
                 'dropdown': ('div', {'class': 'dropdown'}),
             }.get(attributes.get('type')),
@@ -630,19 +634,24 @@ class adapter(presentation.port):
         'pagination': {
             'tag': 'nav',
             'attributes': {'class': 'pagination'},
-            'order':['inner_overwrite','wrapper_each','wrapper_once'],
+            'order':['overwrite_each','wrapper_each','wrapper_once'],
             'wrapper_each': lambda adapter, attributes, inner: {
-                'pagination': lambda adapter, attributes, inner: adapter.code('li', {'class': 'page-item'}, inner),
+                'pagination': lambda adapter, attributes, inner: adapter.code('li', {'class': 'page-item '}, inner),
             }.get(attributes.get('type')),
             'wrapper_once': lambda adapter, attributes, inner: {
                 'pagination': lambda adapter, attributes, inner: adapter.code('ul', {'class': 'pagination m-0'}, inner),
             }.get(attributes.get('type')),
-            'inner_overwrite': lambda adapter, attributes, inner: {
-                'pagination': ({'class':'page-link'},''),
+            #'inner_overwrite': lambda adapter, attributes, inner: {
+            #    'pagination': ({'class':str(adapter.get_attribute(inner[-1],'class'))+' page-link'},''),
+            #}.get(attributes.get('type')),
+            'overwrite_each': lambda adapter, attributes, each: {
+                'pagination': ({'class':str(adapter.get_attribute(each,'class'))+' page-link'},''),
             }.get(attributes.get('type')),
         },
         'carousel': {
             'tag': 'div',
+            #['wrapper','each','inner']:{},
+            #['overwrite','fiest','inner']:{},
             'attributes': {'data-bs-ride':'carousel','class':'carousel slide'},
             'wrapper_each':lambda adapter,attributes,inner: {
                 'carousel': lambda adapter,attributes,inner: adapter.code('div', {'class':'carousel-item w-100 h-100'}, inner),
@@ -658,8 +667,8 @@ class adapter(presentation.port):
             'tag': 'ul',
             'attributes': {'class': 'navigation'},
             'case': lambda attributes: {
-                'bar':  ('nav', {'class': 'navbar'}),
-                'tab': ('ul', {'class': 'nav nav-tabs','role':'tablist'}),
+                'bar':  ('nav', {'class': ('sidebar d-flex flex-column ' if 'vertical' == attributes.get('orientation') else 'navbar ')}),
+                'tab': ('ul', {'class': ('sidebar d-flex flex-column ' if 'vertical' == attributes.get('orientation') else 'navbar ')+'nav nav-tabs','role':'tablist'}),
             }.get(attributes.get('type')),
             'wrapper_each':lambda adapter,attributes,inner: {
                 'tab': lambda adapter,attributes,inner: adapter.code('li', {'class':'nav-item','role':'presentation'}, inner),

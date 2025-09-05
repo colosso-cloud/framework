@@ -467,7 +467,7 @@ class port(ABC):
             element_attrs["class"] = f"{default_attrs['class']} {user_attrs['class']}"
 
          # Gestione dell'ordine di esecuzione
-        execution_order = widget_config.get('order', ['case', 'test', 'wrapper_each', 'inner_overwrite', 'inner_last', 'inner_first', 'wrapper_once', 'inner_append', 'in', 'component'])
+        execution_order = widget_config.get('order', ['case', 'test', 'wrapper_each', 'inner_overwrite', 'inner_last', 'inner_first', 'wrapper_once', 'inner_append', 'in', 'component','overwrite_each'])
 
         hooks = {
             'case': (widget_config.get('case'), 0),
@@ -480,7 +480,12 @@ class port(ABC):
             'inner_append': (widget_config.get('inner_append'), 1),
             'in': (widget_config.get('in'), 1),
             'component': (widget_config.get('component'), 5),
+            'overwrite_each': (widget_config.get('overwrite_each'), 6),
         }
+
+        mass = ['last','first','each']
+        targets = ['last','first','each','inner']
+        acts = ['overwrite','append','']
         
         for hook_name in execution_order:
             if hook_name not in hooks or hooks[hook_name][0] is None:
@@ -498,6 +503,11 @@ class port(ABC):
                 case 5:
                     hook_result = hook
                     pass
+                case 6:
+                    hook_result = []
+                    for cc in children:
+                        hook_result.append(hook(self, element_attrs, cc))
+
 
             match hook_name:
                 case 'case':
@@ -520,6 +530,13 @@ class port(ABC):
                         #print(children,'BOOOOOOOOOOOOOOOOOOOOOOOM KTWWWWWWWWWWWWWWWWWWWWWWWWWW')
                         
                         children = [self.code_update(child, overwrite_attrs) for child in children]
+                case 'overwrite_each':
+                    temp = []
+                    if hook_result:
+                        for xx in range(len(hook_result)):
+                            overwrite_attrs, _ = hook_result[xx]
+                            temp.append(self.code_update(children[xx], overwrite_attrs))
+                    children = temp
                 case 'inner_last':
                     if hook_result:
                         overwrite_attrs, ggg = hook_result
