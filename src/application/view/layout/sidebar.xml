@@ -15,11 +15,11 @@
             {% endblock %}
             </Navigation>
         <Row>
-            <Column padding="p-5" >
+            <Column padding="p-5" expand="dynamic" >
                 <Text class="h1">{% block title %}{% endblock %}</Text>
                 <Text class="h5">{% block subtitle %}{% endblock %}</Text>
             </Column>
-            <Row class="position-sticky">
+            <Row padding="p-5" alignment-content="center" >
                 <Container>{% block action %}{% endblock %}</Container>
             </Row>
         </Row>

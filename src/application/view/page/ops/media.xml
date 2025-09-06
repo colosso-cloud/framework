@@ -1,0 +1,16 @@
+{% extends "sidebar.xml" %}
+{% block bar %}
+<Action route="/home"><Media type="icon" src="bi-pc-horizontal"/> <Text>Machines</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-box-seam"/> <Text>Containers</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-boxes"/> <Text>Services</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-database"/> <Text>Volumes</Text></Action>
+<Action route="/home"><Media type="icon" src="bi-globe"/> <Text>Domains</Text></Action>
+{% endblock %}
+{% block title %}Domain {% endblock %}
+{% block subtitle %}Details and information about the domain #{{url.path[-1]}}.{% endblock %}
+{% block content %}
+<Media height="1000px" type="embed" src="https://www.youtube.com/embed/tujkoXI8rWM?si=7OFG-u-przarv7KE" />
+<Media width="500px" height="500px" type="video" src="https://www.w3schools.com/html/mov_bbb.mp4" controls="" autoplay="" />
+<Text type="code">print("Hello, World!")</Text>
+{% endblock %}

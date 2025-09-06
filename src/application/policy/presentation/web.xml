@@ -8,6 +8,9 @@
     <Route path="/inventory/volumes/volume/{$id}" type="view" view="inventory/volume.xml" method="GET" />
     <Route path="/inventory/containers/container/{$id}" type="view" view="inventory/container.xml" method="GET" />
     <Route path="/inventory/machines/machine/{$id}" type="view" view="inventory/machine.xml" method="GET" />
+    <Route path="/inventory/articles" type="view" view="ops/article.xml" method="GET" />
+    <Route path="/inventory/clients" type="view" view="ops/client.xml" method="GET" />
+    <Route path="/inventory/media" type="view" view="ops/media.xml" method="GET" />
     <Route path="/inventory/{repositories|domains|services|volumes|containers|machines|secrets}" type="view" view="inventory/tables.xml" method="GET" />
     <Route path="/{dev|ops}/{repositories|domains|services|volumes|containers|machines|secrets}" type="view" view="inventory/tables.xml" method="GET" />
     <Route path="/dev" type="view" view="dev/overview.xml" method="GET" />
