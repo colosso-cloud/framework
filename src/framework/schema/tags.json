@@ -17,8 +17,7 @@
                 "allowed": ["horizontal", "center", "end", "between", "around"]
             },
             "expand": {
-                "type": "string",
-                "allowed": ["horizontal", "vertical", "full"]
+                "type": "string"
             }
         },
         "_return": {"function": "render_widget", "args": ["card"]}
@@ -48,6 +47,7 @@
             "autoplay": {"type": "string" },
             "width":{"type": "string"},
             "height":{"type": "string"},
+            "expand":{"type": "string"},
             "type": {
                 "type": "string",
                 "allowed": ["image", "video", "audio", "embed", "carousel", "map","icon"]
