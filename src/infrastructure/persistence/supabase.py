@@ -1,173 +1,230 @@
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import sys
 import json
-try:
-    import supabase
-except Exception as e:
-    import js
-    from js import supabase
-    import pyodide
+import os
 
-modules = {'flow': 'framework.service.flow'}
+# Determina l'ambiente di esecuzione (backend o frontend con Pyodide)
+SUPABASE_ENV = os.environ.get('SUPABASE_ENV', 'BACKEND')
+
+if SUPABASE_ENV == 'FRONTEND':
+    try:
+        import js
+        from js import supabase
+        import pyodide
+    except ImportError:
+        # Gestione di un errore, nel caso in cui le librerie non siano disponibili
+        print("Warning: Pyodide environment specified but libraries not found.", file=sys.stderr)
+        supabase = None
+        pyodide = None
+else:
+    # Per l'ambiente backend
+    try:
+        from supabase import create_client, Client
+    except ImportError:
+        print("Error: Supabase Python library not found. Please install with `pip install supabase`", file=sys.stderr)
+        create_client = None
+
+# Aggiusta il percorso del modulo se necessario, come nel tuo codice originale
+resources = {
+    'flow': 'framework/service/flow.py',
+}
 
 class adapter:
     def __init__(self, **config):
-        """Inizializza il client Supabase con URL e chiave API."""
+        """Inizializza il client Supabase in base all'ambiente."""
         self.config = config.get('config', {})
-        #print(self.config)
-        self.client = supabase.createClient(self.config['url'], self.config['key'])
+        self.is_frontend = SUPABASE_ENV == 'FRONTEND'
+        self.client = None
+        self.js_client = None
+
+        if self.is_frontend:
+            if not supabase or not pyodide:
+                raise RuntimeError("Pyodide environment dependencies not met.")
+            
+            # Inizializza il client JS
+            js_code = f"""
+            globalThis.supabaseClient = supabase.createClient("{self.config.get('url', '')}", "{self.config.get('key', '')}");
+            console.log("✅ Supabase initialized for Pyodide!");
+            """
+            pyodide.code.run_js(js_code)
+            self.js_client = js.globalThis.supabaseClient
+        else:
+            if not create_client:
+                raise RuntimeError("Backend Supabase dependencies not met.")
+            
+            # Inizializza il client Python per il backend
+            self.client: Client = create_client(self.config['url'], self.config['key'])
+            print("✅ Supabase initialized for Backend!")
+
         self.set_token(self.config.get('token', ''))
-
-        js_code = f"""
-  
-        globalThis.supabaseClient = supabase.createClient("{self.config.get('url','')}", "{self.config.get('key','')}");
-
-        console.log("✅ Supabase inizializzato!");
-        """
-        pyodide.code.run_js(js_code)
-        
 
     def set_token(self, token):
         """Imposta il token di autenticazione dell'utente."""
         self.token = token
-        self.client.auth.session = {"access_token": token}  # Usa il token per autenticazione
+        if self.is_frontend and self.js_client:
+            self.js_client.auth.setSession({"access_token": token,'refresh_token':''})
+        elif self.client:
+            self.client.auth.set_session('eyJhbGciOiJIUzI1NiIsImtpZCI6Inl0WDVVZXhsVHNmS2RPVEsiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2xqZW93cHFtb3ZhYXZ4Z2hwc25lLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5OTkzOGQ3YS1lYzIwLTRhZDItYjMxOS02MGIzODMzYmUxNjAiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ5MTU0MjkyLCJpYXQiOjE3NDkxNTA2OTIsImVtYWlsIjoibWFyaW80MjM0MzRAZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbCI6Im1hcmlvNDIzNDM0QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6Ijk5OTM4ZDdhLWVjMjAtNGFkMi1iMzE5LTYwYjM4MzNiZTE2MCJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzQ4NjIxMzE1fV0sInNlc3Npb25faWQiOiI3MTI5ZGRiYi05NDYzLTQ1MGMtYWFkMi1hNDM2MWU5ZWQ3NWYiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.lROpEk57HnTNxiE2ifJAQ1sfuNAbnneZlP2_r55tQkE','fgp6yorrn6zb')
 
-    def generate_query_filter(self, filters):
-        """
-        Genera una stringa di query Python per Supabase applicando dinamicamente i filtri.
-        """
-        query = ""
-
-        # Applica i filtri dinamicamente
-        if 'eq' in filters:
-            for field in filters['eq']:
-                query += f'.eq("{field}", "{filters['eq'][field]}")'
-        if 'neq' in filters:
-            for field, value in filters['neq']:
-                query += f'.neq("{field}", "{filters['neq'][field]}")'
-        if 'like' in filters:
-            for field, value in filters['like']:
-                query += f'.like("{field}", "{filters['like'][field]}")'
-        if 'ilike' in filters:
-            for field, value in filters['ilike']:
-                query += f'.ilike("{field}", "{filters['ilike'][field]}")'
-        if 'pagination' in filters:
-            for field in filters['pagination']:
-                start = filters['pagination'][field].get('start', 1)
-                end = filters['pagination'][field].get('end', 10)
-                start, end = (start - 1) * end, start * end - 1
-                query += f'.range({start}, {end})'
-        if 'in' in filters:
-            for field, value in filters['in']:
-                query += f'.in("{field}", {filters['pagination'][field]})'
-
+    def _apply_filters_to_query(self, query, filters):
+        """Applica dinamicamente i filtri alla query."""
+        if not filters:
+            return query
+        
+        for op, params in filters.items():
+            if op == 'pagination':
+                start = params.get('start', 1)
+                end = params.get('end', 10)
+                start_index, end_index = (start - 1) * end, start * end - 1
+                query = query.range(start_index, end_index)
+            elif op == 'in':
+                for field, values in params.items():
+                    query = query.in_(field, values)
+            else: # Gestisce 'eq', 'neq', 'like', 'ilike'
+                for field, value in params.items():
+                    query = getattr(query, op)(field, value)
         return query
 
-    @flow.asynchronous()
     async def query(self, **constants):
-        
-        """
-        Esegue una query su Supabase tramite supabase-js, con supporto per filtri e paginazione.
-        """
-        payload = constants.get('payload', {}) or "{}"
-        method = constants.get('method', '')
+        """Esegue una query su Supabase in base all'ambiente."""
+        payload = constants.get('payload', {})
+        method = constants.get('method', '').upper()
         location = constants.get('location', '')
-        filter = constants.get('filter', {})
-        filter = self.generate_query_filter(filter)
-        # Configura la paginazione
-        
+        filters = constants.get('filter', {})
 
-        # Genera il codice JavaScript per la query
+        if not location:
+            return {"state": False, "error": "Location not specified."}
+        
+        if self.is_frontend:
+            return await self._query_frontend(method, location, payload, filters)
+        else:
+            return self._query_backend(method, location, payload, filters)
+
+    async def _query_frontend(self, method, location, payload, filters):
+        """Logica di query per Pyodide (frontend) usando JS."""
+        
+        # Semplificazione della gestione dei filtri per JS
+        filter_code = ""
+        if filters:
+            for op, params in filters.items():
+                if op == 'pagination':
+                    start = params.get('start', 1)
+                    end = params.get('end', 10)
+                    start_index, end_index = (start - 1) * end, start * end - 1
+                    filter_code += f".range({start_index}, {end_index})"
+                elif op == 'in':
+                    for field, values in params.items():
+                        js_values = json.dumps(values)
+                        filter_code += f".in('{field}', {js_values})"
+                else:
+                    for field, value in params.items():
+                        js_value = json.dumps(value)
+                        filter_code += f".{op}('{field}', {js_value})"
+
         js_code = f"""
-        async function query() {{
-            let query = supabaseClient.from("{location}");
+        async function run_query() {{
+            let query = globalThis.supabaseClient.from("{location}");
             let response;
 
-           
-            const payload = {json.dumps(payload)};
-            const method = "{method}";
-            const location = "{location}";
-
-            switch (method) {{
+            switch ("{method}") {{
                 case "GET":
-                    response = await query.select("*"){filter};
+                    query = query.select("*"){filter_code};
+                    response = await query;
                     break;
                 case "POST":
-                    response = await query.insert(payload){filter};
+                    response = await query.insert({json.dumps(payload)}){filter_code};
                     break;
                 case "PUT":
-                    response = await query.update(payload){filter};
+                    // Per UPDATE, i filtri sono usati per "match"
+                    response = await query.update({json.dumps(payload)});
+                    
+                    // Applica i filtri come match (necessario per l'API JS)
+                    if (filters && filters.eq) {{
+                        for (const [key, value] of Object.entries(filters.eq)) {{
+                             query = query.eq(key, value);
+                        }}
+                    }}
+                    response = await query;
                     break;
                 case "DELETE":
-                    response = await query.delete(){filter};
+                    // Per DELETE, i filtri sono usati per "match"
+                    response = await query;
+
+                    if (filters && filters.eq) {{
+                        for (const [key, value] of Object.entries(filters.eq)) {{
+                             query = query.eq(key, value);
+                        }}
+                    }}
+                    response = await query.delete();
                     break;
                 default:
-                    return {{ state: false, error: "Invalid method", input: {{ method, payload, location }} }};
+                    return {{ state: false, error: "Invalid method" }};
             }}
 
             return response.error 
                 ? {{ state: false, error: response.error.message, input: {{ method, payload, location }} }}
                 : {{ state: true, result: response.data, input: {{ method, payload, location }} }};
         }}
-        query();
+        run_query();
         """
-        test = await pyodide.code.run_js(js_code)
-        #print(test.to_py(),'test....',js_code)
-        return test.to_py()
-    
-    async def query2(self, **constants):
-        """Esegue una richiesta a Supabase utilizzando il token di autenticazione."""
-        try:
-            payload = constants.get('payload', {})
-            method = constants.get('method', '')
-            tt = constants.get('path', [])[0]
-
-            print(tt)
-            print(dir(supabase.fromTable('router')))
-            filters = constants.get('filters', [])
-
         
+        try:
+            result = await pyodide.code.run_js(js_code)
+            return result.to_py()
+        except Exception as e:
+            return {"state": False, "error": f"JS execution error: {str(e)}"}
+
+    def _query_backend(self, method, location, payload, filters):
+        """Logica di query per il backend usando la libreria Python."""
+        try:
+            query = self.client.table(location)
+            response = None
+            
             if method == 'GET':
-                query = self.client.table(tt).select('*')
-                for f in filters:
-                    query = query.eq(f['field'], f['value'])
+                query = self._apply_filters_to_query(query.select('*'), filters)
                 response = query.execute()
 
             elif method == 'PUT':
-                response = self.client.table(tt).update(payload).match(filters).execute()
+                # Per PUT e DELETE, i filtri 'eq' vengono usati per la clausola `match`
+                match_filters = filters.get('eq', {})
+                if not match_filters:
+                    return {"state": False, "error": "Match filters required for update."}
+                
+                response = query.update(payload).match(match_filters).execute()
 
             elif method == 'POST':
-                response = self.client.table(tt).insert(payload).execute()
+                response = query.insert(payload).execute()
 
             elif method == 'DELETE':
-                response = self.client.table(tt).delete().match(filters).execute()
-
+                match_filters = filters.get('eq', {})
+                if not match_filters:
+                    return {"state": False, "error": "Match filters required for delete."}
+                
+                response = query.delete().match(match_filters).execute()
+            
             else:
                 return {"state": False, "error": "Invalid method"}
+            
+            if response.data is None:
+                # La libreria Python di Supabase non solleva eccezioni per errori HTTP
+                return {"state": False, "error": response.data, "result": None}
 
-           
-            return {"state": bool(response.data), "result": response.data if response else "Request failed"}
-
+            return {"state": True, "result": response.data}
         except Exception as e:
-            print(f"Errore durante la richiesta: {e}")
             return {"state": False, "error": str(e)}
 
+    # Metodi di alias per le operazioni CRUD
     @flow.asynchronous(outputs='transaction')
     async def create(self, **constants):
-        """Inserisce un nuovo record nella tabella Supabase."""
         return await self.query(**constants | {'method': 'POST'})
 
     @flow.asynchronous(outputs='transaction')
     async def delete(self, **constants):
-        """Elimina un record dalla tabella Supabase."""
         return await self.query(**constants | {'method': 'DELETE'})
 
     @flow.asynchronous(outputs='transaction')
     async def read(self, **constants):
-        """Recupera i dati dalla tabella Supabase."""
         return await self.query(**constants | {'method': 'GET'})
 
     @flow.asynchronous(outputs='transaction')
     async def update(self, **constants):
-        """Aggiorna un record nella tabella Supabase."""
         return await self.query(**constants | {'method': 'PUT'})

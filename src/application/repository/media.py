@@ -1,10 +1,10 @@
 resources = {
     'factory': 'framework/service/factory.py',
-    'domain': 'application/model/domain.json',
+    'media': 'application/model/media.json',
 }
 
 repository = factory.repository(
-    location = {'SUPABASE': ['domains']},
-    model = domain,
+    location = {'SUPABASE': ['means']},
+    model = media,
     mapper = {},
 )

@@ -190,7 +190,7 @@ class adapter(presentation.port):
         'storekeeper': {
             'tag': 'div',
             'attributes': {'class': 'container-fluid'},
-            'component': ''
+            #'component': ''
         },
         'component': {
             'tag': 'div',

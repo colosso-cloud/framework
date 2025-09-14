@@ -113,6 +113,7 @@ class port(ABC):
         if 'inner' in constants:
             inner = constants['inner']
             placeholder = markupsafe.Markup('<Text>aaa</Text>')
+            #placeholder = '<Text>aaa</Text>'
             ppp = await self.mount_widget('Text', ['aaa'], {'type':'text'})
             constants['inner'] = placeholder
 
@@ -130,6 +131,7 @@ class port(ABC):
             if isinstance(inner, list):
                 inner = ''.join(str(x) for x in inner)
             view = view.replace(ppp,inner)
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!2",view,constants)
         return view
 
     async def rebuild(self, id, tag, **data):
@@ -333,11 +335,26 @@ class port(ABC):
                 match function:
                     case 'mount_view':
                         #print('Mounting view:',args)
-                        return await self.mount_view(*args,model=['ok'])
+                        return await self.mount_view(*args,**{'model':['ok']})
                     case 'render_widget':
-                        print('Rendering widget:',data)
-                        return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url','')})
-                
+                        #print('Rendering widget:',data)
+                        return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})
+                    case 'render_widget_storekeeper':
+                        #print('Rendering widget:',data)
+                        transaction = await storekeeper.gather(repository='media',filter={},payload={})
+                        print(transaction)
+                        #exit(10)
+                        #exit(10) 'eq': {'id':'10'}
+                        #return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url',''),'storekeeper':transaction})
+                        print(inner)
+                        inner = []
+                        if len(elements) > 0:
+                            for element in elements:
+                                mounted = await self.render_view(element, data|{'storekeeper':transaction})
+                                inner.append(mounted)
+                        ok= await self.builder(file="src/application/view/component/Tiat.xml",text='<Row>{{inner|safe}}</Row>',**{'inner':inner,'url':data.get('url',''),'storekeeper':transaction})
+                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",ok)
+                        return ok              
             if '_type' in schema:
                 schema_type = schema['_type'].get(attributes.get('type', ''))
                 input_type = schema.get('_input','inner')
@@ -347,101 +364,19 @@ class port(ABC):
                     inner.append(str(text))
                 if schema_type:
                     if input_type == 'inner':
-                        return await self.render_widget(schema_type, inner, attributes, **{'url':data.get('url','')})
+                        return await self.render_widget(schema_type, inner, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})
                     elif input_type == 'text':
-                        return await self.render_widget(schema_type, text, attributes, **{'url':data.get('url','')})
+                        return await self.render_widget(schema_type, text, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})
                     elif input_type == 'mixed':
-                        return await self.render_widget(schema_type, inner, attributes, **{'url':data.get('url','')})
+                        return await self.render_widget(schema_type, inner, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})
                     else:
                         print('Unknown input type:',input_type)
                 #print('Mounting widget:',schema_type,tag,attributes.get('type',''))
         else:
-            return await self.render_widget(tag, inner, attributes, **{'url':data.get('url',''),'mode':['component']})
-
-        '''#if tag in self.tags:
-        #    return await self.tags[tag]()
-        match tag:
-            case 'Defender':
-                # Implementazione di un controllo di sicurezza base per prevenire attacchi OWASP comuni
-                # come XSS, SQL Injection, ecc. su codice/text stampato dal componente Defender.
-                # Esegue escaping e validazione degli attributi e del testo.
-
-                # Esempio: verifica e sanifica tutti gli attributi e il testo
-                sanitized_att = {}
-                for k, v in att.items():
-                    # Escape HTML per evitare XSS
-                    sanitized_att[k] = escape(str(v))
-
-                # Sanifica il testo (se presente)
-                sanitized_text = escape(text) if text else ''
-
-                # Controllo su inner: se sono stringhe, esegui escape, se sono elementi, ricorsione
-                sanitized_inner = []
-                for item in inner:
-                    if isinstance(item, str):
-                        sanitized_inner.append(escape(item))
-                    else:
-                        sanitized_inner.append(item)  # Se è già un elemento HTML/XML, si presume sia gestito
-
-                # Costruisci il markup sicuro per Defender
-                defender_html = self.code('div', {'class': 'defender-component', **sanitized_att}, sanitized_inner or sanitized_text)
-                self.att(defender_html, sanitized_att)
-                return defender_html
-            case 'Messenger':
-                id = att['id'] if 'id' in att else str(uuid.uuid4())
-                model = att['type'] if 'type' in att else 'flesh'
-                title = att['title'] if 'title' in att else ''
-                domain = att['domain'] if 'domain' in att else []
-                view = att['view'] if 'view' in att else ''
-                domain = domain.split(',')
-                #self.data[domain] = {'domain':domain,'messages':messages}
-                if id not in self.components:
-                    for dom in domain:
-                        self.data.setdefault(dom,[]).append(id)
-                    
-                    self.components[id] = {'id': id}
-                    self.components[id]['view'] = f'application/view/component/{view}.xml'
-                    #self.components[id]['inner'] = f"<{tag} id='{id}' model='repository'>{markupsafe.Markup(xml_string)}</{tag}>"
-                    self.components[id]['attributes'] = att
-                
-                #item = await self.builder(**data|{'component':self.components[id],'url':self.components[id]['view']})
-                output = await self.compose_view('Container',inner,**att)
-                await self.mount_property('Container',output,att)
-                return output
-            case 'Storekeeper':
-                method = att['method'] if 'method' in att else 'overview'
-                inner_context = []
-                payload = att['payload'] if 'payload' in att else ''
-                payload = language.extract_params(payload)
-                filter = att['filter'] if 'filter' in att else ''
-                filter = language.extract_params(filter)
-                repository = att['repository'] if 'repository' in att else 'repository'
-
-                print(payload,repository,'transactionok')
-
-                try:
-                    match method:
-                        case 'overview':
-                            transaction = await storekeeper.overview(repository=repository,filter=filter,payload=payload)
-                        case 'gather':
-                            transaction = await storekeeper.gather(repository=repository,filter=filter,payload=payload)
-                        case _:
-                            print('Method not found')
-                except Exception as e:
-                    print('Error',e)
-
-                print(transaction,payload,repository,'###333')
-                
-                for element in elements:
-                    built = await self.mount_view(element,data|{'storekeeper':transaction})
-                    inner_context.append(built)
-                
-                output = await self.compose_view('Container',inner_context)
-                await self.mount_property('Container',output,att)
-                return output
-    '''
+            return await self.render_widget(tag, inner, attributes, **{'url':data.get('url',''),'mode':['component'],'storekeeper':data.get('storekeeper',{})})
 
     async def mount_widget(self, tag, children, user_attrs, **context):
+        print(tag,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',context)
         """Mounts a widget using data-driven config."""
         user_attrs = user_attrs or {}
         widget_name = tag.lower()
@@ -561,7 +496,7 @@ class port(ABC):
                     if hook_result:
                         if isinstance(hook_result, tuple):
                             overwrite_attrs, ggg = hook_result
-                            children = await self.builder(file=overwrite_attrs,inner=ggg,**{'url':context.get('url','')})
+                            children = await self.builder(file=overwrite_attrs,inner=ggg,**{'url':context.get('url',''),'storekeeper':context.get('storekeeper',{})})
                             #return children
                             #inner.append(ggg)
                             #children = await self.builder(file=overwrite_attrs,inner=ggg,mode=['layout'])
@@ -612,6 +547,7 @@ class port(ABC):
                         'component':self.components.get(id,{}),
                         'file':url,
                         'inner':children,
+                        #'storekeeper':context.get('storekeeper',{})
                     }
                     argg = context|argg
                     #print(att,data.get('storekeeper',{}).get('component',{}),id,tag,'DATA|COM',data)

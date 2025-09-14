@@ -88,8 +88,9 @@ class repository():
             for item in results:
                 if isinstance(item, dict):
                     try:
+                        #(data_dict, mapper, values, input, output)
                         translated_item = language.translation(
-                            item, self.fields, self.mapper, self.values, profile, 'MODEL'
+                            item, self.mapper, self.values, self.schema, self.schema
                         )
                         r.append(translated_item)
                     except Exception as e:
@@ -116,16 +117,16 @@ class repository():
                 self.schema = await language.load_module(language, path=f'application.model.{self.model}')
                 self.schema = getattr(self.schema, self.model, None)
                 if not self.schema:
-                    raise ValueError(f"Schema non trovato per il modello: {self.model}")
-                self.fields = [field['name'] for field in self.schema if 'name' in field]'''
+                    raise ValueError(f"Schema non trovato per il modello: {self.model}")'''
+            self.fields = [field['name'] for field in self.schema if 'name' in field]
 
             # Ottieni il payload iniziale
             payload = inputs.get('payload', {})
             para = {}
-
+            print(self.schema)
             # Traduzione del payload
-            translated_payload = language.translation(payload, self.schema.keys(), self.mapper, self.values, 'MODEL', profile)
-            print("Translated payload:", translated_payload,payload)
+            #translated_payload = language.translation(payload, self.schema.keys(), self.mapper, self.values, 'MODEL', profile)
+            #print("Translated payload:", translated_payload,payload)
 
             # Applica la funzione payload specifica, se esiste
             func_payload = self.payloads.get(ops_crud, None)

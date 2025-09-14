@@ -19,6 +19,7 @@
             <Action route="/auth/signup"><Text>Don't have an account? Sign up</Text></Action>
             <Action route="/auth/reset-password"><Text>Forgot password? Reset it</Text></Action>
         </Card>
+        
     </Container>
     <Container expand="4" class="bg-body-tertiary border border-1 rounded" padding="p-5" alignment-content="center">
         <Media type="carousel" class="w-100 h-100">

@@ -13,6 +13,7 @@ import uuid
 import json
 import copy
 from urllib.parse import parse_qs,urlencode,urlparse
+import traceback
 
 from cerberus import Validator, TypeDefinition, errors
 
@@ -329,6 +330,20 @@ async def load_provider(lang,**constants):
             di[service].append(provider(config=payload))
 
         except Exception as e:
+            exc_type, exc_obj, tb = sys.exc_info()
+            last_tb = traceback.extract_tb(tb)[-1]
+
+            error_info = {
+                #"module": function.__module__,
+                #"function": function.__name__,
+                "file": last_tb.filename,
+                "line": last_tb.lineno,
+                "error": str(e),
+                #"args": args,
+                #"kwargs": kwargs,
+            }
+
+            print(f"❌ Errore generico: {error_info}")
             print(f"❌ Error: loading 'infrastructure.{service}.{adapter}': {repr(e)}")
 
 async def load_manager(lang,**constants):
@@ -355,7 +370,7 @@ async def load_manager(lang,**constants):
             di[service] = lambda _di: provider(providers=providers) 
         except Exception as e:
             print(constants)
-            print(f"❌ Error: loading '{path}': {repr(e)}")
+            print(f"❌  '{path}': {repr(e)}")
     
 
 def validate_toml(content):

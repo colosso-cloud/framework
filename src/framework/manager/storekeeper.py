@@ -16,21 +16,21 @@ class storekeeper():
         repository_name = constants.get('repository', '')
 
         try:
-            repository_module = await language.load_module(
+            repository_module = await language.resource(
                 language,
-                area="application",
-                service='repository',
-                adapter=repository_name,
-                path=f"application.repository.{repository_name}"
+                path=f"application/repository/{repository_name}.py"
             )
             repository = repository_module.repository
         except Exception as e:
             print(f"Errore durante il caricamento del modulo repository '{repository_name}': {e}")
             return None, []
-
+        
+        print(self.providers)
         for provider in self.providers:
+            print(self.providers,provider)
             try:
                 profile = provider.config.get('profile', '').upper()
+                print(self.providers,provider,profile)
                 if not profile:
                     print(f"Provider {provider} non ha un profilo configurato.")
                     continue
@@ -51,9 +51,11 @@ class storekeeper():
                     task = asyncio.create_task(method(**task_args), name=profile)
                     task.parameters = task_args
                     operations.append(task)
+                else:
+                    print(f"Provider {provider} non ha un profilo trovato.")
             except Exception as e:
                 print(f"Errore imprevisto durante la preparazione per il provider {provider}: {e}")
-
+        print(repository,operations)
         return repository, operations
     
     # overview/view/get

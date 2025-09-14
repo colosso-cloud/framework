@@ -17,5 +17,7 @@
 </Window>
 {% endblock %}
 {% block content %}
-<Grid row="4" ></Grid>
+<Storekeeper id="okkkkkkkkkkkk">
+    <Grid row="4" ></Grid>
+</Storekeeper>
 {% endblock %}

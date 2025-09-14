@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Container id="{{component.id}}" margin="mb-2" >
-    {% set rows = (url.query.get('row_'+component.id) or [5])[-1] | int %}
+    {% set rows = (url.query.get('row_'+component.id) or [6])[-1] | int %}
     {% set current_page = (url.query.get('page_'+component.id) or [1])[-1] | int %}
     <Group type="input" >
         <Input width="auto" type="search" placeholder="search" ></Input>
@@ -18,14 +18,16 @@
             <Text>actions</Text>
         </Input>
     </Group>
-    <Row class="flex-wrap" margin="py-2" spacing="2" >
-        {% for value in range(rows) %}
+    
+    <Row class="flex-wrap" margin="py-2" >
+        {% for value in storekeeper.result %}
             <Card expand="{{component.attributes.row or '3'}}" height="500px" >
-                <Media expand="full" type="embed" src="https://player.kick.com/kswinniie?autoplay=false" />
+                <Media expand="full" type="{{value.type}}" src="{{value.url}}" />
                 <Data type="placeholder" class="position-fixed" >Cell 1</Data>
             </Card>
         {% endfor %}
     </Row>
+    
     <Group type="input"  >
         <Group type="action" expand="dynamic" class="input-group-text" alignment-content="center">
             <Navigation type="pagination" class="h-100" >
@@ -40,9 +42,9 @@
                 <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page + 1)|string)}}"  ><Text>Next</Text></Action>
             </Navigation>
         </Group>
-        <Text class="input-group-text">1 at 10 row from 200 rows for</Text>
+        <Text class="input-group-text">1 at 10 grid 3x3 from 200 items for</Text>
         <Input width="80px" type="select" event-change="route(`{{ url|route('?row_'+component.id+'=${this.value}') }}`)" value="{{rows}}">
-            {% for value_r in [5,10,15,20,25,30,40,50] %}
+            {% for value_r in [2,3,4,6,8,9,30,40,50] %}
             <Text value="{{value_r}}" >{{value_r}}</Text>
             {% endfor %}
         </Input>

@@ -191,12 +191,13 @@
             "repository": {
                 "type": "string"
             },
+            "id": { "type":"string" },
             "filter": { "type":"string" },
             "sort": { "type":"string" },
             "limit": { "type":"string" },
             "offset": { "type":"string" }
         },
-        "_return": {"function": "render_widget", "args": ["Storekeeper"]}
+        "_return": {"function": "render_widget_storekeeper", "args": ["Storekeeper"]}
     },
     "Input": {
         "type": "dict",

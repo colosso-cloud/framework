@@ -139,7 +139,7 @@ class executor:
                 for operation in finished:
                     try:
                         transaction = operation.result()
-                        
+                        print(transaction,'<------------------')
                         if transaction:
                             print(f"Transazione completata: {type(transaction)}")
                             if 'success' in constants:
