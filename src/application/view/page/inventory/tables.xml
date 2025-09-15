@@ -15,7 +15,10 @@
 {% endblock %}
 {% block content %}
 <Container class="border-top border-bottom">
-    <Table id="table_{{name}}"></Table>
+    <Storekeeper repository="products">
+        <Table id="table_{{name}}"></Table>
+    </Storekeeper>
+    
     <!--<Table repository="repository" filter="{'eq':{'owner':'SottoMonte'}}" view="repository" create="wizard" delete="wizard" update="wizard">
         <Text click="table(id:'{{ component or '' }}',sortField:'name')">Repository</Text>
         <Text>Description</Text>

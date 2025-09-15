@@ -118,7 +118,8 @@ class repository():
                 self.schema = getattr(self.schema, self.model, None)
                 if not self.schema:
                     raise ValueError(f"Schema non trovato per il modello: {self.model}")'''
-            self.fields = [field['name'] for field in self.schema if 'name' in field]
+            print(self.schema)
+            #self.fields = [field['name'] for field in self.schema if 'name' in field]
 
             # Ottieni il payload iniziale
             payload = inputs.get('payload', {})

@@ -341,7 +341,7 @@ class port(ABC):
                         return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})
                     case 'render_widget_storekeeper':
                         #print('Rendering widget:',data)
-                        transaction = await storekeeper.gather(repository='media',filter={},payload={})
+                        transaction = await storekeeper.gather(repository=attributes.get('repository',''),filter={},payload={})
                         print(transaction)
                         #exit(10)
                         #exit(10) 'eq': {'id':'10'}
@@ -354,6 +354,7 @@ class port(ABC):
                                 inner.append(mounted)
                         ok= await self.builder(file="src/application/view/component/Tiat.xml",text='<Row>{{inner|safe}}</Row>',**{'inner':inner,'url':data.get('url',''),'storekeeper':transaction})
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",ok)
+                        #exit(10)
                         return ok              
             if '_type' in schema:
                 schema_type = schema['_type'].get(attributes.get('type', ''))

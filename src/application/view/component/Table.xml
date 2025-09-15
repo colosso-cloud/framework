@@ -25,15 +25,18 @@
                 <Text>Header 2</Text>
             </Data>
             <Data type="table.cell">
-                <Text>Header 3</Text>
+                <Text>3</Text>
             </Data>
         </Data>
         <Data type="table.body">
-            {% for value in range(rows) %}
+
+            {% for value in storekeeper.result %}
             <Data type="table.row">
-                <Data type="placeholder" >Cell 1</Data>
-                <Data type="placeholder" >Cell 1</Data>
-                <Data type="placeholder" >Cell 1</Data>
+                <Text >{{value.name}}</Text>
+                <Text >{{value.slug}}</Text>
+                <Text >{{value.description}}</Text>
+                <Text >{{value.price}}</Text>
+                <Data >{{value.category}}</Data>
             </Data>
             {% endfor %}
         </Data>
