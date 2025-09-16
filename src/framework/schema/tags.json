@@ -219,7 +219,7 @@
             "event-change": {"type": "string"},
             "type": {
                 "type": "string",
-                "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox","search"],
+                "allowed": ["email","combobox","text", "select", "checkbox", "textarea", "radio", "switch", "color", "range","password","listbox","search","number"],
                 "default": "text"
             },
             "alignment-content": {
