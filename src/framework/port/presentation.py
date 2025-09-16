@@ -335,7 +335,11 @@ class port(ABC):
                 match function:
                     case 'mount_view':
                         #print('Mounting view:',args)
-                        return await self.mount_view(*args,**{'model':['ok']})
+                        if 'route' in attributes:
+                            return await self.mount_view(*args,**{'model':['ok']})
+                        else:
+                            ok = await self.builder(file="application/view/content/"+attributes.get('view'),inner=inner,**{'view':attributes,'url':data.get('url',''),'storekeeper':data.get('storekeeper',{}),'component':data.get('component',{})})
+                            return ok
                     case 'render_widget':
                         #print('Rendering widget:',data)
                         return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})

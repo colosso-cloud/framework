@@ -20,15 +20,12 @@
     </Group>
     
     <Row class="flex-wrap" margin="py-2" >
-        {% for value in storekeeper.result %}
-            <Card expand="{{component.attributes.row or '3'}}" height="500px" >
-                <Media expand="full" type="{{value.type}}" src="{{value.url}}" />
-                <Data type="placeholder" class="position-fixed" >Cell 1</Data>
-            </Card>
+        {% for value in range(storekeeper.result|length) %}
+            <View view="{{component.attributes.view}}" index="{{value}}" />
         {% endfor %}
     </Row>
     
-    <Group type="input"  >
+    <Group type="input" >
         <Group type="action" expand="dynamic" class="input-group-text" alignment-content="center">
             <Navigation type="pagination" class="h-100" >
                 <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page - 1)|string)}}" ><Text>Previous</Text></Action>

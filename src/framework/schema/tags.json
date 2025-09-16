@@ -95,7 +95,9 @@
     "View": {
         "type": "dict", 
         "schema": {
-            "route": {"type": "string"}
+            "route": {"type": "string"},
+            "view": {"type": "string"},
+            "index": {"type": "string"}
         },
         "_return": {"function": "mount_view", "args": ["route"]}
     },
@@ -129,6 +131,7 @@
     "Column": {
         "type": "dict",
         "schema": {
+            "id": {"type": "string"},
             "padding": {"type": "string"},
             "margin": {"type": "string"},
             "width": {"type": "string"},
@@ -144,6 +147,7 @@
     "Row": {
         "type": "dict", 
         "schema": {
+            "id": {"type": "string"},
             "expand": {"type": "string"},
             "class": {"type": "string"},
             "width": {"type": "string"},
@@ -234,6 +238,7 @@
             "id": {"type": "string"},
             "tooltip": {"type": "string"},
             "spacing": {"type": "string"},
+            "expand": {"type": "string"},
             "alignment-content": {
                 "type": "string",
                 "allowed": ["horizontal", "center", "end", "between", "around"]

@@ -606,10 +606,13 @@ class adapter(presentation.port):
             'tag': 'div',
             'attributes': {'class': 'modal', 'tabindex': '-1', 'role': 'dialog'},
             'wrapper_once': lambda adapter, attributes, inner: {
-                'dialog': lambda adapter, attributes, inner: adapter.code('div', {'class': 'modal-dialog'}, [adapter.code('div', {'class': 'modal-content'}, [
-                    adapter.code('div', {'class': 'modal-header'}, inner), 
+                'dialog': lambda adapter, attributes, inner: adapter.code('div', {'class': f'modal-dialog modal-dialog-centered modal-{attributes.get("size","md")} { "modal-fullscreen" if "full" == attributes.get("expand","md") else "" } modal-dialog-scrollable'}, [adapter.code('div', {'class': 'modal-content'}, [
+                    adapter.code('div', {'class': 'modal-header'}, [
+                        adapter.code('h1', {'class': 'modal-title fs-5'}, [attributes.get('title','')]),
+                        adapter.code('button', {'type':'button','class': 'btn-close','data-bs-dismiss':'modal','aria-label':'Close'}, [])
+                    ]),
                     adapter.code('div', {'class': 'modal-body'}, inner),
-                    adapter.code('div', {'class': 'modal-footer'}, inner)
+                    adapter.code('div', {'class': 'modal-footer'}, [])
                 ])])
             }.get(attributes.get('type')),
         },
@@ -1030,15 +1033,7 @@ class adapter(presentation.port):
     def att(self, element, attributes):
             output = element[:]
             cccc = ''
-            def set_style(css, element):
-                style = self.get_attribute(element, 'style')
-                if style is not str:
-                    style = ''
-                
-                style += f" {css}"
-                element = self.set_attribute(element, 'style', style.strip())
-                print(style, 'style',element)
-                return element
+            zzzz = ''
             
             for key, value in attributes.items():
                 map = self.attributes.get(key)
@@ -1058,7 +1053,11 @@ class adapter(presentation.port):
                     print(f"key:{key} | yyy:{yyy} | map:{map} | value:{value} | attributes:{attributes}")
                     match yyy:
                         case 'style':
-                            output = set_style(value, output)
+                            #output = self.set_attributes  set_style(value, output)
+                            #oldddd = self.get_attribute(output, 'style')
+                            zzzz += ' ' + value
+                            output = self.set_attribute(output, 'style', zzzz.strip())
+                            #print(style, 'style',element)
                         case 'attr':
                             output = self.set_attribute(output, map['attr'], value)
                         case 'attrs':

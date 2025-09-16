@@ -17,7 +17,7 @@
 </Window>
 {% endblock %}
 {% block content %}
-<Storekeeper id="okkkkkkkkkkkk" repository="media">
-    <Grid row="4" ></Grid>
+<Storekeeper id="okkkkkkkkkkkk" repository="means">
+    <Grid row="4" view="card/media.xml" />
 </Storekeeper>
 {% endblock %}

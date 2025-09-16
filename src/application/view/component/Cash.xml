@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Container id="{{component.id}}" expand="full" class="d-flex flex-column" >
+    <Row class="row-6 h-50">
+        <Action route="#dialogCart"><Media type="icon" src="bi-cart" /><Text>Cart</Text></Action>
+    </Row>
+    <Row margin="py-2" class="h-50 row-6" >
+        <Row class="flex-wrap" expand="10" >
+            <Action expand="4" height="auto" class="bg-primary" ><Text>7</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>8</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>9</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>4</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>5</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>6</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>1</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>2</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>3</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>.</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>0</Text></Action>
+            <Action expand="4" height="auto" class="bg-primary"><Text>,</Text></Action>
+        </Row>
+        <Row expand="2" class="flex-wrap" >
+            <Action expand="12" height="auto" class="bg-secondary"><Text>NULL</Text></Action>
+            <Action expand="6" height="auto" class="bg-secondary"><Text>C</Text></Action>
+            <Action expand="6" height="auto" class="bg-secondary"><Text>=</Text></Action>
+        </Row>
+    </Row>
+</Container>

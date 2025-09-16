@@ -130,7 +130,7 @@ async def model(schema, value=None, mode='full', lang=None):
     # Cerberus Validation (Convalida, Tipi, Required, Regex, Default)
     # Crea un validatore Cerberus con lo schema fornito
     print("##################",schema)
-    v = MyCustomValidator(schema,allow_unknown=False)
+    v = MyCustomValidator(schema,allow_unknown=True)
 
     # Permetti a Cerberus di gestire i valori di default durante la validazione
     # Cerberus gestirà 'type', 'required', 'default' e 'regex' direttamente

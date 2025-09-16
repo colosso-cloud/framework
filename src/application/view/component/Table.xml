@@ -18,18 +18,9 @@
     </Group>
     <Data type="table">
         <Data type="table.header">
-            <Data type="table.cell">
-                <Text>Header 1</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>Header 2</Text>
-            </Data>
-            <Data type="table.cell">
-                <Text>3</Text>
-            </Data>
+            {{inner}}
         </Data>
         <Data type="table.body">
-
             {% for value in storekeeper.result %}
             <Data type="table.row">
                 <Text >{{value.name}}</Text>
@@ -42,25 +33,25 @@
         </Data>
     </Data>
     <Group type="input" >
-        <Group expand="dynamic" alignment-content="center" class="border-bottom">
+        <Group type="action" expand="dynamic" class="input-group-text" alignment-content="center">
             <Navigation type="pagination" class="h-100" >
-                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page - 1)|string)}}" class="border-start rounded-0" ><Text>Previous</Text></Action>
+                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page - 1)|string)}}" ><Text>Previous</Text></Action>
                 {% for page in range(1,5) %}
                     {% if current_page == page %}
                 <Action active=""><Text>{{page}}</Text></Action>
                     {% else %}
-                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (page)|string)}}" class="border-start rounded-0"><Text>{{page}}</Text></Action>
+                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (page)|string)}}" ><Text>{{page}}</Text></Action>
                     {% endif %}
                 {% endfor %}
-                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page + 1)|string)}}" class="border-start border-end rounded-0" ><Text>Next</Text></Action>
+                <Action type="link" route="{{url|route('?page_' ~ component.id ~ '=' ~ (current_page + 1)|string)}}"  ><Text>Next</Text></Action>
             </Navigation>
         </Group>
-        <Text class="input-group-text">1 at 10 row from 200 rows for</Text>
+        <Text class="input-group-text">1 at 10 grid 3x3 from 200 items for</Text>
         <Input width="80px" type="select" event-change="route(`{{ url|route('?row_'+component.id+'=${this.value}') }}`)" value="{{rows}}">
-            {% for value_r in [5,10,15,20,25,30,40,50] %}
+            {% for value_r in [2,3,4,6,8,9,30,40,50] %}
             <Text value="{{value_r}}" >{{value_r}}</Text>
             {% endfor %}
         </Input>
-        <Text class="input-group-text rounded-0">rows for page</Text>
+        <Text class="input-group-text">rows for page</Text>
     </Group>
 </Container>
