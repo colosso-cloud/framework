@@ -2,13 +2,7 @@
 {% block title %}Overview{% endblock %}
 {% block subtitle %}Keep track of your company{% endblock %}
 {% block bar %}
-<Action route="/home"><Media type="icon" src="bi-gear"/> <Text>Public</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-pc-horizontal"/> <Text>Account</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-box-seam"/> <Text>Appearance</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-boxes"/> <Text>Billing and licensing</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-bookmarks"/> <Text>Collaborators</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-database"/> <Text>Rules</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-globe"/> <Text>Policy</Text></Action>
+<SideBar from="{{url.path[0]}}" selected="{{'/'.join(url.path)}}" />
 {% endblock %}
 {% block content %}
 

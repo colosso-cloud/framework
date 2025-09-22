@@ -188,6 +188,12 @@ def extract_params(s):
         print(f"Stringa JSON tentata: {final_json_string}")
         return {} # Ritorna un dizionario vuoto in caso di errore di parsing JSON
 
+def convert(data,ttype):
+    s = s.strip()
+    # rimuove virgolette esterne, se presenti
+    if (s.startswith("'") and s.endswith("'")) or (s.startswith('"') and s.endswith('"')):
+        s = s[1:-1]
+    return ast.literal_eval(s)
 
 def generate_identifier():
     return str(uuid.uuid4())

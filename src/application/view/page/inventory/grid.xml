@@ -1,14 +1,9 @@
 {% extends "sidebar.xml" %}
-{% block bar %}
-<Action route="/home"><Media type="icon" src="bi-pc-horizontal"/> <Text>Machines</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-box-seam"/> <Text>Containers</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-boxes"/> <Text>Services</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-bookmarks"/> <Text>Repositories</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-database"/> <Text>Volumes</Text></Action>
-<Action route="/home"><Media type="icon" src="bi-globe"/> <Text>Domains</Text></Action>
-{% endblock %}
 {% block title %}Domain {% endblock %}
 {% block subtitle %}Details and information about the domain #{{url.path[-1]}}.{% endblock %}
+{% block bar %}
+<SideBar from="{{url.path[0]}}" selected="{{'/'.join(url.path)}}" />
+{% endblock %}
 {% block action %}
 <Action route="#dialogCall"><Media type="icon" src="bi-bell" /><Text>Subscribe</Text></Action>
 <Window type="dialog" id="dialogCall">

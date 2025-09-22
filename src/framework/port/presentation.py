@@ -177,74 +177,11 @@ class port(ABC):
     async def render_css(self, *services, **constants):
         await self.apply_css(*services)
 
-    def parse_route2(self, file):
-        # Regex per opzioni multiple tra virgolette (es. {'a'|'b'})
-        regex_quoted = r'\{((?:\'[^\']+\'\|?)+)\}'
-        # Regex per parametri dinamici con $ (es. {$id})
-        regex_param = r'\{(\$[a-zA-Z0-9_]+)\}'
-        # Regex per opzioni multiple senza virgolette (es. {a|b})
-        regex_simple_options = r'\{([a-zA-Z0-9_|]+)\}'
-
-        try:
-            tree = untangle.parse(file)
-            if not tree or not tree.get_elements() or not tree.get_elements()[0].get_elements():
-                print("Errore: Il file XML è vuoto o malformato.")
-                return
-
-            for setting in tree.get_elements()[0].get_elements():
-                path_attribute = setting.get_attribute('path')
-                method = setting.get_attribute('method')
-                typee = setting.get_attribute('type')
-                view = setting.get_attribute('view')
-                layout = setting.get_attribute('layout')
-
-                if view:
-                    view = 'application/view/page/' + view
-                    if not path_attribute:
-                        path_attribute = view.replace('.xml', '')
-
-                # 1. Gestisce i percorsi con opzioni multiple tra virgolette
-                match = re.search(regex_quoted, path_attribute)
-                if match:
-                    dynamic_part = match.group(0)
-                    options_str = match.group(1)
-                    options = options_str.replace("'", "").split('|')
-                    
-                    for option in options:
-                        new_path = path_attribute.replace(dynamic_part, option)
-                        self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
-                    continue
-
-                # 2. Gestisce i percorsi con opzioni multiple senza virgolette
-                match = re.search(regex_simple_options, path_attribute)
-                if match:
-                    dynamic_part = match.group(0)
-                    options_str = match.group(1)
-                    options = options_str.split('|')
-                    
-                    for option in options:
-                        new_path = path_attribute.replace(dynamic_part, option)
-                        self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
-                    continue
-                
-                # 3. Gestisce i percorsi con parametri dinamici ($)
-                match = re.search(regex_param, path_attribute)
-                if match:
-                    param_with_dollar = match.group(1)
-                    param_name = param_with_dollar.lstrip('$')
-                    new_path = path_attribute.replace(param_with_dollar, param_name)
-                    self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
-                    continue
-
-                # 4. Gestisce i percorsi statici
-                self.routes[path_attribute] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
-        
-        except Exception as e:
-            print(f"Si è verificato un errore durante il parsing del file: {e}")
-
     def parse_route(self, file):
         # Regex per opzioni multiple senza virgolette (es. {a|b})
         regex_simple_options = r'\{([a-zA-Z0-9_|]+)\}'
+        # Regex per parametri dinamici tipo {$id} -> {id}
+        regex_dynamic_param = r'\{\$([a-zA-Z0-9_]+)\}'
 
         try:
             tree = untangle.parse(file)
@@ -264,35 +201,44 @@ class port(ABC):
                     if not path_attribute:
                         path_attribute = view.replace('.xml', '')
 
-                # Trova TUTTE le parti dinamiche con opzioni multiple
+                # 🔥 Normalizza subito i parametri dinamici {$id} → {id}
+                path_attribute = re.sub(regex_dynamic_param, r'{\1}', path_attribute)
+
+                # Trova tutte le parti dinamiche con opzioni multiple
                 all_matches = re.finditer(regex_simple_options, path_attribute)
                 dynamic_parts = []
                 options_sets = []
 
                 for match in all_matches:
-                    dynamic_parts.append(match.group(0))
-                    options_str = match.group(1)
-                    options = options_str.split('|')
+                    dynamic_parts.append(match.group(0))  # es. "{means|product}"
+                    options_str = match.group(1)          # es. "means|product"
+                    options = options_str.split('|')      # es. ["means", "product"]
                     options_sets.append(options)
-                
-                # Se sono state trovate parti dinamiche con opzioni
+
                 if dynamic_parts:
-                    # Genera tutte le possibili combinazioni di percorsi
+                    # Caso 1: opzioni multiple → espandi combinazioni
                     for combination in itertools.product(*options_sets):
                         new_path = path_attribute
                         for i, part in enumerate(dynamic_parts):
-                            new_path = new_path.replace(part, combination[i], 1)
-                        
-                        self.routes[new_path] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
+                            # sostituisci solo le opzioni multiple, NON i parametri dinamici
+                            if '|' in part:
+                                new_path = new_path.replace(part, combination[i], 1)
+                        self.routes[new_path] = {
+                            'view': view, 'type': typee,
+                            'method': method, 'layout': layout
+                        }
                 else:
-                    # Gestisce percorsi statici o con parametri dinamici ($)
-                    # La logica per parametri dinamici ($) andrebbe gestita qui
-                    # dato che non sono opzioni multiple
-                    self.routes[path_attribute] = {'view': view, 'type': typee, 'method': method, 'layout': layout}
-        
+                    # Caso 2/3: percorsi statici o con parametri dinamici
+                    self.routes[path_attribute] = {
+                        'view': view, 'type': typee,
+                        'method': method, 'layout': layout
+                    }
+
         except Exception as e:
             print(f"Si è verificato un errore durante il parsing del file: {e}")
+
         print(self.routes)
+
 
 
     @flow.asynchronous(managers=('storekeeper','messenger'))
@@ -344,10 +290,17 @@ class port(ABC):
                         #print('Rendering widget:',data)
                         return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url',''),'storekeeper':data.get('storekeeper',{})})
                     case 'render_widget_storekeeper':
+                        exit(19)
                         #print('Rendering widget:',data)
-                        transaction = await storekeeper.gather(repository=attributes.get('repository',''),filter={},payload={})
+                        if attributes.get('filter'):
+                            filtro = language.convert(attributes.get('filter',''),'dict')
+                            print(filtro)
+                        else:
+                            filtro = {}
+                        
+                        transaction = await storekeeper.gather(repository=attributes.get('repository',''),filter=filtro,payload={})
                         print(transaction)
-                        #exit(10)
+                        exit(10)
                         #exit(10) 'eq': {'id':'10'}
                         #return await self.render_widget(*schema['_return'].get('args',[]), inner, attributes, **{'url':data.get('url',''),'storekeeper':transaction})
                         print(inner)

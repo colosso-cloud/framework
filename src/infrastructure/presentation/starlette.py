@@ -4,7 +4,7 @@ from html import escape
 import re
 import json
 from datetime import datetime
-from urllib.parse import urlparse, urlunparse, ParseResult
+from urllib.parse import urlparse, urlunparse, ParseResult,parse_qs
 
 resources = {
     'flow': 'framework/service/flow.py',
@@ -597,7 +597,10 @@ class adapter(presentation.port):
             'attributes': {'class': 'offcanvas offcanvas-end h-100', 'tabindex': '-1', 'data-bs-backdrop':'false'},
             'wrapper_once': lambda adapter, attributes, inner: {
                 'still': lambda adapter, attributes, inner: [
-                    adapter.code('div', {'class': 'offcanvas-header'}, inner),
+                    adapter.code('div', {'class': 'offcanvas-header'}, [
+                        adapter.code('h1', {'class': 'offcanvas-title'}, [attributes.get('title','')]),
+                        adapter.code('button', {'type':'button','class': 'btn-close','data-bs-dismiss':'offcanvas','aria-label':'Close'}, [])
+                    ]),
                     adapter.code('div', {'class': 'offcanvas-body'}, inner),
                 ]
             }.get(attributes.get('type')),
@@ -919,7 +922,7 @@ class adapter(presentation.port):
                 return RedirectResponse('/', status_code=303)
 
 
-    async def mount_view(self, url,**kargs):
+    async def mount_view2(self, url,**kargs):
         # Dati per un'eventuale rotta corrispondente.
         def process_url(url, default):
             deffault_url = urlparse(default)
@@ -992,6 +995,87 @@ class adapter(presentation.port):
             print(f"Nessuna rotta corrispondente per l'URL: {url}")
             return None
     
+    async def mount_view(self, url,**kargs):
+        def process_url(url, default_base_url):
+            """
+            Unisce raw_url con default_base_url per completare scheme/netloc/etc. usa _replace()
+            """
+            base = urlparse(default_base_url)
+            parsed = urlparse(url)
+
+            merged = parsed._asdict()  # scheme, netloc, path, params, query, fragment
+            for field in base._fields:
+                if not merged.get(field):          # se vuoto -> copia dal base
+                    merged[field] = getattr(base, field)
+
+            return parsed._replace(**merged)
+        parsed_url = process_url(url, self.url)   # self.url = base url
+
+        matched_route = None
+
+        for route_path, route_data in self.routes.items():
+            # costruiamo il pattern regex in modo sicuro:
+            parts = []
+            last_idx = 0
+            param_names = []
+
+            # trova tutte le {...} nel route_path
+            for m in re.finditer(r'\{([^}]+)\}', route_path):
+                # escape della parte statica prima della match
+                parts.append(re.escape(route_path[last_idx:m.start()]))
+                # gruppo di cattura per quel segmento
+                parts.append('([^/]+)')
+                # salva il nome del parametro, rimuovendo eventuale '$' iniziale
+                param_names.append(m.group(1).lstrip('$'))
+                last_idx = m.end()
+
+            # aggiungi la parte finale (escaped)
+            parts.append(re.escape(route_path[last_idx:]))
+            regex_pattern = '^' + ''.join(parts) + '$'
+
+            match = re.search(regex_pattern, parsed_url.path)
+            if match:
+                matched_route = {
+                    'view': route_data.get('view'),
+                    'params': {},
+                    'layout': route_data.get('layout')
+                }
+
+                for i, name in enumerate(param_names):
+                    matched_route['params'][name] = match.group(i + 1)
+
+                break  # prima corrispondenza -> esci
+
+        if not matched_route:
+            print(f"Nessuna rotta corrispondente per l'URL: {url}")
+            return None
+
+        # log (opzionale)
+        print(f"Percorso trovato: {matched_route['view']} per l'URL: {url}", parsed_url)
+        print(f"Parametri estratti: {matched_route['params']}")
+
+        # parametri query e fragment come dict di liste
+        query_params = parse_qs(parsed_url.query, keep_blank_values=True)
+        frag_params = parse_qs(parsed_url.fragment, keep_blank_values=True)
+
+        # path come lista di segmenti (evita elemento vuoto se path è '/')
+        stripped = parsed_url.path.lstrip('/')
+        path_list = stripped.split('/') if stripped else []
+
+        url_payload = {
+            'url': self.url,
+            'protocol': parsed_url.scheme,
+            'host': parsed_url.hostname,
+            'port': parsed_url.port,
+            'path': path_list,
+            'query': query_params,
+            'fragment': frag_params
+        }
+
+        # chiama il modello / builder come nel tuo flusso
+        url_payload = await language.model(scheme_url, url_payload, 'full', language)
+        return await self.builder(file=matched_route['view'], url=url_payload, mode=['main'], **kargs)
+
     async def starlette_view(self,request):
         request.session["url_precedente"] = str(request.url)
         html = await self.mount_view(str(request.url))
